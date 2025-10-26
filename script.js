@@ -183,16 +183,26 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   });
 
-  // === Add Expense modal ===
+  // === Add Expense modal (idempotent binding even if modal exists in HTML) ===
   const expenseOverlay = ensureExpenseModal();
   const modalAmount    = () => $("#modalExpenseAmount");
   const modalCat       = () => $("#modalExpenseCategory");
   const modalCard      = () => $("#modalExpenseCard");
   const modalDetails   = () => $("#modalExpenseDetails");
 
+  function bindExpenseModalHandlers(overlay){
+    if (overlay.dataset.bound) return; // avoid duplicate bindings
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeExpenseModal(); });
+    document.addEventListener("keydown", e => { if (overlay.style.display==="flex" && e.key==="Escape") closeExpenseModal(); });
+    $("#modalCancelBtn", overlay)?.addEventListener("click", closeExpenseModal);
+    $("#modalSubmitBtn", overlay)?.addEventListener("click", submitExpense);
+    overlay.dataset.bound = "1";
+  }
+
   function ensureExpenseModal(){
     let overlay = $("#expenseModalOverlay");
-    if (overlay) return overlay;
+    if (overlay) { bindExpenseModalHandlers(overlay); return overlay; }
+
     overlay = el("div", { id:"expenseModalOverlay", style:"display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999;" },
       el("div",{ className:"expense-modal" },
         el("h3",{ textContent:"Add Expense" }),
@@ -211,14 +221,13 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     );
     document.body.append(overlay);
-    overlay.addEventListener("click", e => { if (e.target === overlay) closeExpenseModal(); });
-    document.addEventListener("keydown", e => { if (overlay.style.display==="flex" && e.key==="Escape") closeExpenseModal(); });
-    $("#modalCancelBtn", overlay).addEventListener("click", closeExpenseModal);
-    $("#modalSubmitBtn", overlay).addEventListener("click", submitExpense);
+    bindExpenseModalHandlers(overlay);
     return overlay;
   }
+
   function openExpenseModal(){ modalAmount().value=""; modalCat().value="Select"; modalCard().value="Credit"; modalDetails().value=""; setShow(expenseOverlay,true); setTimeout(()=>modalAmount().focus(),0); }
   function closeExpenseModal(){ setShow(expenseOverlay,false); }
+
   function submitExpense(){
     const amount   = parseFloat(modalAmount().value);
     const category = modalCat().value;
@@ -238,15 +247,24 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
     closeExpenseModal();
   }
+
   addBtn?.addEventListener("click", openExpenseModal);
 
   // === Details Modal ===
   const detailsOverlay = ensureDetailsModal();
   const detailsBody    = () => $("#detailsModalBody");
 
+  function bindDetailsModalHandlers(overlay){
+    if (overlay.dataset.bound) return;
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeDetailsModal(); });
+    document.addEventListener("keydown", e => { if (overlay.style.display==="flex" && e.key==="Escape") closeDetailsModal(); });
+    $("#detailsModalCloseBtn", overlay)?.addEventListener("click", closeDetailsModal);
+    overlay.dataset.bound = "1";
+  }
+
   function ensureDetailsModal(){
     let overlay = $("#detailsModalOverlay");
-    if (overlay) return overlay;
+    if (overlay) { bindDetailsModalHandlers(overlay); return overlay; }
     overlay = el("div",{ id:"detailsModalOverlay", style:"display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999;" },
       el("div",{ className:"expense-modal" },
         el("h3",{ textContent:"Expense Details" }),
@@ -257,23 +275,30 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     );
     document.body.append(overlay);
-    overlay.addEventListener("click", e => { if (e.target === overlay) closeDetailsModal(); });
-    document.addEventListener("keydown", e => { if (overlay.style.display==="flex" && e.key==="Escape") closeDetailsModal(); });
-    $("#detailsModalCloseBtn", overlay).addEventListener("click", closeDetailsModal);
+    bindDetailsModalHandlers(overlay);
     return overlay;
   }
+
   function openDetailsModal(text){ detailsBody().textContent = text || "No details."; setShow(detailsOverlay,true); }
   function closeDetailsModal(){ setShow(detailsOverlay,false); }
 
-  // === Allowance Modal ===
+  // === Allowance Modal (unchanged behavior; idempotent bindings) ===
   const allowanceOverlay = ensureAllowanceModal();
   const stage = () => $("#allowanceModalStage");
   const back  = () => $("#allowanceModalBackBtn");
   const sub   = () => $("#allowanceModalSubmitBtn");
 
+  function bindAllowanceModalHandlers(overlay){
+    if (overlay.dataset.bound) return;
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeAllowanceModal(); });
+    document.addEventListener("keydown", e => { if (overlay.style.display==="flex" && e.key==="Escape") closeAllowanceModal(); });
+    $("#allowanceModalCancelBtn", overlay)?.addEventListener("click", closeAllowanceModal);
+    overlay.dataset.bound = "1";
+  }
+
   function ensureAllowanceModal(){
     let overlay = $("#allowanceModalOverlay");
-    if (overlay) return overlay;
+    if (overlay) { bindAllowanceModalHandlers(overlay); return overlay; }
     overlay = el("div",{ id:"allowanceModalOverlay", style:"display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999;" },
       el("div",{ className:"expense-modal" },
         el("h3",{ textContent:"Set Global Allowance" }),
@@ -286,11 +311,10 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     );
     document.body.append(overlay);
-    overlay.addEventListener("click", e => { if (e.target === overlay) closeAllowanceModal(); });
-    document.addEventListener("keydown", e => { if (overlay.style.display==="flex" && e.key==="Escape") closeAllowanceModal(); });
-    $("#allowanceModalCancelBtn", overlay).addEventListener("click", closeAllowanceModal);
+    bindAllowanceModalHandlers(overlay);
     return overlay;
   }
+
   function openAllowanceModal(){ showChoice(); setShow(allowanceOverlay,true); }
   function closeAllowanceModal(){ setShow(allowanceOverlay,false); }
 
