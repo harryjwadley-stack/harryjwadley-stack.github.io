@@ -28,21 +28,26 @@
     </div>
 
     <!-- Center: Submitted Expenses Table -->
-    <div class="table-container">
+    <div class="table-container" id="tableContainer">
       <h3>Submitted Expenses</h3>
-      <table id="submittedExpenses">
-        <thead>
-          <tr>
-            <th>Purchase #</th>
-            <th>Amount</th>
-            <th>Category</th>
-            <th>Card</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- JS appends rows here -->
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table id="submittedExpenses">
+          <thead>
+            <tr>
+              <th>Purchase #</th>
+              <th>Amount</th>
+              <th>Category</th>
+              <th>Card</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS appends rows here -->
+          </tbody>
+        </table>
+        <!-- the delete rail lives OUTSIDE the table, aligned to rows -->
+        <div id="deleteRail" aria-hidden="true"></div>
+      </div>
       <button id="clearAllBtn" style="margin-top:10px;">Clear All</button>
     </div>
 

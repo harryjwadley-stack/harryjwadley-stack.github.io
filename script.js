@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ===== Grab elements =====
   const addBtn = document.getElementById("addExpenseBtn");
-  const submittedTableBody = document.getElementById("submittedExpenses").querySelector("tbody");
+  const submittedTable = document.getElementById("submittedExpenses");
+  const submittedTableBody = submittedTable.querySelector("tbody");
   const totalsDiv = document.getElementById("categoryTotals");
   const clearAllBtn = document.getElementById("clearAllBtn");
 
@@ -152,6 +153,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })();
 
+  // ===== Ensure table header has an Actions column =====
+  (function ensureActionsHeader() {
+    const theadRow = submittedTable.querySelector("thead tr");
+    if (!theadRow) return;
+    const ths = Array.from(theadRow.children);
+    const hasActions = ths.some(th => th.textContent.trim().toLowerCase() === "actions");
+    if (!hasActions) {
+      const th = document.createElement("th");
+      th.textContent = "Actions";
+      theadRow.appendChild(th);
+    }
+  })();
+
   // ===== Render helpers =====
   function updateAllowanceRemaining() {
     const data = getMonthData();
@@ -171,23 +185,40 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
+  // --- Overlay for outside-row delete dots ---
+  // We'll attach an absolutely-positioned layer inside the same parent as the table,
+  // and place one small 'd' per row aligned with that row.
+  const tableContainer = submittedTable.closest(".table-container") || document.body;
+  let deleteOverlay = document.getElementById("rowDeleteOverlay");
+  if (!deleteOverlay) {
+    deleteOverlay = document.createElement("div");
+    deleteOverlay.id = "rowDeleteOverlay";
+    // No CSS file changes required; style inline for reliability
+    deleteOverlay.style.position = "absolute";
+    deleteOverlay.style.top = "0";
+    deleteOverlay.style.left = "0";
+    deleteOverlay.style.pointerEvents = "none"; // children will enable their own
+    tableContainer.style.position = tableContainer.style.position || "relative";
+    tableContainer.appendChild(deleteOverlay);
+  }
+
   function renderForCurrentMonth() {
     const data = getMonthData();
     const globalAllowance = Number(settings.allowance) || 0;
     allowanceDisplay.textContent = `Allowance: ${globalAllowance.toFixed(2)}`;
 
-    // Rebuild table
+    // Rebuild table rows
     submittedTableBody.innerHTML = "";
     data.expenses.forEach((e, idx) => {
       const row = document.createElement("tr");
+      row.setAttribute("data-row-id", e.id);
       row.innerHTML = `
         <td>${idx + 1}</td>
         <td>${e.amount.toFixed(2)}</td>
         <td>${e.category}</td>
-        <td style="position:relative;">
-          ${e.card || "-"}
-          <span class="delete-mini" data-id="${e.id}">d</span>
-          <button class="show-details" data-id="${e.id}" style="margin-left:10px;">details</button>
+        <td>${e.card || "-"}</td>
+        <td>
+          <button class="show-details" data-id="${e.id}">details</button>
         </td>
       `;
       submittedTableBody.appendChild(row);
@@ -203,37 +234,91 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateAllowanceRemaining();
     updatePieChart();
+
+    // Rebuild and position outside delete dots
+    queueMicrotask(positionDeleteDots);
   }
 
-  // ===== Row actions: Details + Delete (event delegation) =====
+  function positionDeleteDots() {
+    // Clear previous dots
+    deleteOverlay.innerHTML = "";
+
+    const tableRect = submittedTable.getBoundingClientRect();
+    const containerRect = tableContainer.getBoundingClientRect();
+
+    // Keep overlay the same size as container
+    deleteOverlay.style.width = `${containerRect.width}px`;
+    deleteOverlay.style.height = `${containerRect.height}px`;
+
+    // Create a dot for each row
+    const rows = Array.from(submittedTableBody.querySelectorAll("tr"));
+    rows.forEach((tr) => {
+      const id = Number(tr.getAttribute("data-row-id"));
+      const r = tr.getBoundingClientRect();
+      const topInContainer = r.top - containerRect.top;
+
+      const dot = document.createElement("span");
+      dot.className = "delete-mini-outer";
+      dot.textContent = "d";
+      dot.dataset.id = String(id);
+
+      // Style inline to avoid relying on external CSS
+      dot.style.position = "absolute";
+      dot.style.left = `${(tableRect.right - containerRect.left) + 8}px`; // just outside table right edge
+      dot.style.top = `${topInContainer + (r.height / 2) - 8}px`;
+      dot.style.color = "#007bff";
+      dot.style.cursor = "pointer";
+      dot.style.fontSize = "14px";
+      dot.style.fontWeight = "bold";
+      dot.style.userSelect = "none";
+      dot.style.lineHeight = "1";
+      dot.style.pointerEvents = "auto";
+      dot.style.transition = "transform 0.15s, color 0.15s";
+      dot.addEventListener("mouseenter", () => {
+        dot.style.transform = "scale(1.2)";
+        dot.style.color = "#0056b3";
+      });
+      dot.addEventListener("mouseleave", () => {
+        dot.style.transform = "scale(1)";
+        dot.style.color = "#007bff";
+      });
+
+      deleteOverlay.appendChild(dot);
+    });
+  }
+
+  // Reposition dots on resize (layout changes)
+  window.addEventListener("resize", positionDeleteDots);
+
+  // ===== Row actions: Details (in-table) & Delete (outside overlay) =====
   submittedTableBody.addEventListener("click", (evt) => {
     const detailsBtn = evt.target.closest(".show-details");
-    const deleteBtn  = evt.target.closest(".delete-mini");
+    if (!detailsBtn) return;
 
-    if (detailsBtn) {
-      const id = Number(detailsBtn.dataset.id);
-      const exp = findExpenseById(id);
-      const text = (exp && exp.details && exp.details.trim()) ? exp.details.trim() : "No details.";
-      openDetailsModal(text);
-      return;
-    }
+    const id = Number(detailsBtn.dataset.id);
+    const exp = findExpenseById(id);
+    const text = (exp && exp.details && exp.details.trim()) ? exp.details.trim() : "No details.";
+    openDetailsModal(text);
+  });
 
-    if (deleteBtn) {
-      const id = Number(deleteBtn.dataset.id);
-      const data = getMonthData();
-      const i = data.expenses.findIndex(x => x.id === id);
-      if (i === -1) return;
+  deleteOverlay.addEventListener("click", (evt) => {
+    const el = evt.target.closest(".delete-mini-outer");
+    if (!el) return;
+    const id = Number(el.dataset.id);
 
-      const exp = data.expenses[i];
-      data.categoryTotals[exp.category] = Math.max(
-        0,
-        (data.categoryTotals[exp.category] || 0) - (exp.amount || 0)
-      );
-      data.expenses.splice(i, 1);
+    const data = getMonthData();
+    const i = data.expenses.findIndex(x => x.id === id);
+    if (i === -1) return;
 
-      saveState();
-      renderForCurrentMonth();
-    }
+    const exp = data.expenses[i];
+    data.categoryTotals[exp.category] = Math.max(
+      0,
+      (data.categoryTotals[exp.category] || 0) - (exp.amount || 0)
+    );
+    data.expenses.splice(i, 1);
+
+    saveState();
+    renderForCurrentMonth();
   });
 
   // ===== Clear All =====

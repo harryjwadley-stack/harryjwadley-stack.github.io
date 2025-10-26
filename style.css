@@ -28,6 +28,13 @@ body {
   align-items: center;
 }
 
+/* Wrap to allow absolute positioning of the delete rail */
+.table-wrap {
+  position: relative;
+  display: inline-block; /* shrink-wrap to table width */
+}
+
+/* Table */
 #submittedExpenses {
   border-collapse: collapse;
   width: 100%;
@@ -60,13 +67,11 @@ body {
   padding: 10px;
 }
 
-/* Headings bold */
 .sidebar h3 {
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-/* Allowance and Allowance Remaining values */
 #allowanceDisplay,
 #allowanceRemaining {
   font-weight: normal !important;
@@ -74,7 +79,6 @@ body {
   margin-bottom: 5px;
 }
 
-/* Category totals container */
 #categoryTotals {
   font-weight: normal;
   margin-top: 0;
@@ -86,24 +90,10 @@ body {
   max-width: 100%;
 }
 
-/* Inputs and dropdowns */
+/* Inputs/containers */
 #expenseContainer,
 #allowanceContainer {
   margin-top: 10px;
-}
-
-#expenseInput,
-#allowanceInput {
-  padding: 8px;
-  font-size: 16px;
-  width: 150px;
-  margin-bottom: 10px;
-}
-
-#expenseSelect {
-  padding: 5px;
-  font-size: 16px;
-  margin-bottom: 10px;
 }
 
 /* Buttons */
@@ -185,17 +175,34 @@ button.small {
   line-height: 1.35;
 }
 
-/* Small blue 'd' delete affordance */
+/* Delete rail — sits to the right OUTSIDE the table */
+#deleteRail {
+  position: absolute;
+  top: 0;
+  right: -24px; /* push outside the table edge */
+  width: 16px;  /* narrow gutter for the tiny 'd' */
+  pointer-events: none; /* individual 'd' re-enables pointer events */
+}
+
+/* Small blue 'd' in the rail */
 .delete-mini {
   position: absolute;
-  right: 8px;
+  right: 0;
   color: #007bff;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
   transition: 0.15s;
+  pointer-events: auto;
+  user-select: none;
 }
 .delete-mini:hover {
   color: #0056b3;
   transform: scale(1.2);
+}
+
+/* Make Actions column's button compact */
+.show-details {
+  padding: 6px 10px;
+  font-size: 14px;
 }
