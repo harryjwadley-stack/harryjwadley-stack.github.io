@@ -1,26 +1,38 @@
-body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  margin: 0;
+/* Base */
+:root {
+  --muted-border: #ccc;
+  --muted-bg: #f2f2f2;
+  --row-alt: #f9f9f9;
+  --blue: #007bff;
+  --blue-hover: #0056b3;
 }
 
-/* Top row layout: left panel, table, sidebar */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Layout */
 .top-row {
   display: flex;
+  gap: 50px;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 50px;
 }
 
-/* Left panel: Add Expense + Set Allowance */
-.left-panel {
+.left-panel,
+.sidebar {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 200px;
 }
 
-/* Center: table */
+.left-panel { min-width: 200px; }
+.sidebar { min-width: 200px; gap: 15px; padding: 10px; }
+
 .table-container {
   flex: 1;
   display: flex;
@@ -28,7 +40,16 @@ body {
   align-items: center;
 }
 
-/* Wrap to allow absolute positioning of the delete rail */
+/* Month controls */
+#monthControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+#monthControls select { padding: 4px 6px; font-size: 14px; }
+
+/* Table wrap (enables outside delete rail positioning) */
 .table-wrap {
   position: relative;
   display: inline-block; /* shrink-wrap to table width */
@@ -36,103 +57,62 @@ body {
 
 /* Table */
 #submittedExpenses {
-  border-collapse: collapse;
   width: 100%;
   max-width: 800px;
+  border-collapse: collapse;
 }
-
 #submittedExpenses th,
 #submittedExpenses td {
-  border: 1px solid #ccc;
   padding: 8px;
   text-align: center;
+  border: 1px solid var(--muted-border);
 }
-
-#submittedExpenses th {
-  background-color: #f2f2f2;
-}
-
-#submittedExpenses tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-/* Right sidebar: Allowance + category totals */
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 200px;
-  justify-content: flex-start;
-  gap: 15px;
-  padding: 10px;
-}
-
-.sidebar h3 {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-#allowanceDisplay,
-#allowanceRemaining {
-  font-weight: normal !important;
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-#categoryTotals {
-  font-weight: normal;
-  margin-top: 0;
-}
-
-/* Pie chart */
-#categoryChart {
-  margin-top: 10px;
-  max-width: 100%;
-}
-
-/* Inputs/containers */
-#expenseContainer,
-#allowanceContainer {
-  margin-top: 10px;
-}
+#submittedExpenses th { background: var(--muted-bg); }
+#submittedExpenses tbody tr:nth-child(even) { background: var(--row-alt); }
 
 /* Buttons */
 button {
+  margin-bottom: 10px;
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  margin-bottom: 10px;
 }
-button.small {
-  padding: 6px 12px;
+button.small,
+.show-details {
+  padding: 6px 10px;
   font-size: 14px;
 }
 
-#monthControls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+/* Sidebar text */
+.sidebar h3 { margin: 0 0 5px; font-weight: bold; }
+#allowanceDisplay,
+#allowanceRemaining {
+  margin-bottom: 5px;
+  font-size: 16px;
+  font-weight: normal;
 }
+#categoryTotals { margin-top: 0; font-weight: normal; }
 
-#monthControls select {
-  padding: 4px 6px;
-  font-size: 14px;
-}
+/* Chart */
+#categoryChart { margin-top: 10px; max-width: 100%; }
 
-/* Overlays */
+/* Simple spacers */
+#expenseContainer,
+#allowanceContainer { margin-top: 10px; }
+
+/* Overlays (modals) */
 #expenseModalOverlay,
 #detailsModalOverlay {
   position: fixed;
   inset: 0;
-  display: none; /* toggled via JS */
+  z-index: 9999;
+  display: none;          /* toggled via JS */
   align-items: center;
   justify-content: center;
   background: rgba(0,0,0,0.45);
-  z-index: 9999;
 }
 
-/* Modal box */
+/* Modal */
 .expense-modal {
   width: min(92vw, 520px);
   background: #fff;
@@ -143,25 +123,15 @@ button.small {
   flex-direction: column;
   gap: 10px;
 }
-
-.expense-modal h3 {
-  margin: 0 0 6px 0;
-}
-
-.expense-modal label {
-  font-size: 14px;
-  color: #333;
-}
-
+.expense-modal h3 { margin: 0 0 6px; }
+.expense-modal label { font-size: 14px; color: #333; }
 .expense-modal input[type="number"],
 .expense-modal select,
 .expense-modal textarea {
+  width: 100%;
   padding: 8px;
   font-size: 16px;
-  width: 100%;
-  box-sizing: border-box;
 }
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -169,40 +139,30 @@ button.small {
   margin-top: 6px;
 }
 
-/* Details modal text */
-.details-text {
-  white-space: pre-wrap;
-  line-height: 1.35;
-}
+/* Details text */
+.details-text { white-space: pre-wrap; line-height: 1.35; }
 
-/* Delete rail — sits to the right OUTSIDE the table */
+/* Outside delete rail (right of table) */
 #deleteRail {
   position: absolute;
   top: 0;
-  right: -24px; /* push outside the table edge */
-  width: 16px;  /* narrow gutter for the tiny 'd' */
-  pointer-events: none; /* individual 'd' re-enables pointer events */
+  right: -24px;         /* place outside table edge */
+  width: 16px;          /* narrow gutter for 'd' */
+  pointer-events: none; /* individual dots re-enable events */
 }
 
 /* Small blue 'd' in the rail */
 .delete-mini {
   position: absolute;
   right: 0;
-  color: #007bff;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: 0.15s;
-  pointer-events: auto;
   user-select: none;
+  pointer-events: auto;
+  cursor: pointer;
+  font: bold 14px/1 Arial, sans-serif;
+  color: var(--blue);
+  transition: 0.15s;
 }
 .delete-mini:hover {
-  color: #0056b3;
+  color: var(--blue-hover);
   transform: scale(1.2);
-}
-
-/* Make Actions column's button compact */
-.show-details {
-  padding: 6px 10px;
-  font-size: 14px;
 }
