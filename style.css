@@ -179,21 +179,23 @@ button.small {
   margin-top: 6px;
 }
 
-/* Row action buttons */
-.del-expense {
-  padding: 6px 12px;
-}
-.del-expense:hover {
-  background: #ffecec;
-  border-color: #ffbdbd;
-}
-.show-details {
-  padding: 6px 12px;
-  margin-right: 6px;
-}
-
-/* Details Modal text */
+/* Details modal text */
 .details-text {
   white-space: pre-wrap;
   line-height: 1.35;
+}
+
+/* Small blue 'd' delete affordance */
+.delete-mini {
+  position: absolute;
+  right: 8px;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.15s;
+}
+.delete-mini:hover {
+  color: #0056b3;
+  transform: scale(1.2);
 }

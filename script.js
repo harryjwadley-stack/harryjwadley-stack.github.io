@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ===== Grab elements =====
   const addBtn = document.getElementById("addExpenseBtn");
-  const container = document.getElementById("expenseContainer");
   const submittedTableBody = document.getElementById("submittedExpenses").querySelector("tbody");
   const totalsDiv = document.getElementById("categoryTotals");
   const clearAllBtn = document.getElementById("clearAllBtn");
@@ -35,10 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { position: "bottom" },
-        tooltip: { enabled: true }
-      }
+      plugins: { legend: { position: "bottom" } }
     }
   });
 
@@ -60,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(key, JSON.stringify(val));
   }
 
-  // Light migration cleanup
+  // Light migration cleanup (remove any old per-month allowance fields)
   Object.keys(monthlyState).forEach(k => {
     if (monthlyState[k] && typeof monthlyState[k].allowance !== "undefined") {
       delete monthlyState[k].allowance;
@@ -90,8 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return ensureMonth(currentKey());
   }
   function findExpenseById(id) {
-    const data = getMonthData();
-    return data.expenses.find(e => e.id === id);
+    return getMonthData().expenses.find(e => e.id === id);
   }
 
   // ===== Init month pickers =====
@@ -189,10 +184,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${idx + 1}</td>
         <td>${e.amount.toFixed(2)}</td>
         <td>${e.category}</td>
-        <td>${e.card || "-"}</td>
-        <td>
-          <button class="show-details" data-id="${e.id}">Details</button>
-          <button class="del-expense" data-id="${e.id}">Delete</button>
+        <td style="position:relative;">
+          ${e.card || "-"}
+          <span class="delete-mini" data-id="${e.id}">d</span>
+          <button class="show-details" data-id="${e.id}" style="margin-left:10px;">details</button>
         </td>
       `;
       submittedTableBody.appendChild(row);
@@ -213,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Row actions: Details + Delete (event delegation) =====
   submittedTableBody.addEventListener("click", (evt) => {
     const detailsBtn = evt.target.closest(".show-details");
-    const deleteBtn  = evt.target.closest(".del-expense");
+    const deleteBtn  = evt.target.closest(".delete-mini");
 
     if (detailsBtn) {
       const id = Number(detailsBtn.dataset.id);
@@ -259,30 +254,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Add Expense modal =====
   function ensureExpenseModal() {
     let overlay = document.getElementById("expenseModalOverlay");
-    if (overlay) {
-      // Self-heal: ensure Details textarea exists even if HTML is older
-      const afterEl = document.getElementById("modalExpenseCard");
-      let details = document.getElementById("modalExpenseDetails");
-      if (afterEl && !details) {
-        const detailsLabel = document.createElement("label");
-        detailsLabel.setAttribute("for", "modalExpenseDetails");
-        detailsLabel.style.fontSize = "14px";
-        detailsLabel.style.color = "#333";
-        detailsLabel.textContent = "Details (optional)";
+    if (overlay) return overlay;
 
-        const ta = document.createElement("textarea");
-        ta.id = "modalExpenseDetails";
-        ta.rows = 2;
-        ta.placeholder = "Enter details...";
-        ta.style.cssText = "padding:8px;font-size:16px;width:100%;box-sizing:border-box;";
-
-        afterEl.insertAdjacentElement("afterend", ta);
-        ta.insertAdjacentElement("beforebegin", detailsLabel);
-      }
-      return overlay;
-    }
-
-    // If no modal exists in HTML, inject the full, modern one (with Details)
+    // If no modal exists in HTML, inject a complete one:
     const tpl = document.createElement("div");
     tpl.innerHTML = `
       <div id="expenseModalOverlay" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:9999;">
@@ -383,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (addBtn) addBtn.addEventListener("click", openExpenseModal);
 
-  // ===== Details Modal (view-only for a single expense's details) =====
+  // ===== Details Modal (view-only) =====
   function ensureDetailsModal() {
     let overlay = document.getElementById("detailsModalOverlay");
     if (overlay) return overlay;
@@ -424,11 +398,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   detailsClose().addEventListener("click", closeDetailsModal);
 
-  // ===== Allowance Modal (unchanged) =====
+  // ===== Allowance Modal (unchanged core flow) =====
   function ensureAllowanceModal() {
     let overlay = document.getElementById("allowanceModalOverlay");
     if (overlay) return overlay;
-
     const tpl = document.createElement("div");
     tpl.innerHTML = `
       <div id="allowanceModalOverlay" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:9999;">
