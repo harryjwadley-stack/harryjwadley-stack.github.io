@@ -237,7 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteRail.innerHTML = "";
 
     const containerRect = tableWrap.getBoundingClientRect();
-    const tableRect = submittedTable.getBoundingClientRect();
     const rows = Array.from(submittedTableBody.querySelectorAll("tr"));
 
     rows.forEach((tr) => {
@@ -245,24 +244,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const r = tr.getBoundingClientRect();
       const topInContainer = r.top - containerRect.top + (r.height / 2) - 8;
 
-      // --- Edit button (e) ---
+      // Edit 'e'
       const edit = document.createElement("span");
       edit.className = "edit-mini";
       edit.textContent = "e";
       edit.dataset.id = String(id);
-      edit.style.position = "absolute";
       edit.style.top = `${topInContainer}px`;
-      // position both outside the table (to the right of table edge)
-      edit.style.left = `${(tableRect.right - containerRect.left) + 8}px`;
+      edit.style.left = "20px"; // sits to the left of delete 'd'
 
-      // --- Delete button (d) ---
+      // Delete 'd'
       const dot = document.createElement("span");
       dot.className = "delete-mini";
       dot.textContent = "d";
       dot.dataset.id = String(id);
-      dot.style.position = "absolute";
       dot.style.top = `${topInContainer}px`;
-      dot.style.left = `${(tableRect.right - containerRect.left) + 28}px`; // 20px gap from edit
 
       deleteRail.appendChild(edit);
       deleteRail.appendChild(dot);
