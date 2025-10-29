@@ -226,7 +226,7 @@ button.small {
 .delete-mini {
   position: absolute;
   right: 0;
-  color: #007bff;
+  color: #ff0000;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
@@ -235,7 +235,7 @@ button.small {
   user-select: none;
 }
 .delete-mini:hover {
-  color: #0056b3;
+  color: #b30000;
   transform: scale(1.2);
 }
 
@@ -254,4 +254,21 @@ button.small {
     position: static;
     margin-top: 16px;
   }
+}
+
+/* Small blue 'e' edit button next to 'd' */
+.edit-mini {
+  position: absolute;
+  right: 20px; /* space before delete */
+  color: #007bff; /* warm orange for edit */
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.15s;
+  pointer-events: auto;
+  user-select: none;
+}
+.edit-mini:hover {
+  color: #0056b3;
+  transform: scale(1.2);
 }
