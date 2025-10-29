@@ -4,7 +4,20 @@ body {
   margin: 0;
 }
 
-/* Top row layout: left panel, table, sidebar */
+/* NEW: Two-column layout where sidebar aligns with month controls */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* main | sidebar */
+  gap: 40px;
+  align-items: start; /* top-align both columns */
+}
+
+/* Left column wrapper */
+.main-column {
+  display: block;
+}
+
+/* Existing row: left panel + table */
 .top-row {
   display: flex;
   align-items: flex-start;
@@ -56,15 +69,22 @@ body {
   background-color: #f9f9f9;
 }
 
-/* Right sidebar: Allowance + category totals */
+/* Sidebar (now in grid's right column) */
 .sidebar {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 200px;
-  justify-content: flex-start;
+  min-width: 220px;
   gap: 15px;
   padding: 10px;
+}
+
+/* Optional: keep the sidebar visible while scrolling main column */
+@media (min-width: 900px) {
+  .sidebar {
+    position: sticky;
+    top: 20px;
+  }
 }
 
 .sidebar h3 {
@@ -112,7 +132,7 @@ button.small {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px; /* a touch more breathing room over the row */
 }
 
 #monthControls select {
@@ -120,7 +140,7 @@ button.small {
   font-size: 14px;
 }
 
-/* Overlays (add allowance overlay here) */
+/* Overlays */
 #expenseModalOverlay,
 #detailsModalOverlay,
 #allowanceModalOverlay {
@@ -206,4 +226,15 @@ button.small {
 .show-details {
   padding: 6px 10px;
   font-size: 14px;
+}
+
+/* Mobile: collapse to single column */
+@media (max-width: 799px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+    margin-top: 16px;
+  }
 }

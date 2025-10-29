@@ -10,49 +10,56 @@
   <h1>SavR</h1>
   <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
 
-  <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-    <button id="prevMonthBtn" type="button">◀</button>
-    <select id="monthSelect"></select>
-    <select id="yearSelect"></select>
-    <button id="nextMonthBtn" type="button">▶</button>
-  </div>
-
-  <div class="top-row">
-    <!-- Left panel: Add Expense + Set Allowance -->
-    <div class="left-panel">
-      <button id="setAllowanceBtn">Set Allowance</button>
-      <div id="allowanceContainer"></div>
-
-      <button id="addExpenseBtn">Add Expense</button>
-      <div id="expenseContainer"></div>
-    </div>
-
-    <!-- Center: Submitted Expenses Table -->
-    <div class="table-container" id="tableContainer">
-      <h3>Submitted Expenses</h3>
-      <div class="table-wrap">
-        <table id="submittedExpenses">
-          <thead>
-            <tr>
-              <th>Purchase #</th>
-              <th>Amount</th>
-              <th>Category</th>
-              <th>Card</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- JS appends rows here -->
-          </tbody>
-        </table>
-        <!-- the delete rail lives OUTSIDE the table, aligned to rows -->
-        <div id="deleteRail" aria-hidden="true"></div>
+  <!-- New two-column layout wrapper -->
+  <div class="content-grid">
+    <!-- Left column: month controls + main content -->
+    <div class="main-column">
+      <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <button id="prevMonthBtn" type="button">◀</button>
+        <select id="monthSelect"></select>
+        <select id="yearSelect"></select>
+        <button id="nextMonthBtn" type="button">▶</button>
       </div>
-      <button id="clearAllBtn" style="margin-top:10px;">Clear All</button>
+
+      <!-- Existing two-panel row (left panel + table) -->
+      <div class="top-row">
+        <!-- Left panel: Add Expense + Set Allowance -->
+        <div class="left-panel">
+          <button id="setAllowanceBtn">Set Allowance</button>
+          <div id="allowanceContainer"></div>
+
+          <button id="addExpenseBtn">Add Expense</button>
+          <div id="expenseContainer"></div>
+        </div>
+
+        <!-- Center: Submitted Expenses Table -->
+        <div class="table-container" id="tableContainer">
+          <h3>Submitted Expenses</h3>
+          <div class="table-wrap">
+            <table id="submittedExpenses">
+              <thead>
+                <tr>
+                  <th>Purchase #</th>
+                  <th>Amount</th>
+                  <th>Category</th>
+                  <th>Card</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- JS appends rows here -->
+              </tbody>
+            </table>
+            <!-- the delete rail lives OUTSIDE the table, aligned to rows -->
+            <div id="deleteRail" aria-hidden="true"></div>
+          </div>
+          <button id="clearAllBtn" style="margin-top:10px;">Clear All</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Right sidebar: Allowance and totals -->
-    <div class="sidebar">
+    <!-- Right column: Sidebar (now aligns with month/year controls) -->
+    <aside class="sidebar">
       <h3>Allowance Info</h3>
       <div id="allowanceDisplay">Allowance: 0.00</div>
       <div id="allowanceRemaining">Allowance Remaining: 0.00</div>
@@ -67,7 +74,7 @@
 
       <!-- Pie chart for category breakdown -->
       <canvas id="categoryChart" width="200" height="200"></canvas>
-    </div>
+    </aside>
   </div>
 
   <!-- Add Expense Modal -->
