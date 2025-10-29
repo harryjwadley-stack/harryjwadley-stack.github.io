@@ -2,7 +2,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Grab elements =====
   const addBtn = document.getElementById("addExpenseBtn");
   const submittedTable = document.getElementById("submittedExpenses");
-  const submittedTableBody = submittedTable.querySelector("tbody");
+
+  // Ensure a <tbody> exists (prevents null errors on render)
+  let submittedTableBody = submittedTable.querySelector("tbody");
+  if (!submittedTableBody) {
+    submittedTableBody = document.createElement("tbody");
+    submittedTable.appendChild(submittedTableBody);
+  }
+
   const totalsDiv = document.getElementById("categoryTotals");
   const clearAllBtn = document.getElementById("clearAllBtn");
 
@@ -185,22 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
-  // --- Overlay for outside-row delete dots ---
-  // We'll attach an absolutely-positioned layer inside the same parent as the table,
-  // and place one small 'd' per row aligned with that row.
-  const tableContainer = submittedTable.closest(".table-container") || document.body;
-  let deleteOverlay = document.getElementById("rowDeleteOverlay");
-  if (!deleteOverlay) {
-    deleteOverlay = document.createElement("div");
-    deleteOverlay.id = "rowDeleteOverlay";
-    // No CSS file changes required; style inline for reliability
-    deleteOverlay.style.position = "absolute";
-    deleteOverlay.style.top = "0";
-    deleteOverlay.style.left = "0";
-    deleteOverlay.style.pointerEvents = "none"; // children will enable their own
-    tableContainer.style.position = tableContainer.style.position || "relative";
-    tableContainer.appendChild(deleteOverlay);
-  }
+  // --- Right-side delete rail (match HTML/CSS: #deleteRail + .delete-mini)
+  const tableWrap = document.querySelector(".table-wrap") || document.body;
+  const deleteRail = document.getElementById("deleteRail");
 
   function renderForCurrentMonth() {
     const data = getMonthData();
@@ -235,62 +229,36 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAllowanceRemaining();
     updatePieChart();
 
-    // Rebuild and position outside delete dots
+    // Rebuild and position right-hand delete dots
     queueMicrotask(positionDeleteDots);
   }
 
   function positionDeleteDots() {
-    // Clear previous dots
-    deleteOverlay.innerHTML = "";
+    if (!deleteRail) return;
+    deleteRail.innerHTML = "";
 
-    const tableRect = submittedTable.getBoundingClientRect();
-    const containerRect = tableContainer.getBoundingClientRect();
-
-    // Keep overlay the same size as container
-    deleteOverlay.style.width = `${containerRect.width}px`;
-    deleteOverlay.style.height = `${containerRect.height}px`;
-
-    // Create a dot for each row
+    const containerRect = tableWrap.getBoundingClientRect();
     const rows = Array.from(submittedTableBody.querySelectorAll("tr"));
+
     rows.forEach((tr) => {
       const id = Number(tr.getAttribute("data-row-id"));
       const r = tr.getBoundingClientRect();
       const topInContainer = r.top - containerRect.top;
 
       const dot = document.createElement("span");
-      dot.className = "delete-mini-outer";
+      dot.className = "delete-mini";
       dot.textContent = "d";
       dot.dataset.id = String(id);
-
-      // Style inline to avoid relying on external CSS
-      dot.style.position = "absolute";
-      dot.style.left = `${(tableRect.right - containerRect.left) + 8}px`; // just outside table right edge
       dot.style.top = `${topInContainer + (r.height / 2) - 8}px`;
-      dot.style.color = "#007bff";
-      dot.style.cursor = "pointer";
-      dot.style.fontSize = "14px";
-      dot.style.fontWeight = "bold";
-      dot.style.userSelect = "none";
-      dot.style.lineHeight = "1";
-      dot.style.pointerEvents = "auto";
-      dot.style.transition = "transform 0.15s, color 0.15s";
-      dot.addEventListener("mouseenter", () => {
-        dot.style.transform = "scale(1.2)";
-        dot.style.color = "#0056b3";
-      });
-      dot.addEventListener("mouseleave", () => {
-        dot.style.transform = "scale(1)";
-        dot.style.color = "#007bff";
-      });
 
-      deleteOverlay.appendChild(dot);
+      deleteRail.appendChild(dot);
     });
   }
 
-  // Reposition dots on resize (layout changes)
+  // Reposition dots on resize
   window.addEventListener("resize", positionDeleteDots);
 
-  // ===== Row actions: Details (in-table) & Delete (outside overlay) =====
+  // ===== Row actions: Details (in-table) & Delete (rail) =====
   submittedTableBody.addEventListener("click", (evt) => {
     const detailsBtn = evt.target.closest(".show-details");
     if (!detailsBtn) return;
@@ -301,8 +269,8 @@ document.addEventListener("DOMContentLoaded", () => {
     openDetailsModal(text);
   });
 
-  deleteOverlay.addEventListener("click", (evt) => {
-    const el = evt.target.closest(".delete-mini-outer");
+  deleteRail?.addEventListener("click", (evt) => {
+    const el = evt.target.closest(".delete-mini");
     if (!el) return;
     const id = Number(el.dataset.id);
 
@@ -322,65 +290,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Clear All =====
-  if (clearAllBtn) {
-    clearAllBtn.addEventListener("click", () => {
-      if (!confirm("Are you sure you want to delete all expenses for this month?")) return;
+  clearAllBtn?.addEventListener("click", () => {
+    if (!confirm("Are you sure you want to delete all expenses for this month?")) return;
 
-      const data = getMonthData();
-      data.expenses = [];
-      data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
-      data.purchaseCount = 0;
+    const data = getMonthData();
+    data.expenses = [];
+    data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
+    data.purchaseCount = 0;
 
-      saveState();
-      renderForCurrentMonth();
-    });
-  }
+    saveState();
+    renderForCurrentMonth();
+  });
 
-  // ===== Add Expense modal =====
-  function ensureExpenseModal() {
-    let overlay = document.getElementById("expenseModalOverlay");
-    if (overlay) return overlay;
-
-    // If no modal exists in HTML, inject a complete one:
-    const tpl = document.createElement("div");
-    tpl.innerHTML = `
-      <div id="expenseModalOverlay" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:9999;">
-        <div class="expense-modal" style="width:min(92vw,420px); background:#fff; border-radius:12px; padding:18px 16px; box-shadow:0 10px 30px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:10px;">
-          <h3 style="margin:0 0 6px 0;">Add Expense</h3>
-
-          <label for="modalExpenseAmount" style="font-size:14px; color:#333;">Amount</label>
-          <input id="modalExpenseAmount" type="number" step="0.01" min="0.01" placeholder="Enter amount" style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" />
-
-          <label for="modalExpenseCategory" style="font-size:14px; color:#333;">Category</label>
-          <select id="modalExpenseCategory" style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;">
-            <option value="Select">Select</option>
-            <option value="Groceries">Groceries</option>
-            <option value="Social">Social</option>
-            <option value="Treat">Treat</option>
-            <option value="Unexpected">Unexpected</option>
-          </select>
-
-          <label for="modalExpenseCard" style="font-size:14px; color:#333;">Select card</label>
-          <select id="modalExpenseCard" style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;">
-            <option value="Credit">Credit</option>
-            <option value="Debit">Debit</option>
-          </select>
-
-          <label for="modalExpenseDetails" style="font-size:14px; color:#333;">Details (optional)</label>
-          <textarea id="modalExpenseDetails" rows="2" placeholder="Enter details..." style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;"></textarea>
-
-          <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
-            <button id="modalCancelBtn" type="button">Cancel</button>
-            <button id="modalSubmitBtn" type="button">Submit</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(tpl.firstElementChild);
-    return document.getElementById("expenseModalOverlay");
-  }
-
-  const modalOverlay = ensureExpenseModal();
+  // ===== Add Expense modal (use existing HTML modal) =====
+  const modalOverlay = document.getElementById("expenseModalOverlay");
   const modalAmount  = () => document.getElementById("modalExpenseAmount");
   const modalCat     = () => document.getElementById("modalExpenseCategory");
   const modalCard    = () => document.getElementById("modalExpenseCard");
@@ -389,12 +312,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCancel  = () => document.getElementById("modalCancelBtn");
 
   function openExpenseModal() {
-    modalAmount().value = "";
-    modalCat().value = "Select";
-    if (modalCard()) modalCard().value = "Credit";
+    // Default to valid values so Submit "just works"
+    if (modalAmount())  modalAmount().value = "";
+    if (modalCat())     modalCat().value = "Groceries";  // <- no "Select" default
+    if (modalCard())    modalCard().value = "Credit";
     if (modalDetails()) modalDetails().value = "";
     modalOverlay.style.display = "flex";
-    setTimeout(() => modalAmount().focus(), 0);
+    setTimeout(() => modalAmount()?.focus(), 0);
   }
   function closeExpenseModal() {
     modalOverlay.style.display = "none";
@@ -406,64 +330,49 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (modalOverlay.style.display === "flex" && e.key === "Escape") closeExpenseModal();
   });
-  modalCancel().addEventListener("click", closeExpenseModal);
+  modalCancel()?.addEventListener("click", closeExpenseModal);
 
-  modalSubmit().addEventListener("click", () => {
-    const amount = parseFloat(modalAmount().value);
-    const category = modalCat().value;
-    const card = (modalCard() ? modalCard().value : "").trim();
-    const details = (modalDetails() ? modalDetails().value : "").trim();
+  modalSubmit()?.addEventListener("click", () => {
+    try {
+      const amount = parseFloat(modalAmount().value);
+      const category = modalCat().value;
+      const card = (modalCard() ? modalCard().value : "").trim();
+      const details = (modalDetails() ? modalDetails().value : "").trim();
 
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid amount.");
-      modalAmount().focus();
-      return;
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount.");
+        modalAmount().focus();
+        return;
+      }
+      if (!["Groceries","Social","Treat","Unexpected"].includes(category)) {
+        alert("Please select a valid category.");
+        modalCat().focus();
+        return;
+      }
+      if (!["Credit","Debit"].includes(card)) {
+        alert("Please choose Credit or Debit.");
+        modalCard().focus();
+        return;
+      }
+
+      const data = getMonthData();
+      data.purchaseCount += 1;
+      data.expenses.push({ id: data.purchaseCount, amount, category, card, details });
+      data.categoryTotals[category] += amount;
+
+      saveState();
+      renderForCurrentMonth();
+      closeExpenseModal();
+    } catch (err) {
+      console.error("Submit failed:", err);
+      alert("Something went wrong adding the expense. Check the console for details.");
     }
-    if (!["Groceries","Social","Treat","Unexpected"].includes(category)) {
-      alert("Please select a valid category.");
-      modalCat().focus();
-      return;
-    }
-    if (!["Credit","Debit"].includes(card)) {
-      alert("Please choose Credit or Debit.");
-      modalCard().focus();
-      return;
-    }
-
-    const data = getMonthData();
-    data.purchaseCount += 1;
-    data.expenses.push({ id: data.purchaseCount, amount, category, card, details });
-    data.categoryTotals[category] += amount;
-
-    saveState();
-    renderForCurrentMonth();
-    closeExpenseModal();
   });
 
-  if (addBtn) addBtn.addEventListener("click", openExpenseModal);
+  addBtn?.addEventListener("click", openExpenseModal);
 
   // ===== Details Modal (view-only) =====
-  function ensureDetailsModal() {
-    let overlay = document.getElementById("detailsModalOverlay");
-    if (overlay) return overlay;
-
-    const tpl = document.createElement("div");
-    tpl.innerHTML = `
-      <div id="detailsModalOverlay" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:9999;">
-        <div class="expense-modal" style="width:min(92vw,520px); background:#fff; border-radius:12px; padding:18px 16px; box-shadow:0 10px 30px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:10px;">
-          <h3 style="margin:0 0 6px 0;">Expense Details</h3>
-          <div id="detailsModalBody" style="white-space:pre-wrap; line-height:1.35;"></div>
-          <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
-            <button id="detailsModalCloseBtn" type="button">Close</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(tpl.firstElementChild);
-    return document.getElementById("detailsModalOverlay");
-  }
-
-  const detailsOverlay = ensureDetailsModal();
+  const detailsOverlay = document.getElementById("detailsModalOverlay");
   const detailsBody    = () => document.getElementById("detailsModalBody");
   const detailsClose   = () => document.getElementById("detailsModalCloseBtn");
 
@@ -481,138 +390,18 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (detailsOverlay.style.display === "flex" && e.key === "Escape") closeDetailsModal();
   });
-  detailsClose().addEventListener("click", closeDetailsModal);
+  detailsClose()?.addEventListener("click", closeDetailsModal);
 
-  // ===== Allowance Modal (unchanged core flow) =====
-  function ensureAllowanceModal() {
-    let overlay = document.getElementById("allowanceModalOverlay");
-    if (overlay) return overlay;
-    const tpl = document.createElement("div");
-    tpl.innerHTML = `
-      <div id="allowanceModalOverlay" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:9999;">
-        <div class="expense-modal" style="width:min(92vw,460px); background:#fff; border-radius:12px; padding:18px 16px; box-shadow:0 10px 30px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:10px;">
-          <h3 style="margin:0 0 6px 0;">Set Global Allowance</h3>
-          <div id="allowanceModalStage"></div>
-          <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
-            <button id="allowanceModalCancelBtn" type="button">Cancel</button>
-            <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
-            <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(tpl.firstElementChild);
-    return document.getElementById("allowanceModalOverlay");
-  }
-
-  const allowanceModalOverlay = ensureAllowanceModal();
-  const allowanceStage     = () => document.getElementById("allowanceModalStage");
-  const allowanceCancelBtn = () => document.getElementById("allowanceModalCancelBtn");
-  const allowanceBackBtn   = () => document.getElementById("allowanceModalBackBtn");
-  const allowanceSubmitBtn = () => document.getElementById("allowanceModalSubmitBtn");
-
-  let allowanceFlow = { mode: null };
-
-  function openAllowanceModal() {
-    showAllowanceChoice();
-    allowanceModalOverlay.style.display = "flex";
-  }
-  function closeAllowanceModal() {
-    allowanceModalOverlay.style.display = "none";
-    allowanceFlow = { mode: null };
-  }
-
-  allowanceModalOverlay.addEventListener("click", (e) => {
-    if (e.target === allowanceModalOverlay) closeAllowanceModal();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (allowanceModalOverlay.style.display === "flex" && e.key === "Escape") closeAllowanceModal();
-  });
-  allowanceCancelBtn().addEventListener("click", closeAllowanceModal);
-
-  function showAllowanceChoice() {
-    allowanceFlow.mode = null;
-    allowanceBackBtn().style.display = "none";
-    allowanceSubmitBtn().style.display = "none";
-    allowanceStage().innerHTML = `
-      <p>How would you like to set your global allowance?</p>
-      <div style="display:flex; gap:10px;">
-        <button id="allowanceManualBtn" type="button">Manual</button>
-        <button id="allowanceCalcBtn" type="button">Calculate</button>
-      </div>
-    `;
-    document.getElementById("allowanceManualBtn").addEventListener("click", showAllowanceManual);
-    document.getElementById("allowanceCalcBtn").addEventListener("click", showAllowanceCalc);
-  }
-
-  function showAllowanceManual() {
-    allowanceFlow.mode = "manual";
-    allowanceBackBtn().style.display = "inline-block";
-    allowanceSubmitBtn().style.display = "inline-block";
-    allowanceSubmitBtn().textContent = "Set Global Allowance";
-    allowanceStage().innerHTML = `
-      <label for="allowanceManualInput" style="font-size:14px; color:#333;">Allowance Amount</label>
-      <input id="allowanceManualInput" type="number" step="0.01" min="0" placeholder="Enter amount"
-             style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" />
-    `;
-    const inp = document.getElementById("allowanceManualInput");
-    inp.value = Number(settings.allowance || 0);
-    inp.focus({ preventScroll:true });
-    allowanceBackBtn().onclick = showAllowanceChoice;
-    allowanceSubmitBtn().onclick = () => {
-      const val = parseFloat(inp.value);
-      if (isNaN(val) || val < 0) {
-        alert("Please enter a valid allowance (0 or more).");
-        inp.focus();
-        return;
-      }
+  // ===== Set Allowance button → simple prompt flow (existing UI preserved) =====
+  setAllowanceBtn?.addEventListener("click", () => {
+    if (allowanceContainer) allowanceContainer.innerHTML = "";
+    const val = parseFloat(prompt("Set your global allowance:", settings.allowance || 0));
+    if (!isNaN(val) && val >= 0) {
       settings.allowance = val;
       saveSettings();
       renderForCurrentMonth();
-      closeAllowanceModal();
-    };
-  }
-
-  function showAllowanceCalc() {
-    allowanceFlow.mode = "calc";
-    allowanceBackBtn().style.display = "inline-block";
-    allowanceSubmitBtn().style.display = "inline-block";
-    allowanceSubmitBtn().textContent = "Set Global Allowance";
-    allowanceStage().innerHTML = `
-      <p>Allowance = Income − (Rent + Car + Bills + Savings + Other)</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        ${["Income","Rent","Car Payments","Bills","Ideal Savings","Other"].map(label => `
-          <label style="display:flex; flex-direction:column; gap:6px;">
-            <span style="font-size:14px; color:#333;">${label}</span>
-            <input type="number" step="0.01" min="0" placeholder="${label}" data-allowance="${label}"
-                   style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" value="0" />
-          </label>
-        `).join("")}
-      </div>
-    `;
-    allowanceBackBtn().onclick = showAllowanceChoice;
-    allowanceSubmitBtn().onclick = () => {
-      const vals = {};
-      document.querySelectorAll('[data-allowance]').forEach(el => {
-        vals[el.dataset.allowance] = parseFloat(el.value) || 0;
-      });
-      const income  = vals["Income"];
-      const costs   = vals["Rent"] + vals["Car Payments"] + vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
-      const result  = income - costs;
-      settings.allowance = result;
-      saveSettings();
-      renderForCurrentMonth();
-      closeAllowanceModal();
-    };
-  }
-
-  // ===== Set Allowance button → open modal =====
-  if (setAllowanceBtn) {
-    setAllowanceBtn.addEventListener("click", () => {
-      if (allowanceContainer) allowanceContainer.innerHTML = "";
-      openAllowanceModal();
-    });
-  }
+    }
+  });
 
   // ===== Initial render =====
   renderForCurrentMonth();

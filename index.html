@@ -80,8 +80,8 @@
 
       <label for="modalExpenseCategory">Category</label>
       <select id="modalExpenseCategory">
-        <option value="Select">Select</option>
-        <option value="Groceries">Groceries</option>
+        <!-- Default to a VALID category so Submit works even if user doesn't touch it -->
+        <option value="Groceries" selected>Groceries</option>
         <option value="Social">Social</option>
         <option value="Treat">Treat</option>
         <option value="Unexpected">Unexpected</option>
@@ -89,7 +89,7 @@
 
       <label for="modalExpenseCard">Select card</label>
       <select id="modalExpenseCard">
-        <option value="Credit">Credit</option>
+        <option value="Credit" selected>Credit</option>
         <option value="Debit">Debit</option>
       </select>
 
