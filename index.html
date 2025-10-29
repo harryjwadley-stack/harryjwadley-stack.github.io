@@ -80,7 +80,6 @@
 
       <label for="modalExpenseCategory">Category</label>
       <select id="modalExpenseCategory">
-        <!-- Default to a VALID category so Submit works even if user doesn't touch it -->
         <option value="Groceries" selected>Groceries</option>
         <option value="Social">Social</option>
         <option value="Treat">Treat</option>
@@ -110,6 +109,19 @@
       <div id="detailsModalBody" class="details-text"></div>
       <div class="modal-actions">
         <button id="detailsModalCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Allowance Modal (Manual / Calculate) -->
+  <div id="allowanceModalOverlay" style="display:none;">
+    <div class="expense-modal">
+      <h3>Set Global Allowance</h3>
+      <div id="allowanceModalStage"></div>
+      <div class="modal-actions">
+        <button id="allowanceModalCancelBtn" type="button">Cancel</button>
+        <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
+        <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
       </div>
     </div>
   </div>

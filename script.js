@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearAllBtn = document.getElementById("clearAllBtn");
 
   const setAllowanceBtn = document.getElementById("setAllowanceBtn");
-  const allowanceContainer = document.getElementById("allowanceContainer");
   const allowanceDisplay = document.getElementById("allowanceDisplay");
   const allowanceRemainingDiv = document.getElementById("allowanceRemaining");
 
@@ -64,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(key, JSON.stringify(val));
   }
 
-  // Light migration cleanup (remove any old per-month allowance fields)
+  // Remove any old per-month allowance fields
   Object.keys(monthlyState).forEach(k => {
     if (monthlyState[k] && typeof monthlyState[k].allowance !== "undefined") {
       delete monthlyState[k].allowance;
@@ -302,8 +301,8 @@ document.addEventListener("DOMContentLoaded", () => {
     renderForCurrentMonth();
   });
 
-  // ===== Add Expense modal (use existing HTML modal) =====
-  const modalOverlay = document.getElementById("expenseModalOverlay");
+  // ===== Add Expense modal (existing HTML) =====
+  const expenseOverlay = document.getElementById("expenseModalOverlay");
   const modalAmount  = () => document.getElementById("modalExpenseAmount");
   const modalCat     = () => document.getElementById("modalExpenseCategory");
   const modalCard    = () => document.getElementById("modalExpenseCard");
@@ -312,23 +311,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCancel  = () => document.getElementById("modalCancelBtn");
 
   function openExpenseModal() {
-    // Default to valid values so Submit "just works"
     if (modalAmount())  modalAmount().value = "";
-    if (modalCat())     modalCat().value = "Groceries";  // <- no "Select" default
+    if (modalCat())     modalCat().value = "Groceries";
     if (modalCard())    modalCard().value = "Credit";
     if (modalDetails()) modalDetails().value = "";
-    modalOverlay.style.display = "flex";
+    expenseOverlay.style.display = "flex";
     setTimeout(() => modalAmount()?.focus(), 0);
   }
-  function closeExpenseModal() {
-    modalOverlay.style.display = "none";
-  }
+  function closeExpenseModal() { expenseOverlay.style.display = "none"; }
 
-  modalOverlay.addEventListener("click", (e) => {
-    if (e.target === modalOverlay) closeExpenseModal();
-  });
+  expenseOverlay.addEventListener("click", (e) => { if (e.target === expenseOverlay) closeExpenseModal(); });
   document.addEventListener("keydown", (e) => {
-    if (modalOverlay.style.display === "flex" && e.key === "Escape") closeExpenseModal();
+    if (expenseOverlay.style.display === "flex" && e.key === "Escape") closeExpenseModal();
   });
   modalCancel()?.addEventListener("click", closeExpenseModal);
 
@@ -339,21 +333,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const card = (modalCard() ? modalCard().value : "").trim();
       const details = (modalDetails() ? modalDetails().value : "").trim();
 
-      if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount.");
-        modalAmount().focus();
-        return;
-      }
-      if (!["Groceries","Social","Treat","Unexpected"].includes(category)) {
-        alert("Please select a valid category.");
-        modalCat().focus();
-        return;
-      }
-      if (!["Credit","Debit"].includes(card)) {
-        alert("Please choose Credit or Debit.");
-        modalCard().focus();
-        return;
-      }
+      if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); modalAmount().focus(); return; }
+      if (!["Groceries","Social","Treat","Unexpected"].includes(category)) { alert("Please select a valid category."); modalCat().focus(); return; }
+      if (!["Credit","Debit"].includes(card)) { alert("Please choose Credit or Debit."); modalCard().focus(); return; }
 
       const data = getMonthData();
       data.purchaseCount += 1;
@@ -380,28 +362,113 @@ document.addEventListener("DOMContentLoaded", () => {
     detailsBody().textContent = text || "No details.";
     detailsOverlay.style.display = "flex";
   }
-  function closeDetailsModal() {
-    detailsOverlay.style.display = "none";
-  }
+  function closeDetailsModal() { detailsOverlay.style.display = "none"; }
 
-  detailsOverlay.addEventListener("click", (e) => {
-    if (e.target === detailsOverlay) closeDetailsModal();
-  });
+  detailsOverlay.addEventListener("click", (e) => { if (e.target === detailsOverlay) closeDetailsModal(); });
   document.addEventListener("keydown", (e) => {
     if (detailsOverlay.style.display === "flex" && e.key === "Escape") closeDetailsModal();
   });
   detailsClose()?.addEventListener("click", closeDetailsModal);
 
-  // ===== Set Allowance button → simple prompt flow (existing UI preserved) =====
-  setAllowanceBtn?.addEventListener("click", () => {
-    if (allowanceContainer) allowanceContainer.innerHTML = "";
-    const val = parseFloat(prompt("Set your global allowance:", settings.allowance || 0));
-    if (!isNaN(val) && val >= 0) {
+  // ===== Allowance Modal (Manual / Calculate flow) =====
+  const allowanceOverlay = document.getElementById("allowanceModalOverlay");
+  const allowanceStage   = () => document.getElementById("allowanceModalStage");
+  const allowanceCancel  = () => document.getElementById("allowanceModalCancelBtn");
+  const allowanceBack    = () => document.getElementById("allowanceModalBackBtn");
+  const allowanceSubmit  = () => document.getElementById("allowanceModalSubmitBtn");
+
+  let allowanceFlow = { mode: null };
+
+  function openAllowanceModal() {
+    showAllowanceChoice();
+    allowanceOverlay.style.display = "flex";
+  }
+  function closeAllowanceModal() {
+    allowanceOverlay.style.display = "none";
+    allowanceFlow = { mode: null };
+  }
+
+  function showAllowanceChoice() {
+    allowanceFlow.mode = null;
+    allowanceBack().style.display = "none";
+    allowanceSubmit().style.display = "none";
+    allowanceStage().innerHTML = `
+      <p>How would you like to set your global allowance?</p>
+      <div style="display:flex; gap:10px;">
+        <button id="allowanceManualBtn" type="button">Manual</button>
+        <button id="allowanceCalcBtn" type="button">Calculate</button>
+      </div>
+    `;
+    document.getElementById("allowanceManualBtn").addEventListener("click", showAllowanceManual);
+    document.getElementById("allowanceCalcBtn").addEventListener("click", showAllowanceCalc);
+  }
+
+  function showAllowanceManual() {
+    allowanceFlow.mode = "manual";
+    allowanceBack().style.display = "inline-block";
+    allowanceSubmit().style.display = "inline-block";
+    allowanceSubmit().textContent = "Set Global Allowance";
+    allowanceStage().innerHTML = `
+      <label for="allowanceManualInput" style="font-size:14px; color:#333;">Allowance Amount</label>
+      <input id="allowanceManualInput" type="number" step="0.01" min="0" placeholder="Enter amount"
+             style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" />
+    `;
+    const inp = document.getElementById("allowanceManualInput");
+    inp.value = Number(settings.allowance || 0);
+    inp.focus({ preventScroll:true });
+    allowanceBack().onclick = showAllowanceChoice;
+    allowanceSubmit().onclick = () => {
+      const val = parseFloat(inp.value);
+      if (isNaN(val) || val < 0) { alert("Please enter a valid allowance (0 or more)."); inp.focus(); return; }
       settings.allowance = val;
       saveSettings();
       renderForCurrentMonth();
-    }
+      closeAllowanceModal();
+    };
+  }
+
+  function showAllowanceCalc() {
+    allowanceFlow.mode = "calc";
+    allowanceBack().style.display = "inline-block";
+    allowanceSubmit().style.display = "inline-block";
+    allowanceSubmit().textContent = "Set Global Allowance";
+    allowanceStage().innerHTML = `
+      <p>Allowance = Income − (Rent + Car + Bills + Savings + Other)</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        ${["Income","Rent","Car Payments","Bills","Ideal Savings","Other"].map(label => `
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:14px; color:#333;">${label}</span>
+            <input type="number" step="0.01" min="0" placeholder="${label}" data-allowance="${label}"
+                   style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" value="0" />
+          </label>
+        `).join("")}
+      </div>
+    `;
+    allowanceBack().onclick = showAllowanceChoice;
+    allowanceSubmit().onclick = () => {
+      const vals = {};
+      document.querySelectorAll('[data-allowance]').forEach(el => {
+        vals[el.dataset.allowance] = parseFloat(el.value) || 0;
+      });
+      const income  = vals["Income"];
+      const costs   = vals["Rent"] + vals["Car Payments"] + vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
+      const result  = income - costs;
+      settings.allowance = result;
+      saveSettings();
+      renderForCurrentMonth();
+      closeAllowanceModal();
+    };
+  }
+
+  // Allowance modal wiring
+  allowanceOverlay.addEventListener("click", (e) => { if (e.target === allowanceOverlay) closeAllowanceModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (allowanceOverlay.style.display === "flex" && e.key === "Escape") closeAllowanceModal();
   });
+  allowanceCancel()?.addEventListener("click", closeAllowanceModal);
+
+  // Set Allowance button → open modal
+  setAllowanceBtn?.addEventListener("click", openAllowanceModal);
 
   // ===== Initial render =====
   renderForCurrentMonth();
