@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ===== Grab elements =====
   const addBtn = document.getElementById("addExpenseBtn");
+  const addGroceriesBtn = document.getElementById("addGroceriesBtn");
   const submittedTable = document.getElementById("submittedExpenses");
 
   // Ensure a <tbody> exists (prevents null errors on render)
@@ -191,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
-  // --- Right-side rail (now supports edit + delete)
+  // --- Right-side rail (supports edit + delete)
   const tableWrap = document.querySelector(".table-wrap") || document.body;
   const deleteRail = document.getElementById("deleteRail");
 
@@ -334,8 +335,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Track whether we're editing; if so, which id
   let editingId = null;
 
+  // NOTE: Treat as "edit" ONLY if an expense object with a numeric id is passed.
+  // Otherwise, use the object (if provided) as presets for an "add" flow.
   function openExpenseModal(expense = null) {
-    if (expense) {
+    const isEdit = expense && typeof expense.id === "number";
+
+    if (isEdit) {
       editingId = expense.id;
       modalTitle().textContent = "Edit Expense";
       modalAmount().value = expense.amount;
@@ -345,11 +350,26 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       editingId = null;
       modalTitle().textContent = "Add Expense";
-      modalAmount().value = "";
-      modalCat().value = "Groceries";
-      modalCard().value = "Credit";
-      modalDetails().value = "";
+      // base defaults
+      let amount = "";
+      let category = "Groceries";
+      let card = "Credit";
+      let details = "";
+
+      // if presets provided (e.g., Add Groceries button), apply them
+      if (expense && typeof expense === "object") {
+        if ("amount" in expense) amount = expense.amount;
+        if ("category" in expense) category = expense.category;
+        if ("card" in expense) card = expense.card;
+        if ("details" in expense) details = expense.details;
+      }
+
+      modalAmount().value = amount;
+      modalCat().value = category;
+      modalCard().value = card;
+      modalDetails().value = details;
     }
+
     expenseOverlay.style.display = "flex";
     setTimeout(() => modalAmount()?.focus(), 0);
   }
@@ -404,7 +424,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Buttons to open modal
   addBtn?.addEventListener("click", () => openExpenseModal());
+  addGroceriesBtn?.addEventListener("click", () =>
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "", details: "" })
+  );
 
   // ===== Details Modal (view-only) =====
   const detailsOverlay = document.getElementById("detailsModalOverlay");

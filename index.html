@@ -10,7 +10,7 @@
   <h1>SavR</h1>
   <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
 
-  <!-- New two-column layout wrapper -->
+  <!-- Two-column layout wrapper -->
   <div class="content-grid">
     <!-- Left column: month controls + main content -->
     <div class="main-column">
@@ -21,14 +21,15 @@
         <button id="nextMonthBtn" type="button">▶</button>
       </div>
 
-      <!-- Existing two-panel row (left panel + table) -->
+      <!-- Left panel + table -->
       <div class="top-row">
-        <!-- Left panel: Add Expense + Set Allowance -->
+        <!-- Left panel: controls -->
         <div class="left-panel">
           <button id="setAllowanceBtn">Set Allowance</button>
           <div id="allowanceContainer"></div>
 
           <button id="addExpenseBtn">Add Expense</button>
+          <button id="addGroceriesBtn">Add Groceries</button>
           <div id="expenseContainer"></div>
         </div>
 
@@ -50,7 +51,7 @@
                 <!-- JS appends rows here -->
               </tbody>
             </table>
-            <!-- the delete rail lives OUTSIDE the table, aligned to rows -->
+            <!-- the edit/delete rail lives OUTSIDE the table, aligned to rows -->
             <div id="deleteRail" aria-hidden="true"></div>
           </div>
           <button id="clearAllBtn" style="margin-top:10px;">Clear All</button>
@@ -58,7 +59,7 @@
       </div>
     </div>
 
-    <!-- Right column: Sidebar (now aligns with month/year controls) -->
+    <!-- Right column: Sidebar -->
     <aside class="sidebar">
       <h3>Allowance Info</h3>
       <div id="allowanceDisplay">Allowance: 0.00</div>
@@ -77,7 +78,7 @@
     </aside>
   </div>
 
-  <!-- Add Expense Modal -->
+  <!-- Add/Edit Expense Modal -->
   <div id="expenseModalOverlay" style="display:none;">
     <div class="expense-modal">
       <h3>Add Expense</h3>

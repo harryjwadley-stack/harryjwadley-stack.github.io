@@ -20,21 +20,17 @@ body {
   color: var(--text);
 }
 
-
-/* NEW: Two-column layout where sidebar aligns with month controls */
+/* Two-column layout where sidebar aligns with month controls */
 .content-grid {
   display: grid;
   grid-template-columns: 1fr 300px; /* main | sidebar */
   gap: 40px;
-  align-items: start; /* top-align both columns */
+  align-items: start;
 }
 
-/* Left column wrapper */
-.main-column {
-  display: block;
-}
+.main-column { display: block; }
 
-/* Existing row: left panel + table */
+/* Left panel + table row */
 .top-row {
   display: flex;
   align-items: flex-start;
@@ -58,7 +54,7 @@ body {
   align-items: center;
 }
 
-/* Wrap to allow absolute positioning of the delete rail */
+/* Wrap to allow absolute positioning of the rail */
 .table-wrap {
   position: relative;
   display: inline-block; /* shrink-wrap to table width */
@@ -70,23 +66,16 @@ body {
   width: 100%;
   max-width: 800px;
 }
-
 #submittedExpenses th,
 #submittedExpenses td {
   border: 1px solid #ccc;
   padding: 8px;
   text-align: center;
 }
+#submittedExpenses th { background-color: #f2f2f2; }
+#submittedExpenses tbody tr:nth-child(even) { background-color: #f9f9f9; }
 
-#submittedExpenses th {
-  background-color: #f2f2f2;
-}
-
-#submittedExpenses tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-/* Sidebar (now in grid's right column) */
+/* Sidebar (grid's right column) */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -95,43 +84,15 @@ body {
   gap: 15px;
   padding: 10px;
 }
-
-/* Optional: keep the sidebar visible while scrolling main column */
 @media (min-width: 900px) {
-  .sidebar {
-    position: sticky;
-    top: 20px;
-  }
+  .sidebar { position: sticky; top: 20px; }
 }
-
-.sidebar h3 {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-#allowanceDisplay,
-#allowanceRemaining {
-  font-weight: normal !important;
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-#categoryTotals {
-  font-weight: normal;
-  margin-top: 0;
-}
+.sidebar h3 { font-weight: bold; margin-bottom: 5px; }
+#allowanceDisplay, #allowanceRemaining { font-weight: normal; font-size: 16px; margin-bottom: 5px; }
+#categoryTotals { font-weight: normal; margin-top: 0; }
 
 /* Pie chart */
-#categoryChart {
-  margin-top: 10px;
-  max-width: 100%;
-}
-
-/* Inputs/containers */
-#expenseContainer,
-#allowanceContainer {
-  margin-top: 10px;
-}
+#categoryChart { margin-top: 10px; max-width: 100%; }
 
 /* Buttons */
 button {
@@ -140,22 +101,16 @@ button {
   cursor: pointer;
   margin-bottom: 10px;
 }
-button.small {
-  padding: 6px 12px;
-  font-size: 14px;
-}
+button.small { padding: 6px 12px; font-size: 14px; }
 
+/* Month controls */
 #monthControls {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px; /* a touch more breathing room over the row */
+  margin-bottom: 12px;
 }
-
-#monthControls select {
-  padding: 4px 6px;
-  font-size: 14px;
-}
+#monthControls select { padding: 4px 6px; font-size: 14px; }
 
 /* Overlays */
 #expenseModalOverlay,
@@ -181,16 +136,8 @@ button.small {
   flex-direction: column;
   gap: 10px;
 }
-
-.expense-modal h3 {
-  margin: 0 0 6px 0;
-}
-
-.expense-modal label {
-  font-size: 14px;
-  color: #333;
-}
-
+.expense-modal h3 { margin: 0 0 6px 0; }
+.expense-modal label { font-size: 14px; color: #333; }
 .expense-modal input[type="number"],
 .expense-modal select,
 .expense-modal textarea {
@@ -199,7 +146,6 @@ button.small {
   width: 100%;
   box-sizing: border-box;
 }
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -208,21 +154,18 @@ button.small {
 }
 
 /* Details modal text */
-.details-text {
-  white-space: pre-wrap;
-  line-height: 1.35;
-}
+.details-text { white-space: pre-wrap; line-height: 1.35; }
 
-/* Delete rail — sits to the right OUTSIDE the table */
+/* Edit/Delete rail — sits to the right OUTSIDE the table */
 #deleteRail {
   position: absolute;
   top: 0;
   right: -24px; /* push outside the table edge */
-  width: 16px;  /* narrow gutter for the tiny 'd' */
-  pointer-events: none; /* individual 'd' re-enables pointer events */
+  width: 24px;  /* room for e + d */
+  pointer-events: none; /* individual dots re-enable pointer events */
 }
 
-/* Small blue 'd' in the rail */
+/* Small 'd' delete */
 .delete-mini {
   position: absolute;
   right: 0;
@@ -234,33 +177,13 @@ button.small {
   pointer-events: auto;
   user-select: none;
 }
-.delete-mini:hover {
-  color: #b30000;
-  transform: scale(1.2);
-}
+.delete-mini:hover { color: #b30000; transform: scale(1.2); }
 
-/* Make Actions column's button compact */
-.show-details {
-  padding: 6px 10px;
-  font-size: 14px;
-}
-
-/* Mobile: collapse to single column */
-@media (max-width: 799px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    position: static;
-    margin-top: 16px;
-  }
-}
-
-/* Small blue 'e' edit button next to 'd' */
+/* Small 'e' edit */
 .edit-mini {
   position: absolute;
   right: 20px; /* space before delete */
-  color: #007bff; /* warm orange for edit */
+  color: #007bff;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
@@ -268,7 +191,13 @@ button.small {
   pointer-events: auto;
   user-select: none;
 }
-.edit-mini:hover {
-  color: #0056b3;
-  transform: scale(1.2);
+.edit-mini:hover { color: #0056b3; transform: scale(1.2); }
+
+/* Make Actions column's button compact */
+.show-details { padding: 6px 10px; font-size: 14px; }
+
+/* Mobile: collapse to single column */
+@media (max-width: 799px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .sidebar { position: static; margin-top: 16px; }
 }
