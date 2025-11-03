@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Grab elements =====
   const addBtn = document.getElementById("addExpenseBtn");
   const addGroceriesBtn = document.getElementById("addGroceriesBtn");
+  const addDrinkBtn = document.getElementById("addDrinkBtn");
+
   const submittedTable = document.getElementById("submittedExpenses");
 
   // Ensure a <tbody> exists (prevents null errors on render)
@@ -443,6 +445,10 @@ document.addEventListener("DOMContentLoaded", () => {
   addBtn?.addEventListener("click", () => openExpenseModal());
   addGroceriesBtn?.addEventListener("click", () =>
     openExpenseModal({ category: "Groceries", card: "Credit", amount: "", details: "" }, true)
+  );
+
+  addDrinkBtn?.addEventListener("click", () =>
+    openExpenseModal({ category: "Social", card: "Credit", amount: "", details: "" }, true)
   );
 
   // ===== Details Modal (view-only) =====
