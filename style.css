@@ -1,16 +1,8 @@
 :root {
-  /* Tweak these to your taste */
-  --page-bg: #fff6e5;   /* warm cream */
-  --card-bg: #ffffff;   /* keep cards/tables readable */
+  --page-bg: #fff6e5;
+  --card-bg: #ffffff;
   --text:    #2b2b2b;
 }
-
-/* Optional: subtle gradient version (uncomment to use) */
-/*
-:root {
-  --page-bg: linear-gradient(180deg, #fff6e5 0%, #ffe9cc 100%);
-}
-*/
 
 body {
   font-family: Arial, sans-serif;
@@ -20,17 +12,15 @@ body {
   color: var(--text);
 }
 
-/* Two-column layout where sidebar aligns with month controls */
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr 300px; /* main | sidebar */
+  grid-template-columns: 1fr 300px;
   gap: 40px;
   align-items: start;
 }
 
 .main-column { display: block; }
 
-/* Left panel + table row */
 .top-row {
   display: flex;
   align-items: flex-start;
@@ -38,7 +28,6 @@ body {
   gap: 50px;
 }
 
-/* Left panel: Add Expense + Set Allowance */
 .left-panel {
   display: flex;
   flex-direction: column;
@@ -46,7 +35,6 @@ body {
   min-width: 200px;
 }
 
-/* Center: table */
 .table-container {
   flex: 1;
   display: flex;
@@ -54,13 +42,11 @@ body {
   align-items: center;
 }
 
-/* Wrap to allow absolute positioning of the rail */
 .table-wrap {
   position: relative;
-  display: inline-block; /* shrink-wrap to table width */
+  display: inline-block;
 }
 
-/* Table */
 #submittedExpenses {
   border-collapse: collapse;
   width: 100%;
@@ -75,7 +61,6 @@ body {
 #submittedExpenses th { background-color: #f2f2f2; }
 #submittedExpenses tbody tr:nth-child(even) { background-color: #f9f9f9; }
 
-/* Sidebar (grid's right column) */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -88,44 +73,25 @@ body {
   .sidebar { position: sticky; top: 20px; }
 }
 .sidebar h3 { font-weight: bold; margin-bottom: 5px; }
-#allowanceDisplay, #allowanceRemaining { font-weight: normal; font-size: 16px; margin-bottom: 5px; }
+#allowanceDisplay, #allowanceRemaining { font-weight: normal !important; font-size: 16px; margin-bottom: 5px; }
 #categoryTotals { font-weight: normal; margin-top: 0; }
-
-/* Pie chart */
 #categoryChart { margin-top: 10px; max-width: 100%; }
 
-/* Buttons */
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
+#expenseContainer, #allowanceContainer { margin-top: 10px; }
+
+button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
 button.small { padding: 6px 12px; font-size: 14px; }
 
-/* Month controls */
-#monthControls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
+#monthControls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 #monthControls select { padding: 4px 6px; font-size: 14px; }
 
 /* Overlays */
-#expenseModalOverlay,
-#detailsModalOverlay,
-#allowanceModalOverlay {
-  position: fixed;
-  inset: 0;
-  display: none; /* toggled via JS */
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.45);
-  z-index: 9999;
+#expenseModalOverlay, #detailsModalOverlay, #allowanceModalOverlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.45); z-index: 9999;
 }
 
-/* Modal box */
+/* Modal */
 .expense-modal {
   width: min(92vw, 520px);
   background: #fff;
@@ -141,62 +107,33 @@ button.small { padding: 6px 12px; font-size: 14px; }
 .expense-modal input[type="number"],
 .expense-modal select,
 .expense-modal textarea {
-  padding: 8px;
-  font-size: 16px;
-  width: 100%;
-  box-sizing: border-box;
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
+  padding: 8px; font-size: 16px; width: 100%; box-sizing: border-box;
 }
 
-/* Details modal text */
-.details-text { white-space: pre-wrap; line-height: 1.35; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 
-/* Edit/Delete rail — sits to the right OUTSIDE the table */
+/* Delete rail outside table */
 #deleteRail {
-  position: absolute;
-  top: 0;
-  right: -24px; /* push outside the table edge */
-  width: 24px;  /* room for e + d */
-  pointer-events: none; /* individual dots re-enable pointer events */
+  position: absolute; top: 0; right: -24px; width: 16px; pointer-events: none;
 }
-
-/* Small 'd' delete */
 .delete-mini {
-  position: absolute;
-  right: 0;
-  color: #ff0000;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: 0.15s;
-  pointer-events: auto;
-  user-select: none;
+  position: absolute; right: 0; color: #ff0000; cursor: pointer; font-size: 14px; font-weight: bold;
+  transition: 0.15s; pointer-events: auto; user-select: none;
 }
 .delete-mini:hover { color: #b30000; transform: scale(1.2); }
 
-/* Small 'e' edit */
 .edit-mini {
-  position: absolute;
-  right: 20px; /* space before delete */
-  color: #007bff;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: 0.15s;
-  pointer-events: auto;
-  user-select: none;
+  position: absolute; right: 20px; color: #007bff; cursor: pointer; font-size: 14px; font-weight: bold;
+  transition: 0.15s; pointer-events: auto; user-select: none;
 }
 .edit-mini:hover { color: #0056b3; transform: scale(1.2); }
 
-/* Make Actions column's button compact */
-.show-details { padding: 6px 10px; font-size: 14px; }
+/* Quick-pick stage for Add Drink */
+.quick-stage { margin-top: 2px; }
+.quick-title { margin: 0 0 6px 0; font-weight: 600; }
+.quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.quick-grid button { margin-bottom: 0; }
 
-/* Mobile: collapse to single column */
 @media (max-width: 799px) {
   .content-grid { grid-template-columns: 1fr; }
   .sidebar { position: static; margin-top: 16px; }

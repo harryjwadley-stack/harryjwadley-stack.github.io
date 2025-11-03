@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const submittedTable = document.getElementById("submittedExpenses");
 
-  // Ensure a <tbody> exists (prevents null errors on render)
+  // Ensure a <tbody> exists
   let submittedTableBody = submittedTable.querySelector("tbody");
   if (!submittedTableBody) {
     submittedTableBody = document.createElement("tbody");
@@ -57,14 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveState() { saveJSON(STATE_KEY, monthlyState); }
   function saveSettings() { saveJSON(SETTINGS_KEY, settings); }
-
-  function loadJSON(key) {
-    try { return JSON.parse(localStorage.getItem(key)); }
-    catch { return null; }
-  }
-  function saveJSON(key, val) {
-    localStorage.setItem(key, JSON.stringify(val));
-  }
+  function loadJSON(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
+  function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
   // Remove any old per-month allowance fields
   Object.keys(monthlyState).forEach(k => {
@@ -73,9 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  function yyyymmKey(y, mIndex) {
-    return `${y}-${String(mIndex + 1).padStart(2, "0")}`;
-  }
+  function yyyymmKey(y, mIndex) { return `${y}-${String(mIndex + 1).padStart(2, "0")}`; }
 
   let currentYear, currentMonthIndex;
 
@@ -91,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function currentKey() { return yyyymmKey(currentYear, currentMonthIndex); }
   function getMonthData() { return ensureMonth(currentKey()); }
+  function findExpenseById(id) { return getMonthData().expenses.find(e => e.id === id); }
 
   // ===== Init month pickers =====
   (function initMonthYearPickers() {
@@ -101,8 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (monthSelect) {
       monthNames.forEach((name, i) => {
         const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = name;
+        opt.value = i; opt.textContent = name;
         monthSelect.appendChild(opt);
       });
       monthSelect.value = currentMonthIndex;
@@ -117,8 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const endYear   = currentYear + 3;
       for (let y = startYear; y <= endYear; y++) {
         const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
+        opt.value = y; opt.textContent = y;
         yearSelect.appendChild(opt);
       }
       yearSelect.value = currentYear;
@@ -128,31 +119,28 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    if (prevBtn) {
-      prevBtn.addEventListener("click", () => {
-        currentMonthIndex--;
-        if (currentMonthIndex < 0) {
-          currentMonthIndex = 11;
-          currentYear--;
-          if (yearSelect) yearSelect.value = currentYear;
-        }
-        if (monthSelect) monthSelect.value = currentMonthIndex;
-        renderForCurrentMonth();
-      });
-    }
+    prevBtn?.addEventListener("click", () => {
+      currentMonthIndex--;
+      if (currentMonthIndex < 0) { currentMonthIndex = 11; currentYear--; yearSelect && (yearSelect.value = currentYear); }
+      monthSelect && (monthSelect.value = currentMonthIndex);
+      renderForCurrentMonth();
+    });
 
-    if (nextBtn) {
-      nextBtn.addEventListener("click", () => {
-        currentMonthIndex++;
-        if (currentMonthIndex > 11) {
-          currentMonthIndex = 0;
-          currentYear++;
-          if (yearSelect) yearSelect.value = currentYear;
-        }
-        if (monthSelect) monthSelect.value = currentMonthIndex;
-        renderForCurrentMonth();
-      });
-    }
+    nextBtn?.addEventListener("click", () => {
+      currentMonthIndex++;
+      if (currentMonthIndex > 11) { currentMonthIndex = 0; currentYear++; yearSelect && (yearSelect.value = currentYear); }
+      monthSelect && (monthSelect.value = currentMonthIndex);
+      renderForCurrentMonth();
+    });
+  })();
+
+  // ===== Ensure table header (no Actions column now) =====
+  (function stripActionsHeaderIfPresent() {
+    const theadRow = submittedTable.querySelector("thead tr");
+    if (!theadRow) return;
+    Array.from(theadRow.children).forEach(th => {
+      if (th.textContent.trim().toLowerCase() === "actions") th.remove();
+    });
   })();
 
   // ===== Render helpers =====
@@ -183,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const globalAllowance = Number(settings.allowance) || 0;
     allowanceDisplay.textContent = `Allowance: ${globalAllowance.toFixed(2)}`;
 
-    // Rebuild table rows (NO Actions column anymore)
+    // Rebuild table rows
     submittedTableBody.innerHTML = "";
     data.expenses.forEach((e, idx) => {
       const row = document.createElement("tr");
@@ -230,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
       edit.textContent = "e";
       edit.dataset.id = String(id);
       edit.style.top = `${topInContainer}px`;
-      edit.style.left = "20px"; // sits to the left of delete 'd'
+      edit.style.left = "20px";
 
       // Delete 'd'
       const dot = document.createElement("span");
@@ -247,16 +235,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Reposition dots on resize
   window.addEventListener("resize", positionEditDeleteDots);
 
-  // ===== Rail: Edit/Delete =====
+  // ===== Row actions: Edit/Delete (rail) =====
   deleteRail?.addEventListener("click", (evt) => {
     const editEl = evt.target.closest(".edit-mini");
     const delEl  = evt.target.closest(".delete-mini");
 
     if (editEl) {
       const id = Number(editEl.dataset.id);
-      const data = getMonthData();
-      const exp = data.expenses.find(e => e.id === id);
-      if (exp) openExpenseModal(exp); // open in edit mode (prefilled)
+      const exp = findExpenseById(id);
+      if (exp) openExpenseModal(exp); // edit mode
       return;
     }
 
@@ -291,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderForCurrentMonth();
   });
 
-  // ===== Add/Edit Expense modal (existing HTML) =====
+  // ===== Add/Edit Expense modal =====
   const expenseOverlay = document.getElementById("expenseModalOverlay");
   const modalAmount  = () => document.getElementById("modalExpenseAmount");
   const modalCat     = () => document.getElementById("modalExpenseCategory");
@@ -301,17 +288,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalTitle   = () => expenseOverlay.querySelector(".expense-modal h3");
   const modalCategoryWrapper = () => document.getElementById("modalCategoryWrapper");
 
+  // Quick-pick stage elements
+  const quickStage = document.getElementById("drinkQuickStage");
+  const btnGuinness = document.getElementById("drinkGuinnessBtn");
+  const btnCoffee   = document.getElementById("drinkCoffeeBtn");
+  const btnOther    = document.getElementById("drinkOtherBtn");
+
   // Track whether we're editing; if so, which id
   let editingId = null;
 
-  // Open modal (optionally preset category & hide the category UI)
-  function openExpenseModal(expense = null, hideCategory = false) {
+  // expense: object or existing expense; options: { hideCategory, quickDrink }
+  function openExpenseModal(expense = null, options = {}) {
     const isEdit = expense && typeof expense.id === "number";
+    const hideCategory = !!options.hideCategory;
+    const quickDrink = !!options.quickDrink;
 
-    // Hide/show the category field (always show for edit)
+    // Category show/hide (never hide on edit)
     if (modalCategoryWrapper()) {
       modalCategoryWrapper().style.display = (isEdit || !hideCategory) ? "block" : "none";
     }
+
+    // Quick-pick stage visibility (only when quickDrink && not editing)
+    if (quickStage) quickStage.style.display = (!isEdit && quickDrink) ? "block" : "none";
 
     if (isEdit) {
       editingId = expense.id;
@@ -322,16 +320,12 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       editingId = null;
       modalTitle().textContent = "Add Expense";
-      // defaults (can be overridden by presets)
+      // defaults
       let amount = "";
-      let category = "Groceries";
-      let card = "Credit";
+      let category = expense?.category || "Groceries";
+      let card = expense?.card || "Credit";
 
-      if (expense && typeof expense === "object") {
-        if ("amount" in expense) amount = expense.amount;
-        if ("category" in expense) category = expense.category;
-        if ("card" in expense) card = expense.card;
-      }
+      if (expense && typeof expense.amount !== "undefined") amount = expense.amount;
 
       modalAmount().value = amount;
       modalCat().value = category;
@@ -344,7 +338,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeExpenseModal() {
     expenseOverlay.style.display = "none";
-    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block"; // restore default
+    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
+    if (quickStage) quickStage.style.display = "none";
     editingId = null;
   }
 
@@ -354,6 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   modalCancel()?.addEventListener("click", closeExpenseModal);
 
+  // Submit
   modalSubmit()?.addEventListener("click", () => {
     try {
       const amount = parseFloat(modalAmount().value);
@@ -367,23 +363,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = getMonthData();
 
       if (editingId !== null) {
-        // Update existing expense
         const idx = data.expenses.findIndex(e => e.id === editingId);
         if (idx !== -1) {
           const old = data.expenses[idx];
-          // Adjust old category total
           data.categoryTotals[old.category] = Math.max(0, (data.categoryTotals[old.category] || 0) - (old.amount || 0));
-
-          // Apply updates (no details field anymore—preserve existing details if present)
           data.expenses[idx] = { ...old, amount, category, card };
-
-          // Add to new category total
           data.categoryTotals[category] = (data.categoryTotals[category] || 0) + amount;
         }
       } else {
-        // Add new expense (no details field)
         data.purchaseCount += 1;
-        data.expenses.push({ id: data.purchaseCount, amount, category, card, details: "" });
+        data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
       }
 
@@ -397,13 +386,52 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Buttons to open modal
-  addBtn?.addEventListener("click", () => openExpenseModal());
+  addBtn?.addEventListener("click", () =>
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: false, quickDrink: false })
+  );
+
   addGroceriesBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, true)
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: true, quickDrink: false })
   );
-  addDrinkBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, true)
-  );
+
+  // Add Drink → quick pick first, then show form with Social category hidden
+  addDrinkBtn?.addEventListener("click", () => {
+    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrink: true });
+  });
+
+  // Quick-pick handlers (prefill amount then reveal the form)
+  btnGuinness?.addEventListener("click", () => {
+    modalAmount().value = "6.00";
+    quickStage.style.display = "none";
+    modalAmount().focus();
+  });
+  btnCoffee?.addEventListener("click", () => {
+    modalAmount().value = "3.50";
+    quickStage.style.display = "none";
+    modalAmount().focus();
+  });
+  btnOther?.addEventListener("click", () => {
+    modalAmount().value = "";
+    quickStage.style.display = "none";
+    modalAmount().focus();
+  });
+
+  // ===== Details Modal (view-only) =====
+  const detailsOverlay = document.getElementById("detailsModalOverlay");
+  const detailsBody    = () => document.getElementById("detailsModalBody");
+  const detailsClose   = () => document.getElementById("detailsModalCloseBtn");
+
+  function openDetailsModal(text) {
+    detailsBody().textContent = text || "No details.";
+    detailsOverlay.style.display = "flex";
+  }
+  function closeDetailsModal() { detailsOverlay.style.display = "none"; }
+
+  detailsOverlay.addEventListener("click", (e) => { if (e.target === detailsOverlay) closeDetailsModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (detailsOverlay.style.display === "flex" && e.key === "Escape") closeDetailsModal();
+  });
+  detailsClose()?.addEventListener("click", closeDetailsModal);
 
   // ===== Allowance Modal (Manual / Calculate flow) =====
   const allowanceOverlay = document.getElementById("allowanceModalOverlay");

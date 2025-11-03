@@ -7,12 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-      <button id="prevMonthBtn" type="button">◀</button>
-      <select id="monthSelect"></select>
-      <select id="yearSelect"></select>
-      <button id="nextMonthBtn" type="button">▶</button>
-    </div>
   <h1>SavR</h1>
   <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
 
@@ -20,6 +14,12 @@
   <div class="content-grid">
     <!-- Left column: month controls + main content -->
     <div class="main-column">
+      <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <button id="prevMonthBtn" type="button">◀</button>
+        <select id="monthSelect"></select>
+        <select id="yearSelect"></select>
+        <button id="nextMonthBtn" type="button">▶</button>
+      </div>
 
       <!-- Left panel + table -->
       <div class="top-row">
@@ -47,9 +47,7 @@
                   <th>Card</th>
                 </tr>
               </thead>
-              <tbody>
-                <!-- JS appends rows here -->
-              </tbody>
+              <tbody></tbody>
             </table>
             <!-- the edit/delete rail lives OUTSIDE the table, aligned to rows -->
             <div id="deleteRail" aria-hidden="true"></div>
@@ -83,10 +81,21 @@
     <div class="expense-modal">
       <h3>Add Expense</h3>
 
+      <!-- Quick pick stage (only shown for Add Drink) -->
+      <div id="drinkQuickStage" class="quick-stage" style="display:none;">
+        <p class="quick-title">Quick pick</p>
+        <div class="quick-grid">
+          <button id="drinkGuinnessBtn" type="button">Guinness — $6</button>
+          <button id="drinkCoffeeBtn" type="button">Coffee — $3.50</button>
+          <button id="drinkOtherBtn" type="button">Other</button>
+        </div>
+        <hr />
+      </div>
+
       <label for="modalExpenseAmount">Amount</label>
       <input id="modalExpenseAmount" type="number" step="0.01" min="0.01" placeholder="Enter amount" />
 
-      <!-- Wrapped so we can hide for preset flows (Groceries/Drink) -->
+      <!-- Wrapped so we can hide for Add Groceries / Add Drink -->
       <div id="modalCategoryWrapper">
         <label for="modalExpenseCategory">Category</label>
         <select id="modalExpenseCategory">
@@ -106,6 +115,30 @@
       <div class="modal-actions">
         <button id="modalCancelBtn" type="button">Cancel</button>
         <button id="modalSubmitBtn" type="button">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div id="detailsModalOverlay" style="display:none;">
+    <div class="expense-modal">
+      <h3>Expense Details</h3>
+      <div id="detailsModalBody" class="details-text"></div>
+      <div class="modal-actions">
+        <button id="detailsModalCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Allowance Modal (Manual / Calculate) -->
+  <div id="allowanceModalOverlay" style="display:none;">
+    <div class="expense-modal">
+      <h3>Set Global Allowance</h3>
+      <div id="allowanceModalStage"></div>
+      <div class="modal-actions">
+        <button id="allowanceModalCancelBtn" type="button">Cancel</button>
+        <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
+        <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
       </div>
     </div>
   </div>
