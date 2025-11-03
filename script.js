@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Storage & state =====
   const STATE_KEY = "savr-monthly-state-v1";
-  const SETTINGS_KEY = "savr-settings-v1"; // holds global allowance
+  const SETTINGS_KEY = "savr-settings-v1";
 
   let monthlyState = loadJSON(STATE_KEY) || {};
   let settings = loadJSON(SETTINGS_KEY) || { allowance: 0 };
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  // ===== Ensure table header (no Actions column now) =====
+  // ===== Ensure table header (no Actions column) =====
   (function stripActionsHeaderIfPresent() {
     const theadRow = submittedTable.querySelector("thead tr");
     if (!theadRow) return;
@@ -196,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAllowanceRemaining();
     updatePieChart();
 
-    // Rebuild and position right-hand edit/delete dots
     queueMicrotask(positionEditDeleteDots);
   }
 
@@ -212,7 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const r = tr.getBoundingClientRect();
       const topInContainer = r.top - containerRect.top + (r.height / 2) - 8;
 
-      // Edit 'e'
       const edit = document.createElement("span");
       edit.className = "edit-mini";
       edit.textContent = "e";
@@ -220,7 +218,6 @@ document.addEventListener("DOMContentLoaded", () => {
       edit.style.top = `${topInContainer}px`;
       edit.style.left = "20px";
 
-      // Delete 'd'
       const dot = document.createElement("span");
       dot.className = "delete-mini";
       dot.textContent = "d";
@@ -288,28 +285,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalTitle   = () => expenseOverlay.querySelector(".expense-modal h3");
   const modalCategoryWrapper = () => document.getElementById("modalCategoryWrapper");
 
-  // Quick-pick stage elements
+  // Quick-pick stage elements (inside the same modal)
   const quickStage = document.getElementById("drinkQuickStage");
   const btnGuinness = document.getElementById("drinkGuinnessBtn");
   const btnCoffee   = document.getElementById("drinkCoffeeBtn");
   const btnOther    = document.getElementById("drinkOtherBtn");
 
+  // Helpers to show/hide the normal form fields
+  const amountLabel = document.querySelector('label[for="modalExpenseAmount"]');
+  const cardLabel   = document.querySelector('label[for="modalExpenseCard"]');
+  function showFormFields(show) {
+    if (amountLabel) amountLabel.style.display = show ? "block" : "none";
+    if (modalAmount()) modalAmount().style.display = show ? "block" : "none";
+    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = show ? "block" : "none";
+    if (cardLabel) cardLabel.style.display = show ? "block" : "none";
+    if (modalCard()) modalCard().style.display = show ? "block" : "none";
+    if (modalSubmit()) modalSubmit().style.display = show ? "inline-block" : "none";
+  }
+
   // Track whether we're editing; if so, which id
   let editingId = null;
 
-  // expense: object or existing expense; options: { hideCategory, quickDrink }
+  // expense: object or existing expense; options: { hideCategory, quickDrinkOnly }
   function openExpenseModal(expense = null, options = {}) {
     const isEdit = expense && typeof expense.id === "number";
     const hideCategory = !!options.hideCategory;
-    const quickDrink = !!options.quickDrink;
+    const quickDrinkOnly = !!options.quickDrinkOnly;
 
-    // Category show/hide (never hide on edit)
-    if (modalCategoryWrapper()) {
-      modalCategoryWrapper().style.display = (isEdit || !hideCategory) ? "block" : "none";
+    // If quick pick only, show only the quick stage; hide the form fields
+    if (!isEdit && quickStage) {
+      quickStage.style.display = quickDrinkOnly ? "block" : "none";
+      showFormFields(!quickDrinkOnly); // hide form when quick pick is shown
+    } else if (quickStage) {
+      quickStage.style.display = "none";
+      showFormFields(true);
     }
 
-    // Quick-pick stage visibility (only when quickDrink && not editing)
-    if (quickStage) quickStage.style.display = (!isEdit && quickDrink) ? "block" : "none";
+    // Category show/hide (never hide on edit). If we're in quick-only mode, category hidden anyway.
+    if (modalCategoryWrapper() && !quickDrinkOnly) {
+      modalCategoryWrapper().style.display = (isEdit || !hideCategory) ? "block" : "none";
+    }
 
     if (isEdit) {
       editingId = expense.id;
@@ -319,27 +334,25 @@ document.addEventListener("DOMContentLoaded", () => {
       modalCard().value = expense.card || "Credit";
     } else {
       editingId = null;
-      modalTitle().textContent = "Add Expense";
-      // defaults
+      modalTitle().textContent = quickDrinkOnly ? "Add Drink" : "Add Expense";
       let amount = "";
       let category = expense?.category || "Groceries";
       let card = expense?.card || "Credit";
-
-      if (expense && typeof expense.amount !== "undefined") amount = expense.amount;
-
+      if (typeof expense?.amount !== "undefined") amount = expense.amount;
       modalAmount().value = amount;
       modalCat().value = category;
       modalCard().value = card;
     }
 
     expenseOverlay.style.display = "flex";
-    setTimeout(() => modalAmount()?.focus(), 0);
+    setTimeout(() => (quickDrinkOnly ? null : modalAmount()?.focus()), 0);
   }
 
   function closeExpenseModal() {
     expenseOverlay.style.display = "none";
-    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
     if (quickStage) quickStage.style.display = "none";
+    showFormFields(true); // restore for next open
+    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
     editingId = null;
   }
 
@@ -349,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   modalCancel()?.addEventListener("click", closeExpenseModal);
 
-  // Submit
+  // Submit (only used when the normal form is visible)
   modalSubmit()?.addEventListener("click", () => {
     try {
       const amount = parseFloat(modalAmount().value);
@@ -387,33 +400,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Buttons to open modal
   addBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: false, quickDrink: false })
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: false, quickDrinkOnly: false })
   );
 
   addGroceriesBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: true, quickDrink: false })
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: false })
   );
 
-  // Add Drink → quick pick first, then show form with Social category hidden
+  // Add Drink → show ONLY quick pick stage
   addDrinkBtn?.addEventListener("click", () => {
-    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrink: true });
+    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: true });
   });
 
-  // Quick-pick handlers (prefill amount then reveal the form)
+  // Quick-pick handlers:
+  // If Guinness or Coffee is selected, add immediately (category Social, card Credit), then close.
   btnGuinness?.addEventListener("click", () => {
-    modalAmount().value = "6.00";
-    quickStage.style.display = "none";
-    modalAmount().focus();
+    const data = getMonthData();
+    data.purchaseCount += 1;
+    data.expenses.push({ id: data.purchaseCount, amount: 6.00, category: "Social", card: "Credit" });
+    data.categoryTotals.Social += 6.00;
+    saveState();
+    renderForCurrentMonth();
+    closeExpenseModal();
   });
   btnCoffee?.addEventListener("click", () => {
-    modalAmount().value = "3.50";
-    quickStage.style.display = "none";
-    modalAmount().focus();
+    const data = getMonthData();
+    data.purchaseCount += 1;
+    data.expenses.push({ id: data.purchaseCount, amount: 3.50, category: "Social", card: "Credit" });
+    data.categoryTotals.Social += 3.50;
+    saveState();
+    renderForCurrentMonth();
+    closeExpenseModal();
   });
+  // "Other" → switch to the normal form (still Social, category hidden)
   btnOther?.addEventListener("click", () => {
+    if (quickStage) quickStage.style.display = "none";
+    // Reveal normal form fields, but keep category hidden and fixed to Social
+    showFormFields(true);
+    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "none";
+    modalTitle().textContent = "Add Expense";
+    modalCat().value = "Social";
     modalAmount().value = "";
-    quickStage.style.display = "none";
-    modalAmount().focus();
+    setTimeout(() => modalAmount()?.focus(), 0);
   });
 
   // ===== Details Modal (view-only) =====
