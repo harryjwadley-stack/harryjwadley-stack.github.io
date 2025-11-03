@@ -331,14 +331,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalSubmit  = () => document.getElementById("modalSubmitBtn");
   const modalCancel  = () => document.getElementById("modalCancelBtn");
   const modalTitle   = () => expenseOverlay.querySelector(".expense-modal h3");
+  const modalCategoryWrapper = () => document.getElementById("modalCategoryWrapper");
 
   // Track whether we're editing; if so, which id
   let editingId = null;
+  let hideCategoryTemporarily = false;
 
-  // NOTE: Treat as "edit" ONLY if an expense object with a numeric id is passed.
-  // Otherwise, use the object (if provided) as presets for an "add" flow.
-  function openExpenseModal(expense = null) {
+  // Treat as "edit" ONLY if an expense with numeric id is passed.
+  // Optional second param hides the Category wrapper (used for Add Groceries).
+  function openExpenseModal(expense = null, hideCategory = false) {
     const isEdit = expense && typeof expense.id === "number";
+    hideCategoryTemporarily = !!hideCategory;
+
+    // Hide/show the category field based on flag (always show for edit)
+    if (modalCategoryWrapper()) {
+      modalCategoryWrapper().style.display = (isEdit || !hideCategoryTemporarily) ? "block" : "none";
+    }
 
     if (isEdit) {
       editingId = expense.id;
@@ -373,7 +381,14 @@ document.addEventListener("DOMContentLoaded", () => {
     expenseOverlay.style.display = "flex";
     setTimeout(() => modalAmount()?.focus(), 0);
   }
-  function closeExpenseModal() { expenseOverlay.style.display = "none"; editingId = null; }
+
+  function closeExpenseModal() {
+    expenseOverlay.style.display = "none";
+    // Restore category visibility for next open
+    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
+    hideCategoryTemporarily = false;
+    editingId = null;
+  }
 
   expenseOverlay.addEventListener("click", (e) => { if (e.target === expenseOverlay) closeExpenseModal(); });
   document.addEventListener("keydown", (e) => {
@@ -427,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Buttons to open modal
   addBtn?.addEventListener("click", () => openExpenseModal());
   addGroceriesBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Groceries", card: "Credit", amount: "", details: "" })
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "", details: "" }, true)
   );
 
   // ===== Details Modal (view-only) =====

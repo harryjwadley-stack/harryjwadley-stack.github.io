@@ -86,13 +86,16 @@
       <label for="modalExpenseAmount">Amount</label>
       <input id="modalExpenseAmount" type="number" step="0.01" min="0.01" placeholder="Enter amount" />
 
-      <label for="modalExpenseCategory">Category</label>
-      <select id="modalExpenseCategory">
-        <option value="Groceries" selected>Groceries</option>
-        <option value="Social">Social</option>
-        <option value="Treat">Treat</option>
-        <option value="Unexpected">Unexpected</option>
-      </select>
+      <!-- Wrapped so we can hide for Add Groceries -->
+      <div id="modalCategoryWrapper">
+        <label for="modalExpenseCategory">Category</label>
+        <select id="modalExpenseCategory">
+          <option value="Groceries" selected>Groceries</option>
+          <option value="Social">Social</option>
+          <option value="Treat">Treat</option>
+          <option value="Unexpected">Unexpected</option>
+        </select>
+      </div>
 
       <label for="modalExpenseCard">Select card</label>
       <select id="modalExpenseCard">
