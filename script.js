@@ -89,15 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return monthlyState[key];
   }
-  function currentKey() {
-    return yyyymmKey(currentYear, currentMonthIndex);
-  }
-  function getMonthData() {
-    return ensureMonth(currentKey());
-  }
-  function findExpenseById(id) {
-    return getMonthData().expenses.find(e => e.id === id);
-  }
+  function currentKey() { return yyyymmKey(currentYear, currentMonthIndex); }
+  function getMonthData() { return ensureMonth(currentKey()); }
 
   // ===== Init month pickers =====
   (function initMonthYearPickers() {
@@ -162,19 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })();
 
-  // ===== Ensure table header has an Actions column =====
-  (function ensureActionsHeader() {
-    const theadRow = submittedTable.querySelector("thead tr");
-    if (!theadRow) return;
-    const ths = Array.from(theadRow.children);
-    const hasActions = ths.some(th => th.textContent.trim().toLowerCase() === "actions");
-    if (!hasActions) {
-      const th = document.createElement("th");
-      th.textContent = "Actions";
-      theadRow.appendChild(th);
-    }
-  })();
-
   // ===== Render helpers =====
   function updateAllowanceRemaining() {
     const data = getMonthData();
@@ -203,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const globalAllowance = Number(settings.allowance) || 0;
     allowanceDisplay.textContent = `Allowance: ${globalAllowance.toFixed(2)}`;
 
-    // Rebuild table rows
+    // Rebuild table rows (NO Actions column anymore)
     submittedTableBody.innerHTML = "";
     data.expenses.forEach((e, idx) => {
       const row = document.createElement("tr");
@@ -213,9 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${e.amount.toFixed(2)}</td>
         <td>${e.category}</td>
         <td>${e.card || "-"}</td>
-        <td>
-          <button class="show-details" data-id="${e.id}">details</button>
-        </td>
       `;
       submittedTableBody.appendChild(row);
     });
@@ -270,31 +247,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Reposition dots on resize
   window.addEventListener("resize", positionEditDeleteDots);
 
-  // ===== Row actions: Details (in-table) & Edit/Delete (rail) =====
-  submittedTableBody.addEventListener("click", (evt) => {
-    const detailsBtn = evt.target.closest(".show-details");
-    if (!detailsBtn) return;
-
-    const id = Number(detailsBtn.dataset.id);
-    const exp = findExpenseById(id);
-    const text = (exp && exp.details && exp.details.trim()) ? exp.details.trim() : "No details.";
-    openDetailsModal(text);
-  });
-
+  // ===== Rail: Edit/Delete =====
   deleteRail?.addEventListener("click", (evt) => {
     const editEl = evt.target.closest(".edit-mini");
     const delEl  = evt.target.closest(".delete-mini");
 
     if (editEl) {
       const id = Number(editEl.dataset.id);
-      const exp = findExpenseById(id);
+      const data = getMonthData();
+      const exp = data.expenses.find(e => e.id === id);
       if (exp) openExpenseModal(exp); // open in edit mode (prefilled)
       return;
     }
 
     if (delEl) {
       const id = Number(delEl.dataset.id);
-
       const data = getMonthData();
       const i = data.expenses.findIndex(x => x.id === id);
       if (i === -1) return;
@@ -329,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalAmount  = () => document.getElementById("modalExpenseAmount");
   const modalCat     = () => document.getElementById("modalExpenseCategory");
   const modalCard    = () => document.getElementById("modalExpenseCard");
-  const modalDetails = () => document.getElementById("modalExpenseDetails");
   const modalSubmit  = () => document.getElementById("modalSubmitBtn");
   const modalCancel  = () => document.getElementById("modalCancelBtn");
   const modalTitle   = () => expenseOverlay.querySelector(".expense-modal h3");
@@ -337,17 +303,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Track whether we're editing; if so, which id
   let editingId = null;
-  let hideCategoryTemporarily = false;
 
-  // Treat as "edit" ONLY if an expense with numeric id is passed.
-  // Optional second param hides the Category wrapper (used for Add Groceries).
+  // Open modal (optionally preset category & hide the category UI)
   function openExpenseModal(expense = null, hideCategory = false) {
     const isEdit = expense && typeof expense.id === "number";
-    hideCategoryTemporarily = !!hideCategory;
 
-    // Hide/show the category field based on flag (always show for edit)
+    // Hide/show the category field (always show for edit)
     if (modalCategoryWrapper()) {
-      modalCategoryWrapper().style.display = (isEdit || !hideCategoryTemporarily) ? "block" : "none";
+      modalCategoryWrapper().style.display = (isEdit || !hideCategory) ? "block" : "none";
     }
 
     if (isEdit) {
@@ -356,28 +319,23 @@ document.addEventListener("DOMContentLoaded", () => {
       modalAmount().value = expense.amount;
       modalCat().value = expense.category;
       modalCard().value = expense.card || "Credit";
-      modalDetails().value = expense.details || "";
     } else {
       editingId = null;
       modalTitle().textContent = "Add Expense";
-      // base defaults
+      // defaults (can be overridden by presets)
       let amount = "";
       let category = "Groceries";
       let card = "Credit";
-      let details = "";
 
-      // if presets provided (e.g., Add Groceries button), apply them
       if (expense && typeof expense === "object") {
         if ("amount" in expense) amount = expense.amount;
         if ("category" in expense) category = expense.category;
         if ("card" in expense) card = expense.card;
-        if ("details" in expense) details = expense.details;
       }
 
       modalAmount().value = amount;
       modalCat().value = category;
       modalCard().value = card;
-      modalDetails().value = details;
     }
 
     expenseOverlay.style.display = "flex";
@@ -386,9 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeExpenseModal() {
     expenseOverlay.style.display = "none";
-    // Restore category visibility for next open
-    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
-    hideCategoryTemporarily = false;
+    if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block"; // restore default
     editingId = null;
   }
 
@@ -403,7 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const amount = parseFloat(modalAmount().value);
       const category = modalCat().value;
       const card = (modalCard() ? modalCard().value : "").trim();
-      const details = (modalDetails() ? modalDetails().value : "").trim();
 
       if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); modalAmount().focus(); return; }
       if (!["Groceries","Social","Treat","Unexpected"].includes(category)) { alert("Please select a valid category."); modalCat().focus(); return; }
@@ -419,16 +374,16 @@ document.addEventListener("DOMContentLoaded", () => {
           // Adjust old category total
           data.categoryTotals[old.category] = Math.max(0, (data.categoryTotals[old.category] || 0) - (old.amount || 0));
 
-          // Apply updates
-          data.expenses[idx] = { ...old, amount, category, card, details };
+          // Apply updates (no details field anymore—preserve existing details if present)
+          data.expenses[idx] = { ...old, amount, category, card };
 
           // Add to new category total
           data.categoryTotals[category] = (data.categoryTotals[category] || 0) + amount;
         }
       } else {
-        // Add new expense
+        // Add new expense (no details field)
         data.purchaseCount += 1;
-        data.expenses.push({ id: data.purchaseCount, amount, category, card, details });
+        data.expenses.push({ id: data.purchaseCount, amount, category, card, details: "" });
         data.categoryTotals[category] += amount;
       }
 
@@ -444,29 +399,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Buttons to open modal
   addBtn?.addEventListener("click", () => openExpenseModal());
   addGroceriesBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Groceries", card: "Credit", amount: "", details: "" }, true)
+    openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, true)
   );
-
   addDrinkBtn?.addEventListener("click", () =>
-    openExpenseModal({ category: "Social", card: "Credit", amount: "", details: "" }, true)
+    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, true)
   );
-
-  // ===== Details Modal (view-only) =====
-  const detailsOverlay = document.getElementById("detailsModalOverlay");
-  const detailsBody    = () => document.getElementById("detailsModalBody");
-  const detailsClose   = () => document.getElementById("detailsModalCloseBtn");
-
-  function openDetailsModal(text) {
-    detailsBody().textContent = text || "No details.";
-    detailsOverlay.style.display = "flex";
-  }
-  function closeDetailsModal() { detailsOverlay.style.display = "none"; }
-
-  detailsOverlay.addEventListener("click", (e) => { if (e.target === detailsOverlay) closeDetailsModal(); });
-  document.addEventListener("keydown", (e) => {
-    if (detailsOverlay.style.display === "flex" && e.key === "Escape") closeDetailsModal();
-  });
-  detailsClose()?.addEventListener("click", closeDetailsModal);
 
   // ===== Allowance Modal (Manual / Calculate flow) =====
   const allowanceOverlay = document.getElementById("allowanceModalOverlay");

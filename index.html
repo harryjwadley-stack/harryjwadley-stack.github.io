@@ -20,12 +20,6 @@
   <div class="content-grid">
     <!-- Left column: month controls + main content -->
     <div class="main-column">
-      <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <button id="prevMonthBtn" type="button">◀</button>
-        <select id="monthSelect"></select>
-        <select id="yearSelect"></select>
-        <button id="nextMonthBtn" type="button">▶</button>
-      </div>
 
       <!-- Left panel + table -->
       <div class="top-row">
@@ -36,9 +30,7 @@
 
           <button id="addExpenseBtn">Add Expense</button>
           <button id="addGroceriesBtn">Add Groceries</button>
-          
           <button id="addDrinkBtn">Add Drink</button>
-
           <div id="expenseContainer"></div>
         </div>
 
@@ -53,7 +45,6 @@
                   <th>Amount</th>
                   <th>Category</th>
                   <th>Card</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,7 +86,7 @@
       <label for="modalExpenseAmount">Amount</label>
       <input id="modalExpenseAmount" type="number" step="0.01" min="0.01" placeholder="Enter amount" />
 
-      <!-- Wrapped so we can hide for Add Groceries -->
+      <!-- Wrapped so we can hide for preset flows (Groceries/Drink) -->
       <div id="modalCategoryWrapper">
         <label for="modalExpenseCategory">Category</label>
         <select id="modalExpenseCategory">
@@ -112,36 +103,9 @@
         <option value="Debit">Debit</option>
       </select>
 
-      <label for="modalExpenseDetails">Details (optional)</label>
-      <textarea id="modalExpenseDetails" rows="2" placeholder="Enter details..." style="padding:8px;font-size:16px;width:100%;box-sizing:border-box;"></textarea>
-
       <div class="modal-actions">
         <button id="modalCancelBtn" type="button">Cancel</button>
         <button id="modalSubmitBtn" type="button">Submit</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Details Modal -->
-  <div id="detailsModalOverlay" style="display:none;">
-    <div class="expense-modal">
-      <h3>Expense Details</h3>
-      <div id="detailsModalBody" class="details-text"></div>
-      <div class="modal-actions">
-        <button id="detailsModalCloseBtn" type="button">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Allowance Modal (Manual / Calculate) -->
-  <div id="allowanceModalOverlay" style="display:none;">
-    <div class="expense-modal">
-      <h3>Set Global Allowance</h3>
-      <div id="allowanceModalStage"></div>
-      <div class="modal-actions">
-        <button id="allowanceModalCancelBtn" type="button">Cancel</button>
-        <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
-        <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
       </div>
     </div>
   </div>
