@@ -10,6 +10,9 @@
   --card-bg: #ffffff;
   --text: #1a1a1a;
   --border: #d0d0d0;
+
+  /* Sidebar alignment offset */
+  --sidebar-offset: 90px;
 }
 
 /* ===== Global ===== */
@@ -58,7 +61,7 @@ h3 {
   font-size: 14px;
 }
 
-/* ===== Top-row layout: left panel, table, sidebar ===== */
+/* ===== Top-row layout ===== */
 .top-row {
   display: flex;
   align-items: flex-start;
@@ -136,7 +139,9 @@ h3 {
 @media (min-width: 900px) {
   .sidebar {
     position: sticky;
-    top: 0; /* flush with month selector */
+    top: 0;
+    margin-top: calc(-1 * var(--sidebar-offset)); /* align with SavR title */
+    z-index: 2;
   }
 }
 
@@ -174,44 +179,13 @@ button {
   color: white;
   font-weight: 600;
   transition: 0.2s ease;
+  background: var(--turquoise);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 button:hover {
+  background: #0fb8d6;
   transform: translateY(-2px);
-}
-
-/* Specific button colors */
-#setAllowanceBtn {
-  background: var(--amber);
-  color: #000;
-}
-
-#setAllowanceBtn:hover {
-  background: #ffcb40;
-}
-
-#addExpenseBtn,
-#addGroceriesBtn,
-#addDrinkBtn,
-#showFavouritesBtn {
-  background: var(--turquoise);
-}
-
-#addExpenseBtn:hover,
-#addGroceriesBtn:hover,
-#addDrinkBtn:hover,
-#showFavouritesBtn:hover {
-  background: #0fb8d6;
-}
-
-#clearAllBtn {
-  background: var(--turquoise);
-  color: #000;
-}
-
-#clearAllBtn:hover {
-  background: #0fb8d6;
 }
 
 /* ===== Overlays ===== */
