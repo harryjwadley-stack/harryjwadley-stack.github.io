@@ -10,9 +10,6 @@
   --card-bg: #ffffff;
   --text: #1a1a1a;
   --border: #d0d0d0;
-
-  /* Sidebar alignment offset */
-  --sidebar-offset: 90px;
 }
 
 /* ===== Global ===== */
@@ -61,7 +58,7 @@ h3 {
   font-size: 14px;
 }
 
-/* ===== Top-row layout ===== */
+/* ===== Top-row layout: left panel, table, sidebar ===== */
 .top-row {
   display: flex;
   align-items: flex-start;
@@ -74,8 +71,9 @@ h3 {
 .left-panel {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  min-width: 200px;
+  align-items: stretch;           /* stretch children to full width */
+  min-width: 240px;               /* fixed column width for uniform buttons */
+  width: 240px;
 }
 
 #expenseContainer,
@@ -139,9 +137,7 @@ h3 {
 @media (min-width: 900px) {
   .sidebar {
     position: sticky;
-    top: 0;
-    margin-top: calc(-1 * var(--sidebar-offset)); /* align with SavR title */
-    z-index: 2;
+    top: 0; /* align with month selector */
   }
 }
 
@@ -179,13 +175,47 @@ button {
   color: white;
   font-weight: 600;
   transition: 0.2s ease;
-  background: var(--turquoise);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
+/* Make all left-panel buttons the same width */
+.left-panel button {
+  width: 100%;
+}
+
 button:hover {
-  background: #0fb8d6;
   transform: translateY(-2px);
+}
+
+/* Specific button colors */
+#setAllowanceBtn,
+#showFavouritesBtn {                /* AMBER buttons */
+  background: var(--amber);
+  color: #000;
+}
+#setAllowanceBtn:hover,
+#showFavouritesBtn:hover {
+  background: #ffcb40;
+}
+
+#addExpenseBtn,
+#addGroceriesBtn,
+#addDrinkBtn {                      /* TURQUOISE buttons */
+  background: var(--turquoise);
+  color: #000;
+}
+#addExpenseBtn:hover,
+#addGroceriesBtn:hover,
+#addDrinkBtn:hover {
+  background: #0fb8d6;
+}
+
+#clearAllBtn {
+  background: var(--turquoise);
+  color: #000;
+}
+#clearAllBtn:hover {
+  background: #0fb8d6;
 }
 
 /* ===== Overlays ===== */
@@ -237,9 +267,10 @@ button:hover {
   border-radius: 6px;
 }
 
+/* Spread footer buttons evenly across modal width */
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;   /* evenly across */
   gap: 10px;
   margin-top: 6px;
 }
@@ -324,14 +355,16 @@ button:hover {
   color: var(--navy);
 }
 
+/* Make quick buttons fill and space evenly across the modal */
 .quick-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
 }
-
 .quick-grid button {
   margin-bottom: 0;
+  width: 100%;
 }
 
 /* ===== Responsive ===== */
