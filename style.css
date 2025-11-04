@@ -86,7 +86,7 @@ button.small { padding: 6px 12px; font-size: 14px; }
 #monthControls select { padding: 4px 6px; font-size: 14px; }
 
 /* Overlays */
-#expenseModalOverlay, #detailsModalOverlay, #allowanceModalOverlay {
+#expenseModalOverlay, #detailsModalOverlay, #allowanceModalOverlay, #favesModalOverlay {
   position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.45); z-index: 9999;
 }
@@ -146,4 +146,19 @@ button.small { padding: 6px 12px; font-size: 14px; }
 @media (max-width: 799px) {
   .content-grid { grid-template-columns: 1fr; }
   .sidebar { position: static; margin-top: 16px; }
+}
+
+/* Favourites modal list */
+#favesList table {
+  width: 100%;
+  border-collapse: collapse;
+}
+#favesList th, #favesList td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+#favesList th {
+  background: #f2f2f2;
+  font-weight: 600;
 }
