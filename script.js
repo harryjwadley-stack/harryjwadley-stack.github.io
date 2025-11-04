@@ -51,7 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
       datasets: [{
         label: "Category Breakdown",
         data: [0, 0, 0, 0],
-        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0"]
+        backgroundColor: [
+          "#11cdef", // Turquoise  (Groceries)
+          "#0b2a4a", // Navy       (Social)
+          "#0f766e", // Teal       (Treat)
+          "#ffb000"  // Warm amber (Unexpected)
+        ]
       }]
     },
     options: {
@@ -59,6 +64,19 @@ document.addEventListener("DOMContentLoaded", () => {
       plugins: { legend: { position: "bottom" } }
     }
   });
+
+  // Sync chart colors with CSS variables dynamically
+  (() => {
+    const css = getComputedStyle(document.documentElement);
+    const themedColors = [
+      css.getPropertyValue("--turquoise").trim() || "#11cdef",
+      css.getPropertyValue("--navy").trim()      || "#0b2a4a",
+      css.getPropertyValue("--teal").trim()      || "#0f766e",
+      css.getPropertyValue("--amber").trim()     || "#ffb000",
+    ];
+    categoryChart.data.datasets[0].backgroundColor = themedColors;
+    categoryChart.update();
+  })()
 
   // ===== Storage & state =====
   const STATE_KEY = "savr-monthly-state-v1";
