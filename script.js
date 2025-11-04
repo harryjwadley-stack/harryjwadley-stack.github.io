@@ -26,6 +26,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const favesList = document.getElementById("favesList");
   const favesCloseBtn = document.getElementById("favesCloseBtn");
 
+  // Favourite Name Modal
+  const favNameOverlay = document.getElementById("favNameModalOverlay");
+  const favNameInput   = document.getElementById("favNameInput");
+  const favNameCancel  = document.getElementById("favNameCancelBtn");
+  const favNameSave    = document.getElementById("favNameSaveBtn");
+
   // Month controls
   const prevBtn = document.getElementById("prevMonthBtn");
   const nextBtn = document.getElementById("nextMonthBtn");
@@ -61,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let monthlyState = loadJSON(STATE_KEY) || {};
   let settings = loadJSON(SETTINGS_KEY) || { allowance: 0 };
-  let favourites = loadJSON(FAV_KEY) || {}; // { "YYYY-MM-id": { id, year, monthIndex, amount, category, card } }
+  let favourites = loadJSON(FAV_KEY) || {}; // { "YYYY-MM-id": { id, year, monthIndex, amount, category, card, name } }
 
   function saveState() { saveJSON(STATE_KEY, monthlyState); }
   function saveSettings() { saveJSON(SETTINGS_KEY, settings); }
@@ -296,12 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const exp = data.expenses[i];
 
-      // If favourited globally, remove it too
-      const key = compositeId(currentYear, currentMonthIndex, id);
-      if (favourites[key]) {
-        delete favourites[key];
-        saveFavourites();
-      }
+      // NOTE: Do NOT remove favourites when deleting a row; favourites are global snapshots.
 
       data.categoryTotals[exp.category] = Math.max(
         0,
@@ -315,6 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Clicking star opens "Name your favourite" modal (create or rename)
   leftRail?.addEventListener("click", (evt) => {
     const star = evt.target.closest(".fav-mini");
     if (!star) return;
@@ -325,36 +327,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!exp) return;
 
     const key = compositeId(currentYear, currentMonthIndex, id);
+    const existing = favourites[key];
 
-    if (favourites[key]) {
-      // Unfavourite
-      delete favourites[key];
-    } else {
-      // Favourite globally
-      favourites[key] = {
-        id,
-        year: currentYear,
-        monthIndex: currentMonthIndex,
-        amount: exp.amount,
-        category: exp.category,
-        card: exp.card || ""
-      };
-    }
-    saveFavourites();
-    renderForCurrentMonth();
-    if (favesOverlay.style.display === "flex") renderFavesModal(); // live update
+    const snapshot = {
+      key,
+      year: currentYear,
+      monthIndex: currentMonthIndex,
+      id,
+      amount: exp.amount,
+      category: exp.category,
+      card: exp.card || ""
+    };
+
+    // Always open name modal. If already exists, this works as "rename".
+    openFavNameModal(snapshot, existing?.name || "");
   });
 
   // ===== Clear All =====
   clearAllBtn?.addEventListener("click", () => {
     if (!confirm("Are you sure you want to delete all expenses for this month?")) return;
 
-    // Remove any favourites from this month as well
-    const prefix = `${currentYear}-${String(currentMonthIndex + 1).padStart(2, "0")}-`;
-    Object.keys(favourites).forEach(k => {
-      if (k.startsWith(prefix)) delete favourites[k];
-    });
-    saveFavourites();
+    // Do NOT purge favourites here; they are global snapshots.
 
     const data = getMonthData();
     data.expenses = [];
@@ -671,12 +664,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function closeFavesModal() { favesOverlay.style.display = "none"; }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => (
+      { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]
+    ));
+  }
+
   function renderFavesModal() {
     const arr = Object.values(favourites);
     if (!arr.length) {
       favesList.innerHTML = `<p>No favourites yet.</p>`;
       return;
     }
+
     // sort: newest month first, then id
     arr.sort((a,b) => {
       if (a.year !== b.year) return b.year - a.year;
@@ -684,14 +684,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return (b.id || 0) - (a.id || 0);
     });
 
-    // build table
-    const rows = arr.map((f, i) => `
-      <tr>
-        <td>${i+1}</td>
-        <td>${monthNames[f.monthIndex]} ${f.year}</td>
+    const rows = arr.map((f) => `
+      <tr data-key="${yyyymmKey(f.year, f.monthIndex)}-${f.id}">
+        <td class="fav-name">${escapeHtml(f.name || "Favourite")}</td>
         <td>${(f.amount || 0).toFixed(2)}</td>
         <td>${f.category}</td>
         <td>${f.card || "-"}</td>
+        <td><button class="fave-add" type="button" data-key="${yyyymmKey(f.year, f.monthIndex)}-${f.id}">Add</button></td>
       </tr>
     `).join("");
 
@@ -699,11 +698,11 @@ document.addEventListener("DOMContentLoaded", () => {
       <table>
         <thead>
           <tr>
-            <th>#</th>
-            <th>Month</th>
+            <th>Name</th>
             <th>Amount</th>
             <th>Category</th>
             <th>Card</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -717,7 +716,67 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   favesCloseBtn?.addEventListener("click", closeFavesModal);
 
+  // Click "Add" inside favourites modal to insert into the CURRENT month
+  favesList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".fave-add");
+    if (!btn) return;
+
+    const key = btn.dataset.key;
+    const fav = favourites[key];
+    if (!fav) return;
+
+    const data = getMonthData();
+    data.purchaseCount += 1;
+    const newId = data.purchaseCount;
+    data.expenses.push({
+      id: newId,
+      amount: fav.amount,
+      category: fav.category,
+      card: fav.card || "Credit"
+    });
+    data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
+
+    saveState();
+    renderForCurrentMonth();
+  });
+
   showFavouritesBtn?.addEventListener("click", openFavesModal);
+
+  // ===== "Name your favourite" modal =====
+  let pendingFav = null; // { key, year, monthIndex, id, amount, category, card, name }
+
+  function openFavNameModal(snapshot, defaultName = "") {
+    pendingFav = { ...snapshot, name: defaultName || "" };
+    favNameInput.value = pendingFav.name;
+    favNameOverlay.style.display = "flex";
+    setTimeout(() => favNameInput.focus(), 0);
+  }
+
+  function closeFavNameModal() {
+    favNameOverlay.style.display = "none";
+    pendingFav = null;
+  }
+
+  favNameOverlay.addEventListener("click", (e) => {
+    if (e.target === favNameOverlay) closeFavNameModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (favNameOverlay.style.display === "flex" && e.key === "Escape") closeFavNameModal();
+  });
+  favNameCancel?.addEventListener("click", closeFavNameModal);
+
+  favNameSave?.addEventListener("click", () => {
+    if (!pendingFav) return;
+    const name = favNameInput.value.trim() || "Favourite";
+    const { key, year, monthIndex, id, amount, category, card } = pendingFav;
+
+    favourites[key] = { id, year, monthIndex, amount, category, card, name };
+    saveFavourites();
+
+    closeFavNameModal();
+    renderForCurrentMonth();
+    if (favesOverlay.style.display === "flex") renderFavesModal();
+  });
 
   // ===== Initial render =====
   renderForCurrentMonth();
