@@ -1,9 +1,11 @@
 :root {
+  /* Palette: turquoise, navy, teal, warm amber */
   --turquoise: #11cdef;
   --navy: #0b2a4a;
   --teal: #0f766e;
   --amber: #ffb000;
 
+  /* Derived colors */
   --page-bg: linear-gradient(to bottom, #e9f9ff, #fffaf2);
   --card-bg: #ffffff;
   --text: #1a1a1a;
@@ -43,7 +45,82 @@ h3 {
   grid-template-rows: auto 1fr;
 }
 
-/* ===== Sidebar aligned with SavR ===== */
+/* ===== Month selector row ===== */
+#monthControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#monthControls select {
+  padding: 4px 6px;
+  font-size: 14px;
+}
+
+/* ===== Top-row layout: left panel, table, sidebar ===== */
+.top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 50px;
+  margin-top: 0;
+}
+
+/* ===== Left panel ===== */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;           /* stretch children to full width */
+  min-width: 240px;               /* fixed column width for uniform buttons */
+  width: 240px;
+}
+
+#expenseContainer,
+#allowanceContainer {
+  margin-top: 10px;
+}
+
+/* ===== Table ===== */
+.table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.table-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+#submittedExpenses {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+#submittedExpenses th,
+#submittedExpenses td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: center;
+}
+
+#submittedExpenses th {
+  background-color: var(--navy);
+  color: white;
+  font-weight: 600;
+}
+
+#submittedExpenses tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* ===== Sidebar ===== */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -60,7 +137,7 @@ h3 {
 @media (min-width: 900px) {
   .sidebar {
     position: sticky;
-    top: 95px; /* aligns with SavR heading */
+    top: 0; /* align with month selector */
   }
 }
 
@@ -87,24 +164,6 @@ h3 {
   max-width: 100%;
 }
 
-/* ===== Left panel ===== */
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 240px;
-  width: 240px;
-}
-
-.left-panel button {
-  width: 100%;
-}
-
-#expenseContainer,
-#allowanceContainer {
-  margin-top: 10px;
-}
-
 /* ===== Buttons ===== */
 button {
   padding: 10px 20px;
@@ -113,18 +172,24 @@ button {
   margin-bottom: 10px;
   border: none;
   border-radius: 10px;
+  color: white;
   font-weight: 600;
   transition: 0.2s ease;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Make all left-panel buttons the same width */
+.left-panel button {
+  width: 100%;
 }
 
 button:hover {
   transform: translateY(-2px);
 }
 
-/* Amber for allowance/favourites */
+/* Specific button colors */
 #setAllowanceBtn,
-#showFavouritesBtn {
+#showFavouritesBtn {                /* AMBER buttons */
   background: var(--amber);
   color: #000;
 }
@@ -133,43 +198,27 @@ button:hover {
   background: #ffcb40;
 }
 
-/* Blue (turquoise) for the rest */
 #addExpenseBtn,
 #addGroceriesBtn,
-#addDrinkBtn,
-#clearAllBtn {
+#addDrinkBtn {                      /* TURQUOISE buttons */
   background: var(--turquoise);
   color: #000;
 }
 #addExpenseBtn:hover,
 #addGroceriesBtn:hover,
-#addDrinkBtn:hover,
+#addDrinkBtn:hover {
+  background: #0fb8d6;
+}
+
+#clearAllBtn {
+  background: var(--turquoise);
+  color: #000;
+}
 #clearAllBtn:hover {
   background: #0fb8d6;
 }
 
-/* ===== Table ===== */
-#submittedExpenses {
-  border-collapse: collapse;
-  width: 100%;
-  max-width: 800px;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-#submittedExpenses th,
-#submittedExpenses td {
-  border: 1px solid var(--border);
-  padding: 8px;
-  text-align: center;
-}
-#submittedExpenses th {
-  background-color: var(--navy);
-  color: white;
-  font-weight: 600;
-}
-
-/* ===== Modals & overlays ===== */
+/* ===== Overlays ===== */
 #expenseModalOverlay,
 #detailsModalOverlay,
 #allowanceModalOverlay,
@@ -182,69 +231,131 @@ button:hover {
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   z-index: 9999;
-  animation: fadeIn 0.25s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
+/* ===== Modals ===== */
 .expense-modal {
   width: min(92vw, 520px);
   background: #fff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  align-items: center;
-  text-align: center;
+  gap: 10px;
 }
 
-/* make everything centre-aligned inside modals */
 .expense-modal h3 {
+  margin: 0 0 6px 0;
   color: var(--navy);
-  margin-bottom: 5px;
 }
 
 .expense-modal label {
   font-size: 14px;
   color: #333;
-  width: 100%;
-  text-align: left;
 }
 
-.expense-modal input,
+.expense-modal input[type="number"],
 .expense-modal select,
-.expense-modal textarea {
-  width: 100%;
+.expense-modal textarea,
+.expense-modal input[type="text"] {
   padding: 8px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 16px;
-  text-align: center;
 }
 
-/* popup buttons: all blue & centred */
-.expense-modal button {
-  background: var(--turquoise);
-  color: #000;
-  width: 120px;
-}
-.expense-modal button:hover {
-  background: #0fb8d6;
-}
-
+/* Spread footer buttons evenly across modal width */
 .modal-actions {
   display: flex;
-  justify-content: center;
-  gap: 15px;
+  justify-content: space-between;   /* evenly across */
+  gap: 10px;
   margin-top: 6px;
 }
 
-/* quick pick */
+/* ===== Delete/edit rail ===== */
+#deleteRail {
+  position: absolute;
+  top: 0;
+  right: -36px;
+  width: 36px;
+  pointer-events: none;
+}
+
+.delete-mini,
+.edit-mini {
+  position: absolute;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.15s;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.delete-mini {
+  color: #ff0000;
+  right: 0;
+}
+
+.delete-mini:hover {
+  color: #b30000;
+  transform: scale(1.2);
+}
+
+.edit-mini {
+  color: var(--turquoise);
+  right: 18px;
+}
+
+.edit-mini:hover {
+  color: var(--teal);
+  transform: scale(1.2);
+}
+
+/* ===== Favourites rail ===== */
+#leftRail {
+  position: absolute;
+  top: 0;
+  left: -24px;
+  width: 16px;
+  pointer-events: none;
+}
+
+.fav-mini {
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.15s;
+  pointer-events: auto;
+  user-select: none;
+  color: var(--amber);
+}
+
+.fav-mini.filled {
+  color: #ffc93a;
+}
+
+.fav-mini:hover {
+  transform: scale(1.2);
+}
+
+/* ===== Quick-pick (drinks) ===== */
+.quick-stage {
+  margin-top: 2px;
+}
+
+.quick-title {
+  margin: 0 0 6px 0;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+/* Make quick buttons fill and space evenly across the modal */
 .quick-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -252,14 +363,27 @@ button:hover {
   width: 100%;
 }
 .quick-grid button {
-  background: var(--turquoise);
-  color: #000;
+  margin-bottom: 0;
   width: 100%;
 }
-.quick-grid button:hover {
-  background: #0fb8d6;
+
+/* ===== Responsive ===== */
+@media (max-width: 799px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    margin-top: 16px;
+  }
 }
 
-/* table header rounding */
-#submittedExpenses th:first-child { border-top-left-radius: 10px; }
-#submittedExpenses th:last-child  { border-top-right-radius: 10px; }
+/* ===== Table enhancements ===== */
+#submittedExpenses th:first-child {
+  border-top-left-radius: 10px;
+}
+
+#submittedExpenses th:last-child {
+  border-top-right-radius: 10px;
+}
