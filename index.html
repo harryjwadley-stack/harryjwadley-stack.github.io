@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <button id="prevMonthBtn" type="button">◀</button>
+    <select id="monthSelect"></select>
+    <select id="yearSelect"></select>
+    <button id="nextMonthBtn" type="button">▶</button>
+  </div>
   <h1>SavR</h1>
   <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
 
@@ -14,12 +20,6 @@
   <div class="content-grid">
     <!-- Left column: month controls + main content -->
     <div class="main-column">
-      <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <button id="prevMonthBtn" type="button">◀</button>
-        <select id="monthSelect"></select>
-        <select id="yearSelect"></select>
-        <button id="nextMonthBtn" type="button">▶</button>
-      </div>
 
       <!-- Left panel + table -->
       <div class="top-row">
