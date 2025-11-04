@@ -31,6 +31,7 @@
           <button id="addExpenseBtn">Add Expense</button>
           <button id="addGroceriesBtn">Add Groceries</button>
           <button id="addDrinkBtn">Add Drink</button>
+          <button id="showFavouritesBtn" type="button">Show Favourites</button>
           <div id="expenseContainer"></div>
         </div>
 
@@ -49,7 +50,8 @@
               </thead>
               <tbody></tbody>
             </table>
-            <!-- the edit/delete rail lives OUTSIDE the table, aligned to rows -->
+            <!-- Left & right rails -->
+            <div id="leftRail" aria-hidden="true"></div>
             <div id="deleteRail" aria-hidden="true"></div>
           </div>
           <button id="clearAllBtn" style="margin-top:10px;">Clear All</button>

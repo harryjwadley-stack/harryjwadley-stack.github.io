@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.getElementById("addExpenseBtn");
   const addGroceriesBtn = document.getElementById("addGroceriesBtn");
   const addDrinkBtn = document.getElementById("addDrinkBtn");
+  const showFavouritesBtn = document.getElementById("showFavouritesBtn");
 
   const submittedTable = document.getElementById("submittedExpenses");
 
@@ -162,18 +163,27 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
-  // --- Right-side rail (supports edit + delete)
+  // --- Rails (left favourites, right edit/delete)
   const tableWrap = document.querySelector(".table-wrap") || document.body;
   const deleteRail = document.getElementById("deleteRail");
+  const leftRail = document.getElementById("leftRail");
+
+  // Favourites-only view?
+  let showFavesOnly = false;
+
+  function visibleExpenses(data) {
+    return showFavesOnly ? data.expenses.filter(e => e.fav) : data.expenses;
+  }
 
   function renderForCurrentMonth() {
     const data = getMonthData();
     const globalAllowance = Number(settings.allowance) || 0;
     allowanceDisplay.textContent = `Allowance: ${globalAllowance.toFixed(2)}`;
 
-    // Rebuild table rows
+    // Rebuild table rows (respect favourites filter)
     submittedTableBody.innerHTML = "";
-    data.expenses.forEach((e, idx) => {
+    const list = visibleExpenses(data);
+    list.forEach((e, idx) => {
       const row = document.createElement("tr");
       row.setAttribute("data-row-id", e.id);
       row.innerHTML = `
@@ -185,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
       submittedTableBody.appendChild(row);
     });
 
-    // Totals
+    // Totals (still for all data; say the word if you want to filter these too)
     totalsDiv.innerHTML = `
       Groceries: ${data.categoryTotals.Groceries.toFixed(2)}<br>
       Social: ${data.categoryTotals.Social.toFixed(2)}<br>
@@ -197,6 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePieChart();
 
     queueMicrotask(positionEditDeleteDots);
+    queueMicrotask(positionFavStars);
   }
 
   function positionEditDeleteDots() {
@@ -211,13 +222,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const r = tr.getBoundingClientRect();
       const topInContainer = r.top - containerRect.top + (r.height / 2) - 8;
 
+      // Edit 'e' (right rail) — CSS positions horizontally via right: 18px
       const edit = document.createElement("span");
       edit.className = "edit-mini";
       edit.textContent = "e";
       edit.dataset.id = String(id);
       edit.style.top = `${topInContainer}px`;
-      edit.style.left = "20px";
 
+      // Delete 'd' (right rail) — CSS positions via right: 0
       const dot = document.createElement("span");
       dot.className = "delete-mini";
       dot.textContent = "d";
@@ -229,10 +241,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Reposition dots on resize
-  window.addEventListener("resize", positionEditDeleteDots);
+  function positionFavStars() {
+    if (!leftRail) return;
+    leftRail.innerHTML = "";
 
-  // ===== Row actions: Edit/Delete (rail) =====
+    const containerRect = tableWrap.getBoundingClientRect();
+    const rows = Array.from(submittedTableBody.querySelectorAll("tr"));
+
+    rows.forEach((tr) => {
+      const id = Number(tr.getAttribute("data-row-id"));
+      const r = tr.getBoundingClientRect();
+      const topInContainer = r.top - containerRect.top + (r.height / 2) - 8;
+
+      const star = document.createElement("span");
+      star.className = "fav-mini";
+      star.dataset.id = String(id);
+
+      const exp = findExpenseById(id);
+      const isFav = !!(exp && exp.fav);
+      star.textContent = isFav ? "★" : "☆";
+      if (isFav) star.classList.add("filled");
+
+      // only vertical; horizontal is handled by CSS (left: 0 within #leftRail)
+      star.style.top = `${topInContainer}px`;
+
+      leftRail.appendChild(star);
+    });
+  }
+
+  // Reposition rails on resize
+  window.addEventListener("resize", () => {
+    positionEditDeleteDots();
+    positionFavStars();
+  });
+
+  // ===== Rail actions: Edit/Delete (right) & Favourite (left) =====
   deleteRail?.addEventListener("click", (evt) => {
     const editEl = evt.target.closest(".edit-mini");
     const delEl  = evt.target.closest(".delete-mini");
@@ -260,6 +303,20 @@ document.addEventListener("DOMContentLoaded", () => {
       saveState();
       renderForCurrentMonth();
     }
+  });
+
+  leftRail?.addEventListener("click", (evt) => {
+    const star = evt.target.closest(".fav-mini");
+    if (!star) return;
+
+    const id = Number(star.dataset.id);
+    const data = getMonthData();
+    const exp = data.expenses.find(e => e.id === id);
+    if (!exp) return;
+
+    exp.fav = !exp.fav; // toggle
+    saveState();
+    renderForCurrentMonth();
   });
 
   // ===== Clear All =====
@@ -560,6 +617,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Set Allowance button → open modal
   setAllowanceBtn?.addEventListener("click", openAllowanceModal);
+
+  // ===== Show Favourites toggle =====
+  showFavouritesBtn?.addEventListener("click", () => {
+    showFavesOnly = !showFavesOnly;
+    showFavouritesBtn.textContent = showFavesOnly ? "Show All" : "Show Favourites";
+    renderForCurrentMonth();
+  });
 
   // ===== Initial render =====
   renderForCurrentMonth();

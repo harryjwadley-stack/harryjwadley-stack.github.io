@@ -112,23 +112,32 @@ button.small { padding: 6px 12px; font-size: 14px; }
 
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 
-/* Delete rail outside table */
+/* Delete/edit rail (right) */
 #deleteRail {
-  position: absolute; top: 0; right: -24px; width: 16px; pointer-events: none;
+  position: absolute; top: 0; right: -36px; width: 36px; pointer-events: none;
 }
-.delete-mini {
-  position: absolute; right: 0; color: #ff0000; cursor: pointer; font-size: 14px; font-weight: bold;
+.delete-mini, .edit-mini {
+  position: absolute; cursor: pointer; font-size: 14px; font-weight: bold;
   transition: 0.15s; pointer-events: auto; user-select: none;
 }
+.delete-mini { color: #ff0000; right: 0; }
 .delete-mini:hover { color: #b30000; transform: scale(1.2); }
-
-.edit-mini {
-  position: absolute; right: 20px; color: #007bff; cursor: pointer; font-size: 14px; font-weight: bold;
-  transition: 0.15s; pointer-events: auto; user-select: none;
-}
+.edit-mini { color: #007bff; right: 18px; }
 .edit-mini:hover { color: #0056b3; transform: scale(1.2); }
 
-/* Quick-pick stage for Add Drink */
+/* Favourite rail (left) */
+#leftRail {
+  position: absolute; top: 0; left: -24px; width: 16px; pointer-events: none;
+}
+.fav-mini {
+  position: absolute; left: 0; cursor: pointer; font-size: 14px; font-weight: bold;
+  transition: 0.15s; pointer-events: auto; user-select: none;
+  color: #caa85a;
+}
+.fav-mini.filled { color: #ffbf00; }
+.fav-mini:hover { transform: scale(1.2); }
+
+/* Quick-pick stage */
 .quick-stage { margin-top: 2px; }
 .quick-title { margin: 0 0 6px 0; font-weight: 600; }
 .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
