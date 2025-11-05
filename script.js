@@ -712,15 +712,23 @@ document.addEventListener("DOMContentLoaded", () => {
       return (b.id || 0) - (a.id || 0);
     });
 
-    const rows = arr.map((f) => `
-      <tr data-key="${yyyymmKey(f.year, f.monthIndex)}-${f.id}">
-        <td class="fav-name">${escapeHtml(f.name || "Favourite")}</td>
-        <td>${(f.amount || 0).toFixed(2)}</td>
-        <td>${f.category}</td>
-        <td>${f.card || "-"}</td>
-        <td><button class="fave-add" type="button" data-key="${yyyymmKey(f.year, f.monthIndex)}-${f.id}">Add</button></td>
-      </tr>
-    `).join("");
+    // Replace the rows = arr.map(...) block in renderFavesModal() with this:
+    const rows = arr.map((f) => {
+      const key = `${yyyymmKey(f.year, f.monthIndex)}-${f.id}`;
+      return `
+        <tr data-key="${key}">
+          <td class="fav-name">${escapeHtml(f.name || "Favourite")}</td>
+          <td>${(f.amount || 0).toFixed(2)}</td>
+          <td>${f.category}</td>
+          <td>${f.card || "-"}</td>
+          <td class="fav-actions">
+            <button class="fave-add" type="button" data-key="${key}">Add</button>
+            <span class="mini-inline edit-mini fav-edit" title="Rename" data-key="${key}">e</span>
+            <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
+          </td>
+        </tr>
+      `;
+    }).join("");
 
     favesList.innerHTML = `
       <table>
@@ -744,29 +752,61 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   favesCloseBtn?.addEventListener("click", closeFavesModal);
 
-  // Click "Add" inside favourites modal to insert into the CURRENT month
+  // here
+
+  // Replace the existing favesList.addEventListener("click", ...) with this:
   favesList.addEventListener("click", (e) => {
-    const btn = e.target.closest(".fave-add");
-    if (!btn) return;
+    // Add favourite to current month
+    const addBtn = e.target.closest(".fave-add");
+    if (addBtn) {
+      const key = addBtn.dataset.key;
+      const fav = favourites[key];
+      if (!fav) return;
 
-    const key = btn.dataset.key;
-    const fav = favourites[key];
-    if (!fav) return;
+      const data = getMonthData();
+      data.purchaseCount += 1;
+      const newId = data.purchaseCount;
+      data.expenses.push({
+        id: newId,
+        amount: fav.amount,
+        category: fav.category,
+        card: fav.card || "Credit"
+      });
+      data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
-    const data = getMonthData();
-    data.purchaseCount += 1;
-    const newId = data.purchaseCount;
-    data.expenses.push({
-      id: newId,
-      amount: fav.amount,
-      category: fav.category,
-      card: fav.card || "Credit"
-    });
-    data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
+      saveState();
+      renderForCurrentMonth();
+      return;
+    }
 
-    saveState();
-    renderForCurrentMonth();
+    // Edit (rename) favourite
+    const editBtn = e.target.closest(".fav-edit");
+    if (editBtn) {
+      const key = editBtn.dataset.key;
+      const fav = favourites[key];
+      if (!fav) return;
+
+      // Open the existing "Name your favourite" modal prefilled
+      openFavNameModal(
+        { key, year: fav.year, monthIndex: fav.monthIndex, id: fav.id, amount: fav.amount, category: fav.category, card: fav.card },
+        fav.name || ""
+      );
+      return;
+    }
+
+    // Delete favourite
+    const delBtn = e.target.closest(".fav-delete");
+    if (delBtn) {
+      const key = delBtn.dataset.key;
+      if (!favourites[key]) return;
+
+      delete favourites[key];
+      saveFavourites();
+      renderFavesModal();
+      return;
+    }
   });
+
 
   showFavouritesBtn?.addEventListener("click", openFavesModal);
 

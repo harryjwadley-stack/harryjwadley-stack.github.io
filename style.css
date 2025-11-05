@@ -387,3 +387,26 @@ button:hover {
 #submittedExpenses th:last-child {
   border-top-right-radius: 10px;
 }
+
+/* Inline minis for favourites modal (reuse colors from rail minis) */
+.fav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.mini-inline {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  line-height: 1;
+}
+
+.mini-inline.edit-mini { color: var(--turquoise); }
+.mini-inline.delete-mini { color: #ff0000; }
+
+.mini-inline:hover { transform: scale(1.15); opacity: 0.85; }
