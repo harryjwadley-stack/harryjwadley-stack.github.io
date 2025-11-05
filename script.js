@@ -334,7 +334,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Clicking star opens "Name your favourite" modal (create or rename)
+  // Click star to toggle favourite:
+  // - If not favourited: open "Name your favourite" modal
+  // - If already favourited (filled): remove from favourites immediately
   leftRail?.addEventListener("click", (evt) => {
     const star = evt.target.closest(".fav-mini");
     if (!star) return;
@@ -347,6 +349,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const key = compositeId(currentYear, currentMonthIndex, id);
     const existing = favourites[key];
 
+    if (existing) {
+      // Un-favourite: remove and refresh UI
+      delete favourites[key];
+      saveFavourites();
+      renderForCurrentMonth();
+      if (favesOverlay.style.display === "flex") renderFavesModal();
+      return;
+    }
+
+    // Not favourited yet → open name modal to create
     const snapshot = {
       key,
       year: currentYear,
@@ -356,9 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       category: exp.category,
       card: exp.card || ""
     };
-
-    // Always open name modal. If already exists, this works as "rename".
-    openFavNameModal(snapshot, existing?.name || "");
+    openFavNameModal(snapshot, "");
   });
 
   // ===== Clear All =====
