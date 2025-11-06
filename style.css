@@ -410,3 +410,10 @@ button:hover {
 .mini-inline.delete-mini { color: #ff0000; }
 
 .mini-inline:hover { transform: scale(1.15); opacity: 0.85; }
+
+/* Inline minis inside the Favourites modal should not be absolutely positioned */
+.fav-actions .mini-inline.delete-mini,
+.fav-actions .mini-inline.edit-mini {
+  position: static;
+  right: auto;
+}
