@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     categoryChart.data.datasets[0].backgroundColor = themedColors;
     categoryChart.update();
-  })()
+  })();
 
   // ===== Storage & state =====
   const STATE_KEY = "savr-monthly-state-v1";
@@ -418,6 +418,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Track whether we're editing; if so, which id
   let editingId = null;
 
+  // >>> NEW: track if we're editing a favourite snapshot (by favourites key)
+  let editingFavouriteKey = null;
+
   // expense: object or existing expense; options: { hideCategory, quickDrinkOnly }
   function openExpenseModal(expense = null, options = {}) {
     const isEdit = expense && typeof expense.id === "number";
@@ -460,12 +463,27 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => (quickDrinkOnly ? null : modalAmount()?.focus()), 0);
   }
 
+  // >>> NEW: open favourite edit using the same modal
+  function openFavouriteEdit(key) {
+    const fav = favourites[key];
+    if (!fav) return;
+
+    editingFavouriteKey = key;
+    openExpenseModal(
+      { amount: fav.amount, category: fav.category, card: fav.card || "Credit" },
+      { hideCategory: false, quickDrinkOnly: false }
+    );
+    modalTitle().textContent = "Edit Favourite";
+  }
+
   function closeExpenseModal() {
     expenseOverlay.style.display = "none";
     if (quickStage) quickStage.style.display = "none";
     showFormFields(true); // restore for next open
     if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
     editingId = null;
+    // >>> NEW: reset favourite-edit state
+    editingFavouriteKey = null;
   }
 
   expenseOverlay.addEventListener("click", (e) => { if (e.target === expenseOverlay) closeExpenseModal(); });
@@ -484,6 +502,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); modalAmount().focus(); return; }
       if (!["Groceries","Social","Treat","Unexpected"].includes(category)) { alert("Please select a valid category."); modalCat().focus(); return; }
       if (!["Credit","Debit"].includes(card)) { alert("Please choose Credit or Debit."); modalCard().focus(); return; }
+
+      // >>> NEW: if editing a favourite snapshot, update it and stop here
+      if (editingFavouriteKey) {
+        const fav = favourites[editingFavouriteKey];
+        if (fav) {
+          fav.amount = amount;
+          fav.category = category;
+          fav.card = card;
+          saveFavourites();
+        }
+        if (favesOverlay.style.display === "flex") renderFavesModal();
+        closeExpenseModal();
+        return;
+      }
 
       const data = getMonthData();
 
@@ -712,7 +744,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return (b.id || 0) - (a.id || 0);
     });
 
-    // Replace the rows = arr.map(...) block in renderFavesModal() with this:
     const rows = arr.map((f) => {
       const key = `${yyyymmKey(f.year, f.monthIndex)}-${f.id}`;
       return `
@@ -723,7 +754,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${f.card || "-"}</td>
           <td class="fav-actions">
             <button class="fave-add" type="button" data-key="${key}">Add</button>
-            <span class="mini-inline edit-mini fav-edit" title="Rename" data-key="${key}">e</span>
+            <span class="mini-inline edit-mini fav-edit" title="Rename/Edit" data-key="${key}">e</span>
             <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
           </td>
         </tr>
@@ -752,9 +783,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   favesCloseBtn?.addEventListener("click", closeFavesModal);
 
-  // here
-
-  // Replace the existing favesList.addEventListener("click", ...) with this:
+  // ===== Favourites list actions (Add / Edit / Delete) =====
   favesList.addEventListener("click", (e) => {
     // Add favourite to current month
     const addBtn = e.target.closest(".fave-add");
@@ -779,18 +808,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Edit (rename) favourite
+    // Edit favourite snapshot (amount/category/card) via shared modal
     const editBtn = e.target.closest(".fav-edit");
     if (editBtn) {
       const key = editBtn.dataset.key;
-      const fav = favourites[key];
-      if (!fav) return;
-
-      // Open the existing "Name your favourite" modal prefilled
-      openFavNameModal(
-        { key, year: fav.year, monthIndex: fav.monthIndex, id: fav.id, amount: fav.amount, category: fav.category, card: fav.card },
-        fav.name || ""
-      );
+      if (!favourites[key]) return;
+      openFavouriteEdit(key);
       return;
     }
 
@@ -806,7 +829,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   });
-
 
   showFavouritesBtn?.addEventListener("click", openFavesModal);
 
