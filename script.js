@@ -712,7 +712,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return (b.id || 0) - (a.id || 0);
     });
 
-    // Only "d" (delete) and "Add" — with "d" just left of Add
     const rows = arr.map((f) => {
       const key = `${yyyymmKey(f.year, f.monthIndex)}-${f.id}`;
       return `
@@ -722,8 +721,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${f.category}</td>
           <td>${f.card || "-"}</td>
           <td class="fav-actions">
-            <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
             <button class="fave-add" type="button" data-key="${key}">Add</button>
+            <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
           </td>
         </tr>
       `;
@@ -784,10 +783,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       delete favourites[key];
       saveFavourites();
-      renderFavesModal();
+
+      // Update both UIs:
+      renderFavesModal();       // refresh the popup table
+      renderForCurrentMonth();  // refresh main table & left-rail stars (★ -> ☆)
       return;
-    }
-  });
+  }
 
   showFavouritesBtn?.addEventListener("click", openFavesModal);
 
