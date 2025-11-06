@@ -435,3 +435,36 @@ button:hover {
 #favNameModalOverlay button:hover {
   background: #0fb8d6;
 }
+
+/* ===== Favourites modal table layout ===== */
+#favesList table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed; /* ensures even column widths */
+}
+
+#favesList th,
+#favesList td {
+  padding: 10px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#favesList th {
+  background: var(--navy);
+  color: white;
+  font-weight: 600;
+}
+
+#favesList tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Center and space action buttons nicely */
+.fav-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
