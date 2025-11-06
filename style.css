@@ -403,3 +403,15 @@ button:hover { transform: translateY(-2px); }
 #favNameModalOverlay button:hover {
   background: #0fb8d6;
 }
+
+/* Reset rail positioning for the 'd' inside the Favourites table */
+#favesList .fav-actions .mini-inline.delete-mini {
+  position: static;   /* was absolute from the rail styles */
+  right: auto;
+}
+
+/* limit absolute positioning to the right rail only */
+#deleteRail .delete-mini,
+#deleteRail .edit-mini {
+  position: absolute;
+}
