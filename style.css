@@ -323,6 +323,16 @@ button:hover { transform: translateY(-2px); }
 }
 #favesList tbody tr:nth-child(even) { background: #f9f9f9; }
 
+#favesList {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+#favesList table {
+  width: 90%; /* gives breathing room on the sides */
+}
+
+
 /* ===== Favourites modal action cell alignment ===== */
 .fav-actions {
   display: inline-flex;
