@@ -1,5 +1,5 @@
 :root {
-  /* Palette: turquoise, navy, teal, warm amber */
+  /* Palette */
   --turquoise: #11cdef;
   --navy: #0b2a4a;
   --teal: #0f766e;
@@ -45,34 +45,32 @@ h3 {
   grid-template-rows: auto 1fr;
 }
 
-/* ===== Month selector row ===== */
+/* ===== Month controls ===== */
 #monthControls {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
 }
-
 #monthControls select {
   padding: 4px 6px;
   font-size: 14px;
 }
 
-/* ===== Top-row layout: left panel, table, sidebar ===== */
+/* ===== Top row ===== */
 .top-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 50px;
-  margin-top: 0;
 }
 
 /* ===== Left panel ===== */
 .left-panel {
   display: flex;
   flex-direction: column;
-  align-items: stretch;           /* stretch children to full width */
-  min-width: 240px;               /* fixed column width for uniform buttons */
+  align-items: stretch;
+  min-width: 240px;
   width: 240px;
 }
 
@@ -111,13 +109,13 @@ h3 {
 }
 
 #submittedExpenses th {
-  background-color: var(--navy);
-  color: white;
+  background: var(--navy);
+  color: #fff;
   font-weight: 600;
 }
 
 #submittedExpenses tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background: #f9f9f9;
 }
 
 /* ===== Sidebar ===== */
@@ -133,36 +131,13 @@ h3 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   align-self: start;
 }
-
 @media (min-width: 900px) {
-  .sidebar {
-    position: sticky;
-    top: 0; /* align with month selector */
-  }
+  .sidebar { position: sticky; top: 0; }
 }
-
-.sidebar h3 {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: var(--navy);
-}
-
-#allowanceDisplay,
-#allowanceRemaining {
-  font-weight: 500;
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-#categoryTotals {
-  font-weight: normal;
-  margin-top: 0;
-}
-
-#categoryChart {
-  margin-top: 10px;
-  max-width: 100%;
-}
+.sidebar h3 { font-weight: bold; margin-bottom: 5px; color: var(--navy); }
+#allowanceDisplay, #allowanceRemaining { font-weight: 500; font-size: 16px; margin-bottom: 5px; }
+#categoryTotals { font-weight: normal; margin-top: 0; }
+#categoryChart { margin-top: 10px; max-width: 100%; }
 
 /* ===== Buttons ===== */
 button {
@@ -177,19 +152,12 @@ button {
   transition: 0.2s ease;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
+.left-panel button { width: 100%; }
+button:hover { transform: translateY(-2px); }
 
-/* Make all left-panel buttons the same width */
-.left-panel button {
-  width: 100%;
-}
-
-button:hover {
-  transform: translateY(-2px);
-}
-
-/* Specific button colors */
+/* Colour groups */
 #setAllowanceBtn,
-#showFavouritesBtn {                /* AMBER buttons */
+#showFavouritesBtn {
   background: var(--amber);
   color: #000;
 }
@@ -198,25 +166,33 @@ button:hover {
   background: #ffcb40;
 }
 
+/* Turquoise action buttons (Add, Clear, Big Night) */
 #addExpenseBtn,
 #addGroceriesBtn,
-#addDrinkBtn {                      /* TURQUOISE buttons */
+#addDrinkBtn,
+#bigNightBtn,
+#clearAllBtn {
   background: var(--turquoise);
   color: #000;
 }
 #addExpenseBtn:hover,
 #addGroceriesBtn:hover,
-#addDrinkBtn:hover {
-  background: #0fb8d6;
-}
-
-#clearAllBtn {
-  background: var(--turquoise);
-  color: #000;
-}
+#addDrinkBtn:hover,
+#bigNightBtn:hover,
 #clearAllBtn:hover {
   background: #0fb8d6;
 }
+
+/* Two-line Big Night Out button */
+#bigNightBtn.btn-subtext {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  padding: 12px 20px;
+}
+#bigNightBtn .btn-title { font-size: 16px; font-weight: 700; }
+#bigNightBtn .btn-sub { font-size: 12px; font-weight: 500; opacity: 0.8; margin-top: 2px; }
 
 /* ===== Overlays ===== */
 #expenseModalOverlay,
@@ -229,7 +205,7 @@ button:hover {
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0,0,0,0.45);
   z-index: 9999;
 }
 
@@ -239,26 +215,16 @@ button:hover {
   background: #fff;
   border-radius: 12px;
   padding: 18px 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
-.expense-modal h3 {
-  margin: 0 0 6px 0;
-  color: var(--navy);
-}
-
-.expense-modal label {
-  font-size: 14px;
-  color: #333;
-}
-
-.expense-modal input[type="number"],
+.expense-modal h3 { margin: 0 0 6px 0; color: var(--navy); }
+.expense-modal label { font-size: 14px; color: #333; }
+.expense-modal input,
 .expense-modal select,
-.expense-modal textarea,
-.expense-modal input[type="text"] {
+.expense-modal textarea {
   padding: 8px;
   font-size: 16px;
   width: 100%;
@@ -266,16 +232,14 @@ button:hover {
   border: 1px solid var(--border);
   border-radius: 6px;
 }
-
-/* Spread footer buttons evenly across modal width */
 .modal-actions {
   display: flex;
-  justify-content: space-between;   /* evenly across */
+  justify-content: space-between;
   gap: 10px;
   margin-top: 6px;
 }
 
-/* ===== Delete/edit rail ===== */
+/* ===== Rails (edit/delete/fav) ===== */
 #deleteRail {
   position: absolute;
   top: 0;
@@ -284,8 +248,7 @@ button:hover {
   pointer-events: none;
 }
 
-.delete-mini,
-.edit-mini {
+.delete-mini, .edit-mini {
   position: absolute;
   cursor: pointer;
   font-size: 14px;
@@ -294,28 +257,11 @@ button:hover {
   pointer-events: auto;
   user-select: none;
 }
+.delete-mini { color: #ff0000; right: 0; }
+.delete-mini:hover { color: #b30000; transform: scale(1.2); }
+.edit-mini { color: var(--turquoise); right: 18px; }
+.edit-mini:hover { color: var(--teal); transform: scale(1.2); }
 
-.delete-mini {
-  color: #ff0000;
-  right: 0;
-}
-
-.delete-mini:hover {
-  color: #b30000;
-  transform: scale(1.2);
-}
-
-.edit-mini {
-  color: var(--turquoise);
-  right: 18px;
-}
-
-.edit-mini:hover {
-  color: var(--teal);
-  transform: scale(1.2);
-}
-
-/* ===== Favourites rail ===== */
 #leftRail {
   position: absolute;
   top: 0;
@@ -323,102 +269,80 @@ button:hover {
   width: 16px;
   pointer-events: none;
 }
-
 .fav-mini {
   position: absolute;
   left: 0;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
+  color: var(--amber);
   transition: 0.15s;
   pointer-events: auto;
   user-select: none;
-  color: var(--amber);
 }
-
-.fav-mini.filled {
-  color: #ffc93a;
-}
-
-.fav-mini:hover {
-  transform: scale(1.2);
-}
+.fav-mini.filled { color: #ffc93a; }
+.fav-mini:hover { transform: scale(1.2); }
 
 /* ===== Quick-pick (drinks) ===== */
-.quick-stage {
-  margin-top: 2px;
-}
-
-.quick-title {
-  margin: 0 0 6px 0;
-  font-weight: 600;
-  color: var(--navy);
-}
-
-/* Make quick buttons fill and space evenly across the modal */
+.quick-stage { margin-top: 2px; }
+.quick-title { margin: 0 0 6px 0; font-weight: 600; color: var(--navy); }
 .quick-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   width: 100%;
 }
-.quick-grid button {
-  margin-bottom: 0;
-  width: 100%;
-}
+.quick-grid button { margin-bottom: 0; width: 100%; }
 
 /* ===== Responsive ===== */
 @media (max-width: 799px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-    margin-top: 16px;
-  }
+  .content-grid { grid-template-columns: 1fr; }
+  .sidebar { position: static; margin-top: 16px; }
 }
 
-/* ===== Table enhancements ===== */
-#submittedExpenses th:first-child {
-  border-top-left-radius: 10px;
-}
+/* ===== Table Enhancements ===== */
+#submittedExpenses th:first-child { border-top-left-radius: 10px; }
+#submittedExpenses th:last-child { border-top-right-radius: 10px; }
 
-#submittedExpenses th:last-child {
-  border-top-right-radius: 10px;
+/* ===== Favourites Modal ===== */
+#favesList table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed;
 }
+#favesList th, #favesList td {
+  padding: 10px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+#favesList th {
+  background: var(--navy);
+  color: white;
+  font-weight: 600;
+}
+#favesList tbody tr:nth-child(even) { background: #f9f9f9; }
 
-/* Inline minis for favourites modal (reuse colors from rail minis) */
 .fav-actions {
   display: flex;
-  align-items: center;
-  gap: 8px;
   justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
-
 .mini-inline {
   display: inline-block;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.15s ease, opacity 0.15s ease;
   line-height: 1;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
-
-.mini-inline.edit-mini { color: var(--turquoise); }
 .mini-inline.delete-mini { color: #ff0000; }
-
+.mini-inline.edit-mini { color: var(--turquoise); }
 .mini-inline:hover { transform: scale(1.15); opacity: 0.85; }
 
-/* Inline minis inside the Favourites modal should not be absolutely positioned */
-.fav-actions .mini-inline.delete-mini,
-.fav-actions .mini-inline.edit-mini {
-  position: static;
-  right: auto;
-}
-
-/* ===== Pop-up button colour match ===== */
+/* ===== Pop-up Buttons ===== */
 #expenseModalOverlay button,
 #detailsModalOverlay button,
 #allowanceModalOverlay button,
@@ -427,94 +351,10 @@ button:hover {
   background: var(--turquoise);
   color: #000;
 }
-
 #expenseModalOverlay button:hover,
 #detailsModalOverlay button:hover,
 #allowanceModalOverlay button:hover,
 #favesModalOverlay button:hover,
 #favNameModalOverlay button:hover {
-  background: #0fb8d6;
-}
-
-/* ===== Favourites modal table layout ===== */
-#favesList table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
-  table-layout: fixed; /* ensures even column widths */
-}
-
-#favesList th,
-#favesList td {
-  padding: 10px 12px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-#favesList th {
-  background: var(--navy);
-  color: white;
-  font-weight: 600;
-}
-
-#favesList tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-/* Center and space action buttons nicely */
-.fav-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-#addExpenseBtn,
-#addGroceriesBtn,
-#addDrinkBtn,
-#bigNightBtn {
-  background: var(--turquoise);
-  color: #000;
-}
-#addExpenseBtn:hover,
-#addGroceriesBtn:hover,
-#addDrinkBtn:hover,
-#bigNightBtn:hover {
-  background: #0fb8d6;
-}
-
-/* Two-line button layout for Big Night Out */
-#bigNightBtn.btn-subtext {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.1;
-  padding: 12px 20px; /* a bit taller to fit the subtext nicely */
-}
-
-/* Title & subtext sizes */
-#bigNightBtn .btn-title {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-#bigNightBtn .btn-sub {
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.8;
-  margin-top: 2px;
-}
-
-#addExpenseBtn,
-#addGroceriesBtn,
-#addDrinkBtn,
-#bigNightBtn {
-  background: var(--turquoise);
-  color: #000;
-}
-#addExpenseBtn:hover,
-#addGroceriesBtn:hover,
-#addDrinkBtn:hover,
-#bigNightBtn:hover {
   background: #0fb8d6;
 }
