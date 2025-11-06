@@ -7,16 +7,18 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="monthControls" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-    <button id="prevMonthBtn" type="button">◀</button>
-    <select id="monthSelect"></select>
-    <select id="yearSelect"></select>
-    <button id="nextMonthBtn" type="button">▶</button>
+  <!-- Month selector row -->
+  <div id="monthControls">
+    <button id="prevMonthBtn" type="button" aria-label="Previous month">◀</button>
+    <select id="monthSelect" aria-label="Select month"></select>
+    <select id="yearSelect" aria-label="Select year"></select>
+    <button id="nextMonthBtn" type="button" aria-label="Next month">▶</button>
   </div>
+
   <h1>SavR</h1>
   <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
 
-  <!-- Two-column layout wrapper -->
+  <!-- Two-column layout -->
   <div class="content-grid">
     <div class="main-column">
       <div class="top-row">
@@ -29,10 +31,10 @@
           <button id="addGroceriesBtn">Add Groceries</button>
           <button id="addDrinkBtn">Add Drink</button>
 
-          <!-- New Big Night Out button + caption -->
+          <!-- Big Night Out (two-line button with caption inside) -->
           <button id="bigNightBtn" class="btn-subtext">
             <span class="btn-title">Big Night Out?</span>
-            <span class="btn-sub">no worries, we've all been there...</span>
+            <span class="btn-sub">no worries. we've all been there</span>
           </button>
 
           <button id="showFavouritesBtn" type="button">Show Favourites</button>
@@ -43,13 +45,13 @@
         <div class="table-container" id="tableContainer">
           <h3>Submitted Expenses</h3>
           <div class="table-wrap">
-            <table id="submittedExpenses">
+            <table id="submittedExpenses" aria-label="Submitted expenses">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Amount</th>
-                  <th>Category</th>
-                  <th>Card</th>
+                  <th scope="col">#</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Card</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -58,13 +60,14 @@
             <div id="leftRail" aria-hidden="true"></div>
             <div id="deleteRail" aria-hidden="true"></div>
           </div>
-          <button id="clearAllBtn" style="margin-top:10px;">Clear All</button>
+
+          <button id="clearAllBtn" type="button">Clear All</button>
         </div>
       </div>
     </div>
 
     <!-- Right column: Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Insights">
       <h3>Allowance Info</h3>
       <div id="allowanceDisplay">Allowance: 0.00</div>
       <div id="allowanceRemaining">Allowance Remaining: 0.00</div>
@@ -78,17 +81,17 @@
       </div>
 
       <!-- Pie chart for category breakdown -->
-      <canvas id="categoryChart" width="200" height="200"></canvas>
+      <canvas id="categoryChart" width="200" height="200" aria-label="Category breakdown chart"></canvas>
     </aside>
   </div>
 
   <!-- Add/Edit Expense Modal -->
-  <div id="expenseModalOverlay" style="display:none;">
+  <div id="expenseModalOverlay" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
     <div class="expense-modal">
-      <h3>Add Expense</h3>
+      <h3 id="expenseModalTitle">Add Expense</h3>
 
-      <!-- Quick pick stage (only shown for Add Drink / Big Night Out) -->
-      <div id="drinkQuickStage" class="quick-stage" style="display:none;">
+      <!-- Quick pick stage (shown for Add Drink / Big Night Out) -->
+      <div id="drinkQuickStage" class="quick-stage">
         <p class="quick-title">Quick pick</p>
         <div class="quick-grid">
           <button id="drinkGuinnessBtn" type="button">Guinness — $6</button>
@@ -126,9 +129,9 @@
   </div>
 
   <!-- Details Modal -->
-  <div id="detailsModalOverlay" style="display:none;">
+  <div id="detailsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle">
     <div class="expense-modal">
-      <h3>Expense Details</h3>
+      <h3 id="detailsModalTitle">Expense Details</h3>
       <div id="detailsModalBody" class="details-text"></div>
       <div class="modal-actions">
         <button id="detailsModalCloseBtn" type="button">Close</button>
@@ -136,10 +139,10 @@
     </div>
   </div>
 
-  <!-- Allowance Modal (Manual / Calculate) -->
-  <div id="allowanceModalOverlay" style="display:none;">
+  <!-- Allowance Modal -->
+  <div id="allowanceModalOverlay" role="dialog" aria-modal="true" aria-labelledby="allowanceModalTitle">
     <div class="expense-modal">
-      <h3>Set Global Allowance</h3>
+      <h3 id="allowanceModalTitle">Set Global Allowance</h3>
       <div id="allowanceModalStage"></div>
       <div class="modal-actions">
         <button id="allowanceModalCancelBtn" type="button">Cancel</button>
@@ -149,10 +152,10 @@
     </div>
   </div>
 
-  <!-- Favourites Modal (GLOBAL list across months) -->
-  <div id="favesModalOverlay" style="display:none;">
+  <!-- Favourites Modal -->
+  <div id="favesModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favesModalTitle">
     <div class="expense-modal">
-      <h3>Favourites</h3>
+      <h3 id="favesModalTitle">Favourites</h3>
       <div id="favesList"></div>
       <div class="modal-actions">
         <button id="favesCloseBtn" type="button">Close</button>
@@ -161,9 +164,9 @@
   </div>
 
   <!-- Favourite Name Modal -->
-  <div id="favNameModalOverlay" style="display:none;">
+  <div id="favNameModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favNameModalTitle">
     <div class="expense-modal">
-      <h3>Name your favourite</h3>
+      <h3 id="favNameModalTitle">Name your favourite</h3>
       <input id="favNameInput" type="text" placeholder="e.g., Friday Guinness, Payday Coffee" />
       <div class="modal-actions">
         <button id="favNameCancelBtn" type="button">Cancel</button>
@@ -172,7 +175,7 @@
     </div>
   </div>
 
-  <!-- Chart.js CDN -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
