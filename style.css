@@ -482,3 +482,39 @@ button:hover {
 #bigNightBtn:hover {
   background: #0fb8d6;
 }
+
+/* Two-line button layout for Big Night Out */
+#bigNightBtn.btn-subtext {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  padding: 12px 20px; /* a bit taller to fit the subtext nicely */
+}
+
+/* Title & subtext sizes */
+#bigNightBtn .btn-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#bigNightBtn .btn-sub {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+#addExpenseBtn,
+#addGroceriesBtn,
+#addDrinkBtn,
+#bigNightBtn {
+  background: var(--turquoise);
+  color: #000;
+}
+#addExpenseBtn:hover,
+#addGroceriesBtn:hover,
+#addDrinkBtn:hover,
+#bigNightBtn:hover {
+  background: #0fb8d6;
+}

@@ -523,8 +523,12 @@ document.addEventListener("DOMContentLoaded", () => {
   addDrinkBtn?.addEventListener("click", () => {
     openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: true });
   });
+  // Big Night Out → same flow as Add Groceries (normal form), but default category Social
   bigNightBtn?.addEventListener("click", () => {
-    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: true });
+    openExpenseModal(
+      { category: "Social", card: "Credit", amount: "" },
+      { hideCategory: true, quickDrinkOnly: false } // show form, hide category picker
+    );
   });
 
   // Quick-pick handlers:
