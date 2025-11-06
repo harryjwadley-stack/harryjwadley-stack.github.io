@@ -323,12 +323,47 @@ button:hover { transform: translateY(-2px); }
 }
 #favesList tbody tr:nth-child(even) { background: #f9f9f9; }
 
+/* ===== Favourites modal action cell alignment ===== */
 .fav-actions {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 8px;              /* spacing between Add and d */
+  white-space: nowrap;   /* keep them on one line */
 }
+
+.fav-actions button.fave-add {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: var(--turquoise);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.fav-actions button.fave-add:hover {
+  background: #0fb8d6;
+}
+
+.fav-actions .mini-inline.delete-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff0000;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.fav-actions .mini-inline.delete-mini:hover {
+  transform: scale(1.15);
+  opacity: 0.85;
+}
+
 .mini-inline {
   display: inline-block;
   font-size: 14px;
