@@ -468,3 +468,17 @@ button:hover {
   align-items: center;
   gap: 10px;
 }
+
+#addExpenseBtn,
+#addGroceriesBtn,
+#addDrinkBtn,
+#bigNightBtn {
+  background: var(--turquoise);
+  color: #000;
+}
+#addExpenseBtn:hover,
+#addGroceriesBtn:hover,
+#addDrinkBtn:hover,
+#bigNightBtn:hover {
+  background: #0fb8d6;
+}

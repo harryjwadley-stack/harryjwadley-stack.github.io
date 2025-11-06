@@ -18,10 +18,7 @@
 
   <!-- Two-column layout wrapper -->
   <div class="content-grid">
-    <!-- Left column: month controls + main content -->
     <div class="main-column">
-
-      <!-- Left panel + table -->
       <div class="top-row">
         <!-- Left panel: controls -->
         <div class="left-panel">
@@ -31,6 +28,13 @@
           <button id="addExpenseBtn">Add Expense</button>
           <button id="addGroceriesBtn">Add Groceries</button>
           <button id="addDrinkBtn">Add Drink</button>
+
+          <!-- New Big Night Out button + caption -->
+          <button id="bigNightBtn">Big Night Out?</button>
+          <p style="font-size:12px;color:#555;margin-top:-8px;margin-bottom:10px;text-align:center;">
+            no worries. we've all been there
+          </p>
+
           <button id="showFavouritesBtn" type="button">Show Favourites</button>
           <div id="expenseContainer"></div>
         </div>
@@ -83,7 +87,7 @@
     <div class="expense-modal">
       <h3>Add Expense</h3>
 
-      <!-- Quick pick stage (only shown for Add Drink) -->
+      <!-- Quick pick stage (only shown for Add Drink / Big Night Out) -->
       <div id="drinkQuickStage" class="quick-stage" style="display:none;">
         <p class="quick-title">Quick pick</p>
         <div class="quick-grid">

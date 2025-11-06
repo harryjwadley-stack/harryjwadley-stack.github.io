@@ -3,11 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.getElementById("addExpenseBtn");
   const addGroceriesBtn = document.getElementById("addGroceriesBtn");
   const addDrinkBtn = document.getElementById("addDrinkBtn");
+  const bigNightBtn = document.getElementById("bigNightBtn");
   const showFavouritesBtn = document.getElementById("showFavouritesBtn");
 
   const submittedTable = document.getElementById("submittedExpenses");
-
-  // Ensure a <tbody> exists
   let submittedTableBody = submittedTable.querySelector("tbody");
   if (!submittedTableBody) {
     submittedTableBody = document.createElement("tbody");
@@ -52,10 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
         label: "Category Breakdown",
         data: [0, 0, 0, 0],
         backgroundColor: [
-          "#11cdef", // Turquoise  (Groceries)
-          "#0b2a4a", // Navy       (Social)
-          "#0f766e", // Teal       (Treat)
-          "#ffb000"  // Warm amber (Unexpected)
+          "#11cdef", // Turquoise
+          "#0b2a4a", // Navy
+          "#0f766e", // Teal
+          "#ffb000"  // Amber
         ]
       }]
     },
@@ -81,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Storage & state =====
   const STATE_KEY = "savr-monthly-state-v1";
   const SETTINGS_KEY = "savr-settings-v1";
-  const FAV_KEY = "savr-favourites-v1"; // global favourites across months (map of composite key -> favourite)
+  const FAV_KEY = "savr-favourites-v1"; // global favourites across months
 
   let monthlyState = loadJSON(STATE_KEY) || {};
   let settings = loadJSON(SETTINGS_KEY) || { allowance: 0 };
@@ -223,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
       submittedTableBody.appendChild(row);
     });
 
-    // Totals (for full month data)
+    // Totals
     totalsDiv.innerHTML = `
       Groceries: ${data.categoryTotals.Groceries.toFixed(2)}<br>
       Social: ${data.categoryTotals.Social.toFixed(2)}<br>
@@ -320,8 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const exp = data.expenses[i];
 
-      // NOTE: Do NOT remove favourites when deleting a row; favourites are global snapshots.
-
+      // Do NOT remove favourites when deleting a row; favourites are global snapshots.
       data.categoryTotals[exp.category] = Math.max(
         0,
         (data.categoryTotals[exp.category] || 0) - (exp.amount || 0)
@@ -330,13 +328,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       saveState();
       renderForCurrentMonth();
-      if (favesOverlay.style.display === "flex") renderFavesModal(); // keep modal in sync
+      if (favesOverlay.style.display === "flex") renderFavesModal();
     }
   });
 
-  // Click star to toggle favourite:
-  // - If not favourited: open "Name your favourite" modal
-  // - If already favourited (filled): remove from favourites immediately
+  // Click star to toggle favourite
   leftRail?.addEventListener("click", (evt) => {
     const star = evt.target.closest(".fav-mini");
     if (!star) return;
@@ -350,7 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const existing = favourites[key];
 
     if (existing) {
-      // Un-favourite: remove and refresh UI
       delete favourites[key];
       saveFavourites();
       renderForCurrentMonth();
@@ -358,7 +353,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Not favourited yet → open name modal to create
     const snapshot = {
       key,
       year: currentYear,
@@ -375,8 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
   clearAllBtn?.addEventListener("click", () => {
     if (!confirm("Are you sure you want to delete all expenses for this month?")) return;
 
-    // Do NOT purge favourites here; they are global snapshots.
-
+    // Do NOT purge favourites; they are global snapshots.
     const data = getMonthData();
     data.expenses = [];
     data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
@@ -397,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalTitle   = () => expenseOverlay.querySelector(".expense-modal h3");
   const modalCategoryWrapper = () => document.getElementById("modalCategoryWrapper");
 
-  // Quick-pick stage elements (inside the same modal)
+  // Quick-pick stage elements
   const quickStage = document.getElementById("drinkQuickStage");
   const btnGuinness = document.getElementById("drinkGuinnessBtn");
   const btnCoffee   = document.getElementById("drinkCoffeeBtn");
@@ -418,22 +411,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Track whether we're editing; if so, which id
   let editingId = null;
 
-  // expense: object or existing expense; options: { hideCategory, quickDrinkOnly }
+  // Open modal
   function openExpenseModal(expense = null, options = {}) {
     const isEdit = expense && typeof expense.id === "number";
     const hideCategory = !!options.hideCategory;
     const quickDrinkOnly = !!options.quickDrinkOnly;
 
-    // If quick pick only, show only the quick stage; hide the form fields
     if (!isEdit && quickStage) {
       quickStage.style.display = quickDrinkOnly ? "block" : "none";
-      showFormFields(!quickDrinkOnly); // hide form when quick pick is shown
+      showFormFields(!quickDrinkOnly);
     } else if (quickStage) {
       quickStage.style.display = "none";
       showFormFields(true);
     }
 
-    // Category show/hide (never hide on edit). If we're in quick-only mode, category hidden anyway.
     if (modalCategoryWrapper() && !quickDrinkOnly) {
       modalCategoryWrapper().style.display = (isEdit || !hideCategory) ? "block" : "none";
     }
@@ -463,7 +454,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeExpenseModal() {
     expenseOverlay.style.display = "none";
     if (quickStage) quickStage.style.display = "none";
-    showFormFields(true); // restore for next open
+    showFormFields(true);
     if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "block";
     editingId = null;
   }
@@ -474,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   modalCancel()?.addEventListener("click", closeExpenseModal);
 
-  // Submit (only used when the normal form is visible)
+  // Submit (normal form)
   modalSubmit()?.addEventListener("click", () => {
     try {
       const amount = parseFloat(modalAmount().value);
@@ -491,16 +482,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const idx = data.expenses.findIndex(e => e.id === editingId);
         if (idx !== -1) {
           const old = data.expenses[idx];
-          // Adjust old totals
           data.categoryTotals[old.category] = Math.max(0, (data.categoryTotals[old.category] || 0) - (old.amount || 0));
-
-          // Update expense
           data.expenses[idx] = { ...old, amount, category, card };
-
-          // Update totals
           data.categoryTotals[category] = (data.categoryTotals[category] || 0) + amount;
 
-          // If this expense is favourited globally, update its snapshot too
           const key = compositeId(currentYear, currentMonthIndex, editingId);
           if (favourites[key]) {
             favourites[key].amount = amount;
@@ -510,6 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
+        const data = getMonthData();
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
@@ -525,17 +511,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Buttons to open modal
+  // Open modal buttons
   addBtn?.addEventListener("click", () =>
     openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: false, quickDrinkOnly: false })
   );
-
   addGroceriesBtn?.addEventListener("click", () =>
     openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: false })
   );
 
-  // Add Drink → show ONLY quick pick stage
+  // Add Drink / Big Night Out → show ONLY quick pick stage
   addDrinkBtn?.addEventListener("click", () => {
+    openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: true });
+  });
+  bigNightBtn?.addEventListener("click", () => {
     openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory: true, quickDrinkOnly: true });
   });
 
@@ -572,13 +560,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailsOverlay = document.getElementById("detailsModalOverlay");
   const detailsBody    = () => document.getElementById("detailsModalBody");
   const detailsClose   = () => document.getElementById("detailsModalCloseBtn");
-
   function openDetailsModal(text) {
     detailsBody().textContent = text || "No details.";
     detailsOverlay.style.display = "flex";
   }
   function closeDetailsModal() { detailsOverlay.style.display = "none"; }
-
   detailsOverlay.addEventListener("click", (e) => { if (e.target === detailsOverlay) closeDetailsModal(); });
   document.addEventListener("keydown", (e) => {
     if (detailsOverlay.style.display === "flex" && e.key === "Escape") closeDetailsModal();
@@ -675,17 +661,14 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Allowance modal wiring
   allowanceOverlay.addEventListener("click", (e) => { if (e.target === allowanceOverlay) closeAllowanceModal(); });
   document.addEventListener("keydown", (e) => {
     if (allowanceOverlay.style.display === "flex" && e.key === "Escape") closeAllowanceModal();
   });
   allowanceCancel()?.addEventListener("click", closeAllowanceModal);
-
-  // Set Allowance button → open modal
   setAllowanceBtn?.addEventListener("click", openAllowanceModal);
 
-  // ===== FAVOURITES MODAL (GLOBAL) =====
+  // ===== FAVOURITES MODAL =====
   function openFavesModal() {
     renderFavesModal();
     favesOverlay.style.display = "flex";
@@ -712,6 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return (b.id || 0) - (a.id || 0);
     });
 
+    // Only "Add" then "d" (delete)
     const rows = arr.map((f) => {
       const key = `${yyyymmKey(f.year, f.monthIndex)}-${f.id}`;
       return `
@@ -750,7 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   favesCloseBtn?.addEventListener("click", closeFavesModal);
 
-  // ===== Favourites list actions (Add / Delete) =====
+  // Favourites list actions (Add / Delete)
   favesList.addEventListener("click", (e) => {
     // Add favourite to current month
     const addBtn = e.target.closest(".fave-add");
@@ -775,7 +759,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Delete favourite
+    // Delete favourite → also hollow the star in main table
     const delBtn = e.target.closest(".fav-delete");
     if (delBtn) {
       const key = delBtn.dataset.key;
@@ -784,12 +768,10 @@ document.addEventListener("DOMContentLoaded", () => {
       delete favourites[key];
       saveFavourites();
 
-      // Update both UIs:
-      renderFavesModal();       // refresh the popup table
-      renderForCurrentMonth();  // refresh main table & left-rail stars (★ -> ☆)
+      renderFavesModal();       // refresh popup
+      renderForCurrentMonth();  // update stars (★ -> ☆)
       return;
     }
-
   });
 
   showFavouritesBtn?.addEventListener("click", openFavesModal);
