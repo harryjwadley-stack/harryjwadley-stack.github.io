@@ -172,7 +172,7 @@ button {
   margin-bottom: 10px;
   border: none;
   border-radius: 10px;
-  color: #0fb8d6;
+  color: white;
   font-weight: 600;
   transition: 0.2s ease;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
@@ -416,4 +416,22 @@ button:hover {
 .fav-actions .mini-inline.edit-mini {
   position: static;
   right: auto;
+}
+
+/* ===== Pop-up button colour match ===== */
+#expenseModalOverlay button,
+#detailsModalOverlay button,
+#allowanceModalOverlay button,
+#favesModalOverlay button,
+#favNameModalOverlay button {
+  background: var(--turquoise);
+  color: #000;
+}
+
+#expenseModalOverlay button:hover,
+#detailsModalOverlay button:hover,
+#allowanceModalOverlay button:hover,
+#favesModalOverlay button:hover,
+#favNameModalOverlay button:hover {
+  background: #0fb8d6;
 }
