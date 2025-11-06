@@ -788,7 +788,9 @@ document.addEventListener("DOMContentLoaded", () => {
       renderFavesModal();       // refresh the popup table
       renderForCurrentMonth();  // refresh main table & left-rail stars (★ -> ☆)
       return;
-  }
+    }
+
+  });
 
   showFavouritesBtn?.addEventListener("click", openFavesModal);
 
