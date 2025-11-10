@@ -24,6 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const allowanceDisplay = $("allowanceDisplay");
   const allowanceRemainingDiv = $("allowanceRemaining");
 
+  // Sidebar stats
+  const expenseCountEl = $("expenseCount");
+  const scoreTotalEl   = $("scoreTotal");
+
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
   const favesList = $("favesList");
@@ -73,8 +77,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const FAV_KEY = "savr-favourites-v1";
 
   let monthlyState = loadJSON(STATE_KEY) || {};
-  let settings     = loadJSON(SETTINGS_KEY) || { allowance: 0 };
+  let settings     = loadJSON(SETTINGS_KEY) || { allowance: 0, expenseCount: 0, score: 0 };
   let favourites   = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
+
+  // Backfill missing fields
+  if (typeof settings.allowance !== "number") settings.allowance = Number(settings.allowance)||0;
+  if (typeof settings.expenseCount !== "number") settings.expenseCount = 0;
+  if (typeof settings.score !== "number") settings.score = 0;
 
   function loadJSON(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
   function saveJSON(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
@@ -159,6 +168,11 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
+  function updateStatsUI(){
+    if (expenseCountEl) expenseCountEl.textContent = `Expenses: ${Number(settings.expenseCount || 0)}`;
+    if (scoreTotalEl)   scoreTotalEl.textContent   = `Score: ${Number(settings.score || 0)}`;
+  }
+
   function renderForCurrentMonth(){
     const data = getMonthData();
     allowanceDisplay.textContent = `Allowance: ${(Number(settings.allowance)||0).toFixed(2)}`;
@@ -178,6 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateAllowanceRemaining();
     updatePieChart();
+    updateStatsUI();
     queueMicrotask(updateRails);
   }
 
@@ -219,6 +234,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   on(window, "resize", updateRails);
+
+  /* ---------- Stats bump on add ---------- */
+  function bumpStatsOnAdd(){
+    settings.expenseCount = (settings.expenseCount || 0) + 1;
+    settings.score        = (settings.score || 0) + 10;
+    saveSettings();
+    updateStatsUI();
+  }
 
   /* ---------- Rail actions ---------- */
   on(deleteRail, "click", (evt) => {
@@ -382,6 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
+        bumpStatsOnAdd(); // ++ counters on NEW add
       }
 
       saveState();
@@ -407,6 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.purchaseCount += 1;
     data.expenses.push({ id: data.purchaseCount, amount: amt, category: "Social", card: "Credit" });
     data.categoryTotals.Social += amt;
+    bumpStatsOnAdd(); // ++ counters on quick add
     saveState(); renderForCurrentMonth(); closeExpenseModal();
   };
   on(btnGuinness, "click", () => quickAdd(6.00));
@@ -517,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
   function renderFavesModal(){
     const entries = Object.entries(favourites); // [key, fav]
@@ -566,6 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
       data.purchaseCount += 1;
       data.expenses.push({ id: data.purchaseCount, amount: fav.amount, category: fav.category, card: fav.card || "Credit" });
       data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
+      bumpStatsOnAdd(); // ++ counters on favourite add
       saveState(); renderForCurrentMonth();
       return;
     }

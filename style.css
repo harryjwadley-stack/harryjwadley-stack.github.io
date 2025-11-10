@@ -426,3 +426,15 @@ button:hover { transform: translateY(-2px); }
   cursor: default;
   min-width: 90px;
 }
+
+#sidebarStats {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  width: 100%;
+}
+#expenseCount, #scoreTotal {
+  font-weight: 600;
+  color: var(--navy);
+  margin: 4px 0;
+}
