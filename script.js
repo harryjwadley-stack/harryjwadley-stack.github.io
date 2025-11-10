@@ -42,6 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearSelect = $("yearSelect");
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+  const dayBtn = $("dayCounterBtn");
+  let currentDay = 1; // 1..7
+
   // Rails
   const tableWrap = document.querySelector(".table-wrap") || document.body;
   const deleteRail = $("deleteRail");
@@ -104,6 +107,9 @@ document.addEventListener("DOMContentLoaded", () => {
     currentYear = now.getFullYear();
     currentMonthIndex = now.getMonth();
 
+    if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
+
+
     if (monthSelect) {
       monthNames.forEach((n,i)=> monthSelect.appendChild(new Option(n, i)));
       monthSelect.value = currentMonthIndex;
@@ -117,14 +123,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     on(prevBtn, "click", () => {
-      currentMonthIndex--; if (currentMonthIndex < 0){ currentMonthIndex = 11; currentYear--; if (yearSelect) yearSelect.value = currentYear; }
-      if (monthSelect) monthSelect.value = currentMonthIndex;
-      renderForCurrentMonth();
+      currentDay = currentDay <= 1 ? 7 : currentDay - 1;
+      if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
     });
+
     on(nextBtn, "click", () => {
-      currentMonthIndex++; if (currentMonthIndex > 11){ currentMonthIndex = 0; currentYear++; if (yearSelect) yearSelect.value = currentYear; }
-      if (monthSelect) monthSelect.value = currentMonthIndex;
-      renderForCurrentMonth();
+      currentDay = currentDay >= 7 ? 1 : currentDay + 1;
+      if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
     });
   })();
 
@@ -590,3 +595,4 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Initial render ---------- */
   renderForCurrentMonth();
 });
+  

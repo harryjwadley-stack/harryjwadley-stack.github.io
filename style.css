@@ -415,3 +415,14 @@ button:hover { transform: translateY(-2px); }
 #deleteRail .edit-mini {
   position: absolute;
 }
+
+#dayCounterBtn {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  cursor: default;
+  min-width: 90px;
+}
