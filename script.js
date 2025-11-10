@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Gold popup helper ---------- */
   let goldPopupTimer = null;
-  function showGoldPopup(message = "Congratulations !! you're on the right track. +50 points.") {
+  function showGoldPopup(message = "Congratulations !! you're on the right track.") {
     let popup = document.querySelector(".gold-popup-toast");
     if (!popup) {
       popup = document.createElement("div");
@@ -319,7 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveState();
     renderForCurrentMonth();
 
-    showGoldPopup("Congratulations !! you're on the right track. +50 points.");
+    showGoldPopup("Congratulations !! you're on the right track.");
   });
 
   /* ---------- Rail actions ---------- */
@@ -498,6 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
         addScore(1); // +10 for a new add
+        showGoldPopup("great addition !! + 10 points");
       }
 
       saveState();
@@ -529,6 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.expenses.push({ id: data.purchaseCount, amount: amt, category: "Social", card: "Credit" });
     data.categoryTotals.Social += amt;
     addScore(1); // +10 for quick add
+    showGoldPopup("great addition !! + 10 points");
 
     saveState(); renderForCurrentMonth(); closeExpenseModal();
   };
@@ -694,6 +696,8 @@ document.addEventListener("DOMContentLoaded", () => {
       data.expenses.push({ id: data.purchaseCount, amount: fav.amount, category: fav.category, card: fav.card || "Credit" });
       data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
       addScore(1); // +10 for favourite add
+      showGoldPopup("great addition !! + 10 points");
+
       saveState(); renderForCurrentMonth();
       return;
     }
