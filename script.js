@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const favNameCancel  = $("favNameCancelBtn");
   const favNameSave    = $("favNameSaveBtn");
 
-  // Month controls
+  // Month/Day controls
   const prevBtn = $("prevMonthBtn");
   const nextBtn = $("nextMonthBtn");
   const monthSelect = $("monthSelect");
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let monthlyState = loadJSON(STATE_KEY) || {};
   let settings     = loadJSON(SETTINGS_KEY) || { allowance: 0 };
-  let favourites   = loadJSON(FAV_KEY) || {}; // { "YYYY-MM-id": { id, year, monthIndex, amount, category, card, name } }
+  let favourites   = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
 
   function loadJSON(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
   function saveJSON(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
@@ -86,7 +86,12 @@ document.addEventListener("DOMContentLoaded", () => {
   for (const k of Object.keys(monthlyState)) if (monthlyState[k] && "allowance" in monthlyState[k]) delete monthlyState[k].allowance;
 
   const yyyymmKey = (y,m) => `${y}-${String(m+1).padStart(2,"0")}`;
-  const compositeId = (y,m,id) => `${yyyymmKey(y,m)}-${id}`;
+
+  // Use day buckets when the Day UI exists (day-1…day-7), otherwise fall back to month key.
+  const periodKey = () => (dayBtn ? `day-${currentDay}` : yyyymmKey(currentYear, currentMonthIndex));
+
+  // Favourite keys are now tied to the current period (day).
+  const compositeId = (id) => `${periodKey()}-${id}`;
 
   let currentYear, currentMonthIndex;
 
@@ -96,19 +101,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return monthlyState[key];
   }
-  const currentKey = () => yyyymmKey(currentYear, currentMonthIndex);
+  const currentKey = () => periodKey();
   const getMonthData = () => ensureMonth(currentKey());
   const findExpenseById = (id) => getMonthData().expenses.find(e => e.id === id);
-  const isFavourited = (y,m,id) => !!favourites[compositeId(y,m,id)];
+  const isFavourited = (id) => !!favourites[compositeId(id)];
 
-  /* ---------- Month pickers ---------- */
+  /* ---------- Month/Day pickers ---------- */
   (function initMonthYearPickers(){
     const now = new Date();
     currentYear = now.getFullYear();
     currentMonthIndex = now.getMonth();
 
     if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-
 
     if (monthSelect) {
       monthNames.forEach((n,i)=> monthSelect.appendChild(new Option(n, i)));
@@ -125,11 +129,13 @@ document.addEventListener("DOMContentLoaded", () => {
     on(prevBtn, "click", () => {
       currentDay = currentDay <= 1 ? 7 : currentDay - 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
+      renderForCurrentMonth(); // swap to this day’s bucket
     });
 
     on(nextBtn, "click", () => {
       currentDay = currentDay >= 7 ? 1 : currentDay + 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
+      renderForCurrentMonth(); // swap to this day’s bucket
     });
   })();
 
@@ -205,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     eachRow(({id, top}) => {
       const star = document.createElement("span");
       star.className = "fav-mini"; star.dataset.id = String(id); star.style.top = `${top}px`;
-      const fav = isFavourited(currentYear, currentMonthIndex, id);
+      const fav = isFavourited(id);
       star.textContent = fav ? "★" : "☆";
       if (fav) star.classList.add("filled");
       leftRail.appendChild(star);
@@ -245,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = getMonthData();
     const exp = data.expenses.find(e => e.id === id); if (!exp) return;
 
-    const key = compositeId(currentYear, currentMonthIndex, id);
+    const key = compositeId(id);
     if (favourites[key]) {
       delete favourites[key];
       saveFavourites();
@@ -261,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Clear All ---------- */
   on(clearAllBtn, "click", () => {
-    if (!confirm("Are you sure you want to delete all expenses for this month?")) return;
+    if (!confirm("Are you sure you want to delete all expenses for this day?")) return;
     const data = getMonthData();
     data.expenses = [];
     data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
@@ -366,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
           data.expenses[idx] = { ...old, amount, category, card };
           data.categoryTotals[category] = (data.categoryTotals[category] || 0) + amount;
 
-          const key = compositeId(currentYear, currentMonthIndex, editingId);
+          const key = compositeId(editingId);
           if (favourites[key]) {
             Object.assign(favourites[key], { amount, category, card });
             saveFavourites();
@@ -511,28 +517,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
   function renderFavesModal(){
-    const arr = Object.values(favourites);
-    if (!arr.length) { favesList.innerHTML = `<p>No favourites yet.</p>`; return; }
+    const entries = Object.entries(favourites); // [key, fav]
+    if (!entries.length) { favesList.innerHTML = `<p>No favourites yet.</p>`; return; }
 
-    arr.sort((a,b) => (b.year - a.year) || (b.monthIndex - a.monthIndex) || ((b.id||0) - (a.id||0)));
+    // Keep existing sort behaviour using stored metadata when present
+    entries.sort((a,b) => {
+      const fa = a[1], fb = b[1];
+      return ( (fb.year|0) - (fa.year|0) ) ||
+             ( (fb.monthIndex|0) - (fa.monthIndex|0) ) ||
+             ( (fb.id|0) - (fa.id|0) );
+    });
 
-    const rows = arr.map(f => {
-      const key = `${yyyymmKey(f.year, f.monthIndex)}-${f.id}`;
-      return `
-        <tr data-key="${key}">
-          <td class="fav-name">${escapeHtml(f.name || "Favourite")}</td>
-          <td>${(f.amount || 0).toFixed(2)}</td>
-          <td>${f.category}</td>
-          <td>${f.card || "-"}</td>
-          <td class="fav-actions">
-            <button class="fave-add" type="button" data-key="${key}">Add</button>
-            <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
-          </td>
-        </tr>`;
-    }).join("");
+    const rows = entries.map(([key, f]) => `
+      <tr data-key="${key}">
+        <td class="fav-name">${escapeHtml(f.name || "Favourite")}</td>
+        <td>${(f.amount || 0).toFixed(2)}</td>
+        <td>${f.category}</td>
+        <td>${f.card || "-"}</td>
+        <td class="fav-actions">
+          <button class="fave-add" type="button" data-key="${key}">Add</button>
+          <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
+        </td>
+      </tr>`).join("");
 
     favesList.innerHTML = `
       <table>
@@ -595,4 +604,3 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Initial render ---------- */
   renderForCurrentMonth();
 });
-  
