@@ -438,3 +438,26 @@ button:hover { transform: translateY(-2px); }
   color: var(--navy);
   margin: 4px 0;
 }
+
+:root {
+  /* ...existing vars... */
+  --red: #ff3b30; /* Apple-esque red; vivid like --turquoise */
+}
+
+#noSpendBtn {
+  background: var(--red);
+  color: #fff;
+}
+#noSpendBtn:hover {
+  background: #ff5b50;
+}
+
+/* Full-width banner row when day is marked as no-spend */
+.no-spending-row {
+  font-weight: 700;
+  font-size: 16px;
+  color: #a00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #ffe9e7;
+}

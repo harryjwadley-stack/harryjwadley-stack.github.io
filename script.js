@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const addDrinkBtn = $("addDrinkBtn");
   const bigNightBtn = $("bigNightBtn");
   const showFavouritesBtn = $("showFavouritesBtn");
+  const noSpendBtn = $("noSpendBtn");
 
   const submittedTable = $("submittedExpenses");
   let submittedTableBody = submittedTable.querySelector("tbody") || submittedTable.appendChild(document.createElement("tbody"));
@@ -39,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const favNameCancel  = $("favNameCancelBtn");
   const favNameSave    = $("favNameSaveBtn");
 
-  // Month/Day controls
+  // Day controls (repurposed month controls)
   const prevBtn = $("prevMonthBtn");
   const nextBtn = $("nextMonthBtn");
   const monthSelect = $("monthSelect");
@@ -98,14 +99,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Use day buckets when the Day UI exists (day-1…day-7), otherwise fall back to month key.
   const periodKey = () => (dayBtn ? `day-${currentDay}` : yyyymmKey(currentYear, currentMonthIndex));
 
-  // Favourite keys are now tied to the current period (day).
+  // Favourite keys are tied to the current period (day).
   const compositeId = (id) => `${periodKey()}-${id}`;
 
   let currentYear, currentMonthIndex;
 
   function ensureMonth(key){
     if (!monthlyState[key]) {
-      monthlyState[key] = { expenses: [], categoryTotals: { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 }, purchaseCount: 0 };
+      monthlyState[key] = {
+        expenses: [],
+        categoryTotals: { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 },
+        purchaseCount: 0,
+        noSpending: false
+      };
+    } else {
+      if (typeof monthlyState[key].purchaseCount !== "number") monthlyState[key].purchaseCount = 0;
+      if (!monthlyState[key].categoryTotals) monthlyState[key].categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
+      if (typeof monthlyState[key].noSpending !== "boolean") monthlyState[key].noSpending = false;
     }
     return monthlyState[key];
   }
@@ -114,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const findExpenseById = (id) => getMonthData().expenses.find(e => e.id === id);
   const isFavourited = (id) => !!favourites[compositeId(id)];
 
-  /* ---------- Month/Day pickers ---------- */
+  /* ---------- Day pickers ---------- */
   (function initMonthYearPickers(){
     const now = new Date();
     currentYear = now.getFullYear();
@@ -137,13 +147,13 @@ document.addEventListener("DOMContentLoaded", () => {
     on(prevBtn, "click", () => {
       currentDay = currentDay <= 1 ? 7 : currentDay - 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth(); // swap to this day’s bucket (count resets to that table)
+      renderForCurrentMonth(); // swap to this day’s bucket (count reflects that table)
     });
 
     on(nextBtn, "click", () => {
       currentDay = currentDay >= 7 ? 1 : currentDay + 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth(); // swap to this day’s bucket (count resets to that table)
+      renderForCurrentMonth(); // swap to this day’s bucket (count reflects that table)
     });
   })();
 
@@ -179,11 +189,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = getMonthData();
     allowanceDisplay.textContent = `Allowance: ${(Number(settings.allowance)||0).toFixed(2)}`;
 
-    submittedTableBody.innerHTML = data.expenses.map((e,idx)=>(
-      `<tr data-row-id="${e.id}">
-        <td>${idx+1}</td><td>${e.amount.toFixed(2)}</td><td>${e.category}</td><td>${e.card || "-"}</td>
-      </tr>`
-    )).join("");
+    if (data.noSpending) {
+      submittedTableBody.innerHTML = `<tr><td colspan="4" class="no-spending-row">No spending</td></tr>`;
+    } else {
+      submittedTableBody.innerHTML = data.expenses.map((e,idx)=>(
+        `<tr data-row-id="${e.id}">
+          <td>${idx+1}</td><td>${e.amount.toFixed(2)}</td><td>${e.category}</td><td>${e.card || "-"}</td>
+        </tr>`
+      )).join("");
+    }
 
     totalsDiv.innerHTML = `
       Groceries: ${data.categoryTotals.Groceries.toFixed(2)}<br>
@@ -203,7 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function eachRow(cb){
     const containerRect = tableWrap.getBoundingClientRect();
     [...submittedTableBody.querySelectorAll("tr")].forEach(tr => {
-      const id = +tr.getAttribute("data-row-id");
+      const id = +(tr.getAttribute("data-row-id") || NaN);
+      if (!Number.isFinite(id)) return; // skip "No spending" row
       const r = tr.getBoundingClientRect();
       const top = r.top - containerRect.top + (r.height/2) - 8;
       cb({ id, top });
@@ -249,6 +264,27 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStatsUI();
   }
 
+  /* ---------- "No spending today" button ---------- */
+  on(noSpendBtn, "click", () => {
+    const data = getMonthData();
+    if (data.noSpending) {
+      alert("Already marked as 'No spending' for this day.");
+      return;
+    }
+    // Clear day without subtracting score (special case)
+    const n = data.expenses.length;
+    if (n > 0) {
+      data.expenses = [];
+      data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
+      data.purchaseCount = 0;
+    }
+    data.noSpending = true;
+    addScore(5); // +50 for a no-spend day
+
+    saveState();
+    renderForCurrentMonth();
+  });
+
   /* ---------- Rail actions ---------- */
   on(deleteRail, "click", (evt) => {
     const editEl = evt.target.closest(".edit-mini");
@@ -272,7 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Global score goes down with deletes
       subtractScore(1);
       saveState();
-      renderForCurrentMonth(); // this refreshes the count and rails
+      renderForCurrentMonth();
       if (favesOverlay.style.display === "flex") renderFavesModal();
     }
   });
@@ -301,15 +337,14 @@ document.addEventListener("DOMContentLoaded", () => {
   on(clearAllBtn, "click", () => {
     const data = getMonthData();
     const n = data.expenses.length;
-    if (!n) return;
+    if (!n && !data.noSpending) return;
     if (!confirm("Are you sure you want to delete all expenses for this day?")) return;
 
-    // Adjust score by number of deleted items
-    subtractScore(n);
-
+    if (n > 0) subtractScore(n); // subtract 10 × items cleared
     data.expenses = [];
     data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
     data.purchaseCount = 0;
+    data.noSpending = false; // clearing day resets the banner
 
     saveState();
     renderForCurrentMonth();
@@ -418,6 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
+        data.noSpending = false; // adding cancels "No spending" flag
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
@@ -444,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Quick pick ---------- */
   const quickAdd = (amt) => {
     const data = getMonthData();
+    data.noSpending = false; // adding cancels "No spending" flag
     data.purchaseCount += 1;
     data.expenses.push({ id: data.purchaseCount, amount: amt, category: "Social", card: "Credit" });
     data.categoryTotals.Social += amt;
@@ -558,13 +595,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
   function renderFavesModal(){
     const entries = Object.entries(favourites); // [key, fav]
     if (!entries.length) { favesList.innerHTML = `<p>No favourites yet.</p>`; return; }
 
-    // Keep existing sort behaviour using stored metadata when present
     entries.sort((a,b) => {
       const fa = a[1], fb = b[1];
       return ( (fb.year|0) - (fa.year|0) ) ||
@@ -604,6 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (add) {
       const fav = favourites[add.dataset.key]; if (!fav) return;
       const data = getMonthData();
+      data.noSpending = false; // adding cancels "No spending" flag
       data.purchaseCount += 1;
       data.expenses.push({ id: data.purchaseCount, amount: fav.amount, category: fav.category, card: fav.card || "Credit" });
       data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
@@ -615,7 +652,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (del) {
       const key = del.dataset.key; if (!favourites[key]) return;
       delete favourites[key]; saveFavourites();
-      renderFavesModal(); renderForCurrentMonth(); // hollow stars unaffected; score unchanged (favourite ≠ expense)
+      renderFavesModal(); renderForCurrentMonth(); // score unchanged; favourites ≠ expenses
     }
   });
 
