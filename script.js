@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const favNameCancel  = $("favNameCancelBtn");
   const favNameSave    = $("favNameSaveBtn");
 
-  // Day controls (repurposed month controls)
+  // Day controls
   const prevBtn = $("prevMonthBtn");
   const nextBtn = $("nextMonthBtn");
   const monthSelect = $("monthSelect");
@@ -147,13 +147,13 @@ document.addEventListener("DOMContentLoaded", () => {
     on(prevBtn, "click", () => {
       currentDay = currentDay <= 1 ? 7 : currentDay - 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth(); // swap to this day’s bucket (count reflects that table)
+      renderForCurrentMonth();
     });
 
     on(nextBtn, "click", () => {
       currentDay = currentDay >= 7 ? 1 : currentDay + 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth(); // swap to this day’s bucket (count reflects that table)
+      renderForCurrentMonth();
     });
   })();
 
@@ -266,8 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Gold popup helper ---------- */
   let goldPopupTimer = null;
-  function showGoldPopup(message = "Congratulations !! you're on the right track.") {
-    // If already visible, reset timer and text
+  function showGoldPopup(message = "Congratulations !! you're on the right track. +50 points.") {
     let popup = document.querySelector(".gold-popup-toast");
     if (!popup) {
       popup = document.createElement("div");
@@ -296,11 +295,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     popup.textContent = message;
     popup.style.display = "block";
-    // Auto-hide after 4s
     if (goldPopupTimer) clearTimeout(goldPopupTimer);
-    goldPopupTimer = setTimeout(() => {
-      if (popup) popup.style.display = "none";
-    }, 4000);
+    goldPopupTimer = setTimeout(() => { if (popup) popup.style.display = "none"; }, 4000);
   }
 
   /* ---------- "No spending today" button ---------- */
@@ -323,8 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveState();
     renderForCurrentMonth();
 
-    // Show gold popup for 4 seconds
-    showGoldPopup("Congratulations !! you're on the right track.");
+    showGoldPopup("Congratulations !! you're on the right track. +50 points.");
   });
 
   /* ---------- Rail actions ---------- */
@@ -495,8 +490,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
-        const data = getMonthData();
-        data.noSpending = false; // adding cancels "No spending" flag
+        // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
+        if (data.noSpending) subtractScore(5);
+        data.noSpending = false;
+
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
@@ -523,11 +520,16 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Quick pick ---------- */
   const quickAdd = (amt) => {
     const data = getMonthData();
-    data.noSpending = false; // adding cancels "No spending" flag
+
+    // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
+    if (data.noSpending) subtractScore(5);
+    data.noSpending = false;
+
     data.purchaseCount += 1;
     data.expenses.push({ id: data.purchaseCount, amount: amt, category: "Social", card: "Credit" });
     data.categoryTotals.Social += amt;
     addScore(1); // +10 for quick add
+
     saveState(); renderForCurrentMonth(); closeExpenseModal();
   };
   on(btnGuinness, "click", () => quickAdd(6.00));
@@ -683,7 +685,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (add) {
       const fav = favourites[add.dataset.key]; if (!fav) return;
       const data = getMonthData();
-      data.noSpending = false; // adding cancels "No spending" flag
+
+      // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
+      if (data.noSpending) subtractScore(5);
+      data.noSpending = false;
+
       data.purchaseCount += 1;
       data.expenses.push({ id: data.purchaseCount, amount: fav.amount, category: fav.category, card: fav.card || "Credit" });
       data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
@@ -695,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (del) {
       const key = del.dataset.key; if (!favourites[key]) return;
       delete favourites[key]; saveFavourites();
-      renderFavesModal(); renderForCurrentMonth(); // score unchanged; favourites ≠ expenses
+      renderFavesModal(); renderForCurrentMonth();
     }
   });
 
