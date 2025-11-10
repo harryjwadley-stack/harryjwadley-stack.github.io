@@ -264,6 +264,45 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStatsUI();
   }
 
+  /* ---------- Gold popup helper ---------- */
+  let goldPopupTimer = null;
+  function showGoldPopup(message = "Congratulations !! you're on the right track.") {
+    // If already visible, reset timer and text
+    let popup = document.querySelector(".gold-popup-toast");
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.className = "gold-popup-toast";
+      popup.setAttribute("role", "alert");
+      popup.setAttribute("aria-live", "polite");
+      Object.assign(popup.style, {
+        position: "fixed",
+        inset: "auto 50% 30px auto",
+        transform: "translateX(50%)",
+        zIndex: "10000",
+        background: "linear-gradient(180deg, #ffd866, #ffb000)",
+        color: "#1a1a1a",
+        border: "2px solid #d39b00",
+        borderRadius: "12px",
+        padding: "14px 18px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+        fontWeight: "700",
+        fontFamily: "inherit",
+        letterSpacing: "0.3px",
+        textAlign: "center",
+        maxWidth: "90vw",
+        minWidth: "260px"
+      });
+      document.body.appendChild(popup);
+    }
+    popup.textContent = message;
+    popup.style.display = "block";
+    // Auto-hide after 4s
+    if (goldPopupTimer) clearTimeout(goldPopupTimer);
+    goldPopupTimer = setTimeout(() => {
+      if (popup) popup.style.display = "none";
+    }, 4000);
+  }
+
   /* ---------- "No spending today" button ---------- */
   on(noSpendBtn, "click", () => {
     const data = getMonthData();
@@ -283,6 +322,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveState();
     renderForCurrentMonth();
+
+    // Show gold popup for 4 seconds
+    showGoldPopup("Congratulations !! you're on the right track.");
   });
 
   /* ---------- Rail actions ---------- */
@@ -453,6 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
+        const data = getMonthData();
         data.noSpending = false; // adding cancels "No spending" flag
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
@@ -595,7 +638,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
   function renderFavesModal(){
     const entries = Object.entries(favourites); // [key, fav]
