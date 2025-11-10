@@ -77,12 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const FAV_KEY = "savr-favourites-v1";
 
   let monthlyState = loadJSON(STATE_KEY) || {};
-  let settings     = loadJSON(SETTINGS_KEY) || { allowance: 0, expenseCount: 0, score: 0 };
+  let settings     = loadJSON(SETTINGS_KEY) || { allowance: 0, score: 0 };
   let favourites   = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
 
   // Backfill missing fields
   if (typeof settings.allowance !== "number") settings.allowance = Number(settings.allowance)||0;
-  if (typeof settings.expenseCount !== "number") settings.expenseCount = 0;
   if (typeof settings.score !== "number") settings.score = 0;
 
   function loadJSON(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
@@ -138,13 +137,13 @@ document.addEventListener("DOMContentLoaded", () => {
     on(prevBtn, "click", () => {
       currentDay = currentDay <= 1 ? 7 : currentDay - 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth(); // swap to this day’s bucket
+      renderForCurrentMonth(); // swap to this day’s bucket (count resets to that table)
     });
 
     on(nextBtn, "click", () => {
       currentDay = currentDay >= 7 ? 1 : currentDay + 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth(); // swap to this day’s bucket
+      renderForCurrentMonth(); // swap to this day’s bucket (count resets to that table)
     });
   })();
 
@@ -168,8 +167,11 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
+  // EXPENSE COUNT (per current day) + SCORE (global)
   function updateStatsUI(){
-    if (expenseCountEl) expenseCountEl.textContent = `Expenses: ${Number(settings.expenseCount || 0)}`;
+    const data = getMonthData();
+    const count = data.expenses.length;
+    if (expenseCountEl) expenseCountEl.textContent = `Expenses: ${count}`;
     if (scoreTotalEl)   scoreTotalEl.textContent   = `Score: ${Number(settings.score || 0)}`;
   }
 
@@ -235,10 +237,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(window, "resize", updateRails);
 
-  /* ---------- Stats bump on add ---------- */
-  function bumpStatsOnAdd(){
-    settings.expenseCount = (settings.expenseCount || 0) + 1;
-    settings.score        = (settings.score || 0) + 10;
+  /* ---------- SCORE helpers ---------- */
+  function addScore(n = 1){
+    settings.score = Math.max(0, (settings.score || 0) + 10 * n);
+    saveSettings();
+    updateStatsUI();
+  }
+  function subtractScore(n = 1){
+    settings.score = Math.max(0, (settings.score || 0) - 10 * n);
     saveSettings();
     updateStatsUI();
   }
@@ -260,10 +266,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const i = data.expenses.findIndex(x => x.id === id);
       if (i === -1) return;
       const exp = data.expenses[i];
+      // Update state
       data.categoryTotals[exp.category] = Math.max(0, (data.categoryTotals[exp.category] || 0) - (exp.amount || 0));
       data.expenses.splice(i,1);
+      // Global score goes down with deletes
+      subtractScore(1);
       saveState();
-      renderForCurrentMonth();
+      renderForCurrentMonth(); // this refreshes the count and rails
       if (favesOverlay.style.display === "flex") renderFavesModal();
     }
   });
@@ -288,13 +297,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }, "");
   });
 
-  /* ---------- Clear All ---------- */
+  /* ---------- Clear All (current day) ---------- */
   on(clearAllBtn, "click", () => {
-    if (!confirm("Are you sure you want to delete all expenses for this day?")) return;
     const data = getMonthData();
+    const n = data.expenses.length;
+    if (!n) return;
+    if (!confirm("Are you sure you want to delete all expenses for this day?")) return;
+
+    // Adjust score by number of deleted items
+    subtractScore(n);
+
     data.expenses = [];
     data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
     data.purchaseCount = 0;
+
     saveState();
     renderForCurrentMonth();
     if (favesOverlay.style.display === "flex") renderFavesModal();
@@ -405,7 +421,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
-        bumpStatsOnAdd(); // ++ counters on NEW add
+        addScore(1); // +10 for a new add
       }
 
       saveState();
@@ -431,7 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.purchaseCount += 1;
     data.expenses.push({ id: data.purchaseCount, amount: amt, category: "Social", card: "Credit" });
     data.categoryTotals.Social += amt;
-    bumpStatsOnAdd(); // ++ counters on quick add
+    addScore(1); // +10 for quick add
     saveState(); renderForCurrentMonth(); closeExpenseModal();
   };
   on(btnGuinness, "click", () => quickAdd(6.00));
@@ -542,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
   function renderFavesModal(){
     const entries = Object.entries(favourites); // [key, fav]
@@ -591,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
       data.purchaseCount += 1;
       data.expenses.push({ id: data.purchaseCount, amount: fav.amount, category: fav.category, card: fav.card || "Credit" });
       data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
-      bumpStatsOnAdd(); // ++ counters on favourite add
+      addScore(1); // +10 for favourite add
       saveState(); renderForCurrentMonth();
       return;
     }
@@ -599,7 +615,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (del) {
       const key = del.dataset.key; if (!favourites[key]) return;
       delete favourites[key]; saveFavourites();
-      renderFavesModal(); renderForCurrentMonth(); // hollow stars
+      renderFavesModal(); renderForCurrentMonth(); // hollow stars unaffected; score unchanged (favourite ≠ expense)
     }
   });
 
