@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Gold popup helper ---------- */
   let goldPopupTimer = null;
-  function showGoldPopup(message = "Congratulations !! you're on the right track.") {
+  function showGoldPopup(message = "Congratulations !! you're on the right track. + 50 points.") {
     let popup = document.querySelector(".gold-popup-toast");
     if (!popup) {
       popup = document.createElement("div");
@@ -319,7 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveState();
     renderForCurrentMonth();
 
-    showGoldPopup("Congratulations !! you're on the right track.");
+    showGoldPopup("Congratulations !! you're on the right track. + 50 points.");
   });
 
   /* ---------- Rail actions ---------- */
