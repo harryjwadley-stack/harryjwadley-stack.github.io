@@ -16,7 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const noSpendBtn = $("noSpendBtn");
 
   const submittedTable = $("submittedExpenses");
-  let submittedTableBody = submittedTable.querySelector("tbody") || submittedTable.appendChild(document.createElement("tbody"));
+  let submittedTableBody =
+    submittedTable.querySelector("tbody") ||
+    submittedTable.appendChild(document.createElement("tbody"));
 
   const totalsDiv = $("categoryTotals");
   const clearAllBtn = $("clearAllBtn");
@@ -46,7 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const hardResetBtn = $("hardResetBtn");
   const monthSelect = $("monthSelect");
   const yearSelect = $("yearSelect");
-  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
 
   const dayBtn = $("dayCounterBtn");
   let currentDay = 1; // 1..7
@@ -62,14 +67,20 @@ document.addEventListener("DOMContentLoaded", () => {
     type: "pie",
     data: {
       labels: ["Groceries", "Social", "Treat", "Unexpected"],
-      datasets: [{ label: "Category Breakdown", data: [0, 0, 0, 0], backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"] }]
+      datasets: [{
+        label: "Category Breakdown",
+        data: [0, 0, 0, 0],
+        backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"]
+      }]
     },
     options: { responsive: true, plugins: { legend: { position: "bottom" } } }
   });
   (() => {
     const css = getComputedStyle(document.documentElement);
-    const themed = ["--turquoise","--navy","--teal","--amber"].map(v => css.getPropertyValue(v).trim());
-    categoryChart.data.datasets[0].backgroundColor = themed.map((c,i)=> c || categoryChart.data.datasets[0].backgroundColor[i]);
+    const themed = ["--turquoise","--navy","--teal","--amber"]
+      .map(v => css.getPropertyValue(v).trim());
+    categoryChart.data.datasets[0].backgroundColor =
+      themed.map((c,i)=> c || categoryChart.data.datasets[0].backgroundColor[i]);
     categoryChart.update();
   })();
 
@@ -79,26 +90,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const FAV_KEY = "savr-favourites-v1";
 
   let monthlyState = loadJSON(STATE_KEY) || {};
-  let settings     = loadJSON(SETTINGS_KEY) || { allowance: 0, score: 0 };
+  let settings     = loadJSON(SETTINGS_KEY) || {
+    allowance: 0,
+    score: 0,
+    streak: 0,
+    lastActiveDay: null
+  };
   let favourites   = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
 
   // Backfill missing fields
   if (typeof settings.allowance !== "number") settings.allowance = Number(settings.allowance)||0;
   if (typeof settings.score !== "number") settings.score = 0;
+  if (typeof settings.streak !== "number") settings.streak = 0;
+  if (typeof settings.lastActiveDay !== "number") settings.lastActiveDay = null;
 
-  function loadJSON(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+  function loadJSON(k){
+    try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
+  }
   function saveJSON(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
   const saveState = () => saveJSON(STATE_KEY, monthlyState);
   const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
   const saveFavourites = () => saveJSON(FAV_KEY, favourites);
 
   // Clean legacy per-month allowance keys
-  for (const k of Object.keys(monthlyState)) if (monthlyState[k] && "allowance" in monthlyState[k]) delete monthlyState[k].allowance;
+  for (const k of Object.keys(monthlyState)) {
+    if (monthlyState[k] && "allowance" in monthlyState[k]) {
+      delete monthlyState[k].allowance;
+    }
+  }
 
   const yyyymmKey = (y,m) => `${y}-${String(m+1).padStart(2,"0")}`;
 
   // Use day buckets when the Day UI exists (day-1…day-7), otherwise fall back to month key.
-  const periodKey = () => (dayBtn ? `day-${currentDay}` : yyyymmKey(currentYear, currentMonthIndex));
+  const periodKey = () =>
+    (dayBtn ? `day-${currentDay}` : yyyymmKey(currentYear, currentMonthIndex));
 
   // Favourite keys are tied to the current period (day).
   const compositeId = (id) => `${periodKey()}-${id}`;
@@ -114,9 +139,17 @@ document.addEventListener("DOMContentLoaded", () => {
         noSpending: false
       };
     } else {
-      if (typeof monthlyState[key].purchaseCount !== "number") monthlyState[key].purchaseCount = 0;
-      if (!monthlyState[key].categoryTotals) monthlyState[key].categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
-      if (typeof monthlyState[key].noSpending !== "boolean") monthlyState[key].noSpending = false;
+      if (typeof monthlyState[key].purchaseCount !== "number") {
+        monthlyState[key].purchaseCount = 0;
+      }
+      if (!monthlyState[key].categoryTotals) {
+        monthlyState[key].categoryTotals = {
+          Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
+        };
+      }
+      if (typeof monthlyState[key].noSpending !== "boolean") {
+        monthlyState[key].noSpending = false;
+      }
     }
     return monthlyState[key];
   }
@@ -136,13 +169,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (monthSelect) {
       monthNames.forEach((n,i)=> monthSelect.appendChild(new Option(n, i)));
       monthSelect.value = currentMonthIndex;
-      on(monthSelect, "change", () => { currentMonthIndex = +monthSelect.value; renderForCurrentMonth(); });
+      on(monthSelect, "change", () => {
+        currentMonthIndex = +monthSelect.value;
+        renderForCurrentMonth();
+      });
     }
 
     if (yearSelect) {
-      for (let y = currentYear - 3; y <= currentYear + 3; y++) yearSelect.appendChild(new Option(y, y));
+      for (let y = currentYear - 3; y <= currentYear + 3; y++) {
+        yearSelect.appendChild(new Option(y, y));
+      }
       yearSelect.value = currentYear;
-      on(yearSelect, "change", () => { currentYear = +yearSelect.value; renderForCurrentMonth(); });
+      on(yearSelect, "change", () => {
+        currentYear = +yearSelect.value;
+        renderForCurrentMonth();
+      });
     }
 
     on(prevBtn, "click", () => {
@@ -158,20 +199,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-    // ---------- Hard Reset (global wipe) ----------
+  /* ---------- Hard Reset (global wipe) ---------- */
   on(hardResetBtn, "click", () => {
     if (!confirm(
       "This will reset EVERYTHING:\n\n" +
       "• All days' expenses and category totals\n" +
       "• All favourites\n" +
-      "• Allowance and score\n\n" +
+      "• Allowance, score, and streak\n\n" +
       "Are you sure?"
     )) {
       return;
     }
 
-    // Reset settings (allowance + score)
-    settings = { allowance: 0, score: 0 };
+    // Reset settings (allowance + score + streak)
+    settings = {
+      allowance: 0,
+      score: 0,
+      streak: 0,
+      lastActiveDay: null
+    };
     saveSettings();
 
     // Clear all day/month state
@@ -182,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     favourites = {};
     saveFavourites();
 
-    // Optionally reset day back to 1
+    // Reset day back to 1
     currentDay = 1;
     if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
 
@@ -194,19 +240,24 @@ document.addEventListener("DOMContentLoaded", () => {
   (function stripActionsHeaderIfPresent(){
     const tr = submittedTable.querySelector("thead tr");
     if (!tr) return;
-    [...tr.children].forEach(th => { if (th.textContent.trim().toLowerCase() === "actions") th.remove(); });
+    [...tr.children].forEach(th => {
+      if (th.textContent.trim().toLowerCase() === "actions") th.remove();
+    });
   })();
 
   /* ---------- Render ---------- */
   function updateAllowanceRemaining(){
     const data = getMonthData();
     const spent = Object.values(data.categoryTotals).reduce((a,b)=>a+b,0);
-    allowanceRemainingDiv.textContent = `Allowance Remaining: ${((settings.allowance || 0) - spent).toFixed(2)}`;
+    allowanceRemainingDiv.textContent =
+      `Allowance Remaining: ${((settings.allowance || 0) - spent).toFixed(2)}`;
   }
 
   function updatePieChart(){
     const d = getMonthData().categoryTotals;
-    categoryChart.data.datasets[0].data = [d.Groceries, d.Social, d.Treat, d.Unexpected];
+    categoryChart.data.datasets[0].data = [
+      d.Groceries, d.Social, d.Treat, d.Unexpected
+    ];
     categoryChart.update();
   }
 
@@ -220,14 +271,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderForCurrentMonth(){
     const data = getMonthData();
-    allowanceDisplay.textContent = `Allowance: ${(Number(settings.allowance)||0).toFixed(2)}`;
+    allowanceDisplay.textContent =
+      `Allowance: ${(Number(settings.allowance)||0).toFixed(2)}`;
 
     if (data.noSpending) {
-      submittedTableBody.innerHTML = `<tr><td colspan="4" class="no-spending-row">No spending</td></tr>`;
+      submittedTableBody.innerHTML =
+        `<tr><td colspan="4" class="no-spending-row">No spending</td></tr>`;
     } else {
       submittedTableBody.innerHTML = data.expenses.map((e,idx)=>(
         `<tr data-row-id="${e.id}">
-          <td>${idx+1}</td><td>${e.amount.toFixed(2)}</td><td>${e.category}</td><td>${e.card || "-"}</td>
+          <td>${idx+1}</td>
+          <td>${e.amount.toFixed(2)}</td>
+          <td>${e.category}</td>
+          <td>${e.card || "-"}</td>
         </tr>`
       )).join("");
     }
@@ -245,7 +301,10 @@ document.addEventListener("DOMContentLoaded", () => {
     queueMicrotask(updateRails);
   }
 
-  const updateRails = () => { positionEditDeleteDots(); positionFavStars(); };
+  const updateRails = () => {
+    positionEditDeleteDots();
+    positionFavStars();
+  };
 
   function eachRow(cb){
     const containerRect = tableWrap.getBoundingClientRect();
@@ -263,10 +322,19 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteRail.innerHTML = "";
     eachRow(({id, top}) => {
       const edit = document.createElement("span");
-      edit.className = "edit-mini"; edit.textContent = "e"; edit.dataset.id = String(id); edit.style.top = `${top}px`;
+      edit.className = "edit-mini";
+      edit.textContent = "e";
+      edit.dataset.id = String(id);
+      edit.style.top = `${top}px`;
+
       const del = document.createElement("span");
-      del.className = "delete-mini"; del.textContent = "d"; del.dataset.id = String(id); del.style.top = `${top}px`;
-      deleteRail.appendChild(edit); deleteRail.appendChild(del);
+      del.className = "delete-mini";
+      del.textContent = "d";
+      del.dataset.id = String(id);
+      del.style.top = `${top}px`;
+
+      deleteRail.appendChild(edit);
+      deleteRail.appendChild(del);
     });
   }
 
@@ -275,7 +343,9 @@ document.addEventListener("DOMContentLoaded", () => {
     leftRail.innerHTML = "";
     eachRow(({id, top}) => {
       const star = document.createElement("span");
-      star.className = "fav-mini"; star.dataset.id = String(id); star.style.top = `${top}px`;
+      star.className = "fav-mini";
+      star.dataset.id = String(id);
+      star.style.top = `${top}px`;
       const fav = isFavourited(id);
       star.textContent = fav ? "★" : "☆";
       if (fav) star.classList.add("filled");
@@ -295,6 +365,53 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.score = Math.max(0, (settings.score || 0) - 10 * n);
     saveSettings();
     updateStatsUI();
+  }
+
+  /**
+   * Apply scoring and streak bonus for “good” activity on the current day.
+   * baseUnits: how many 10-point units to add (1 = 10 pts, 5 = 50 pts, etc.)
+   * baseMessage: primary text (“great addition !! + 10 points”, etc.)
+   */
+  function applyStreakScore(baseUnits, baseMessage){
+    const prevDay = (typeof settings.lastActiveDay === "number")
+      ? settings.lastActiveDay
+      : null;
+    let streak = typeof settings.streak === "number" ? settings.streak : 0;
+    const today = currentDay;
+
+    // Update streak only when we move to a new day
+    if (prevDay === null) {
+      streak = 1;
+    } else if (today === prevDay) {
+      // same day → streak unchanged
+    } else if (today === prevDay + 1) {
+      streak = streak + 1;
+    } else {
+      // jumped days or backwards → reset streak
+      streak = 1;
+    }
+
+    settings.lastActiveDay = today;
+    settings.streak = streak;
+    saveSettings();
+
+    // Base score for this action
+    addScore(baseUnits);
+    const basePoints = baseUnits * 10;
+
+    // Streak bonus only when we moved to a *new* day and are on a streak
+    let bonusUnits = 0;
+    if (prevDay !== null && today !== prevDay && streak > 1) {
+      bonusUnits = streak;          // e.g. 2 => +20 pts, 3 => +30 pts
+      addScore(bonusUnits);
+    }
+    const bonusPoints = bonusUnits * 10;
+
+    let msg = baseMessage;
+    if (bonusUnits > 0) {
+      msg += `  |  ${streak} day streak, +${bonusPoints} points`;
+    }
+    showGoldPopup(msg || `Streak day ${streak}`);
   }
 
   /* ---------- Gold popup helper ---------- */
@@ -329,7 +446,9 @@ document.addEventListener("DOMContentLoaded", () => {
     popup.textContent = message;
     popup.style.display = "block";
     if (goldPopupTimer) clearTimeout(goldPopupTimer);
-    goldPopupTimer = setTimeout(() => { if (popup) popup.style.display = "none"; }, 4000);
+    goldPopupTimer = setTimeout(() => {
+      if (popup) popup.style.display = "none";
+    }, 4000);
   }
 
   /* ---------- "No spending today" button ---------- */
@@ -343,16 +462,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const n = data.expenses.length;
     if (n > 0) {
       data.expenses = [];
-      data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
+      data.categoryTotals = {
+        Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
+      };
       data.purchaseCount = 0;
     }
     data.noSpending = true;
-    addScore(5); // +50 for a no-spend day
 
     saveState();
     renderForCurrentMonth();
 
-    showGoldPopup("Congratulations !! you're on the right track. + 50 points.");
+    // Base 50 points + streak bonus
+    applyStreakScore(5, "Congratulations !! you're on the right track. + 50 points");
   });
 
   /* ---------- Rail actions ---------- */
@@ -373,7 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (i === -1) return;
       const exp = data.expenses[i];
       // Update state
-      data.categoryTotals[exp.category] = Math.max(0, (data.categoryTotals[exp.category] || 0) - (exp.amount || 0));
+      data.categoryTotals[exp.category] =
+        Math.max(0, (data.categoryTotals[exp.category] || 0) - (exp.amount || 0));
       data.expenses.splice(i,1);
       // Global score goes down with deletes
       subtractScore(1);
@@ -384,10 +506,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   on(leftRail, "click", (evt) => {
-    const star = evt.target.closest(".fav-mini"); if (!star) return;
+    const star = evt.target.closest(".fav-mini");
+    if (!star) return;
     const id = +star.dataset.id;
     const data = getMonthData();
-    const exp = data.expenses.find(e => e.id === id); if (!exp) return;
+    const exp = data.expenses.find(e => e.id === id);
+    if (!exp) return;
 
     const key = compositeId(id);
     if (favourites[key]) {
@@ -398,8 +522,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     openFavNameModal({
-      key, year: currentYear, monthIndex: currentMonthIndex, id,
-      amount: exp.amount, category: exp.category, card: exp.card || ""
+      key,
+      year: currentYear,
+      monthIndex: currentMonthIndex,
+      id,
+      amount: exp.amount,
+      category: exp.category,
+      card: exp.card || ""
     }, "");
   });
 
@@ -412,7 +541,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (n > 0) subtractScore(n); // subtract 10 × items cleared
     data.expenses = [];
-    data.categoryTotals = { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 };
+    data.categoryTotals = {
+      Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
+    };
     data.purchaseCount = 0;
     data.noSpending = false; // clearing day resets the banner
 
@@ -451,7 +582,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let editingId = null;
 
-  function openExpenseModal(expense = null, { hideCategory=false, quickDrinkOnly=false } = {}){
+  function openExpenseModal(
+    expense = null,
+    { hideCategory=false, quickDrinkOnly=false } = {}
+  ){
     const isEdit = expense && typeof expense.id === "number";
 
     if (!isEdit && quickStage) {
@@ -492,8 +626,14 @@ document.addEventListener("DOMContentLoaded", () => {
     editingId = null;
   }
 
-  on(expenseOverlay, "click", (e)=>{ if (e.target === expenseOverlay) closeExpenseModal(); });
-  on(document, "keydown", (e)=>{ if (expenseOverlay.style.display === "flex" && e.key === "Escape") closeExpenseModal(); });
+  on(expenseOverlay, "click", (e)=>{
+    if (e.target === expenseOverlay) closeExpenseModal();
+  });
+  on(document, "keydown", (e)=>{
+    if (expenseOverlay.style.display === "flex" && e.key === "Escape") {
+      closeExpenseModal();
+    }
+  });
   on(modalCancel(), "click", closeExpenseModal);
 
   on(modalSubmit(), "click", () => {
@@ -502,9 +642,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const category = modalCat().value;
       const card = (modalCard() ? modalCard().value : "").trim();
 
-      if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); modalAmount().focus(); return; }
-      if (!CATEGORIES.has(category)) { alert("Please select a valid category."); modalCat().focus(); return; }
-      if (!CARDS.has(card)) { alert("Please choose Credit or Debit."); modalCard().focus(); return; }
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount.");
+        modalAmount().focus();
+        return;
+      }
+      if (!CATEGORIES.has(category)) {
+        alert("Please select a valid category.");
+        modalCat().focus();
+        return;
+      }
+      if (!CARDS.has(card)) {
+        alert("Please choose Credit or Debit.");
+        modalCard().focus();
+        return;
+      }
 
       const data = getMonthData();
 
@@ -512,9 +664,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const idx = data.expenses.findIndex(e => e.id === editingId);
         if (idx !== -1) {
           const old = data.expenses[idx];
-          data.categoryTotals[old.category] = Math.max(0, (data.categoryTotals[old.category] || 0) - (old.amount || 0));
+          data.categoryTotals[old.category] =
+            Math.max(0, (data.categoryTotals[old.category] || 0) - (old.amount || 0));
           data.expenses[idx] = { ...old, amount, category, card };
-          data.categoryTotals[category] = (data.categoryTotals[category] || 0) + amount;
+          data.categoryTotals[category] =
+            (data.categoryTotals[category] || 0) + amount;
 
           const key = compositeId(editingId);
           if (favourites[key]) {
@@ -530,8 +684,9 @@ document.addEventListener("DOMContentLoaded", () => {
         data.purchaseCount += 1;
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
-        addScore(1); // +10 for a new add
-        showGoldPopup("great addition !! + 10 points");
+
+        // Base + streak for a new expense
+        applyStreakScore(1, "great addition !! + 10 points");
       }
 
       saveState();
@@ -545,11 +700,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ---------- Openers ---------- */
-  on(addBtn, "click", () => openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory:false, quickDrinkOnly:false }));
-  on(addGroceriesBtn, "click", () => openExpenseModal({ category: "Groceries", card: "Credit", amount: "" }, { hideCategory:true, quickDrinkOnly:false }));
-  on(addDrinkBtn, "click", () => openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory:true, quickDrinkOnly:true }));
+  on(addBtn, "click", () =>
+    openExpenseModal(
+      { category: "Groceries", card: "Credit", amount: "" },
+      { hideCategory:false, quickDrinkOnly:false }
+    )
+  );
+  on(addGroceriesBtn, "click", () =>
+    openExpenseModal(
+      { category: "Groceries", card: "Credit", amount: "" },
+      { hideCategory:true, quickDrinkOnly:false }
+    )
+  );
+  on(addDrinkBtn, "click", () =>
+    openExpenseModal(
+      { category: "Social", card: "Credit", amount: "" },
+      { hideCategory:true, quickDrinkOnly:true }
+    )
+  );
   // Big Night Out → normal form like Add Groceries, but default Social
-  on(bigNightBtn, "click", () => openExpenseModal({ category: "Social", card: "Credit", amount: "" }, { hideCategory:true, quickDrinkOnly:false }));
+  on(bigNightBtn, "click", () =>
+    openExpenseModal(
+      { category: "Social", card: "Credit", amount: "" },
+      { hideCategory:true, quickDrinkOnly:false }
+    )
+  );
 
   /* ---------- Quick pick ---------- */
   const quickAdd = (amt) => {
@@ -560,12 +735,20 @@ document.addEventListener("DOMContentLoaded", () => {
     data.noSpending = false;
 
     data.purchaseCount += 1;
-    data.expenses.push({ id: data.purchaseCount, amount: amt, category: "Social", card: "Credit" });
+    data.expenses.push({
+      id: data.purchaseCount,
+      amount: amt,
+      category: "Social",
+      card: "Credit"
+    });
     data.categoryTotals.Social += amt;
-    addScore(1); // +10 for quick add
-    showGoldPopup("great addition !! + 10 points");
 
-    saveState(); renderForCurrentMonth(); closeExpenseModal();
+    // Base + streak for quick add
+    applyStreakScore(1, "great addition !! + 10 points");
+
+    saveState();
+    renderForCurrentMonth();
+    closeExpenseModal();
   };
   on(btnGuinness, "click", () => quickAdd(6.00));
   on(btnCoffee, "click", () => quickAdd(3.50));
@@ -584,10 +767,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailsBody = () => $("detailsModalBody");
   const detailsClose = () => $("detailsModalCloseBtn");
 
-  function openDetailsModal(text){ (detailsBody()).textContent = text || "No details."; setDisplay(detailsOverlay, true); }
-  function closeDetailsModal(){ setDisplay(detailsOverlay, false); }
-  on(detailsOverlay, "click", (e)=>{ if (e.target === detailsOverlay) closeDetailsModal(); });
-  on(document, "keydown", (e)=>{ if (detailsOverlay.style.display === "flex" && e.key === "Escape") closeDetailsModal(); });
+  function openDetailsModal(text){
+    (detailsBody()).textContent = text || "No details.";
+    setDisplay(detailsOverlay, true);
+  }
+  function closeDetailsModal(){
+    setDisplay(detailsOverlay, false);
+  }
+  on(detailsOverlay, "click", (e)=>{
+    if (e.target === detailsOverlay) closeDetailsModal();
+  });
+  on(document, "keydown", (e)=>{
+    if (detailsOverlay.style.display === "flex" && e.key === "Escape") {
+      closeDetailsModal();
+    }
+  });
   on(detailsClose(), "click", closeDetailsModal);
 
   /* ---------- Allowance Modal ---------- */
@@ -599,8 +793,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allowanceFlow = { mode: null };
 
-  const openAllowanceModal  = () => { showAllowanceChoice(); setDisplay(allowanceOverlay, true); };
-  const closeAllowanceModal = () => { setDisplay(allowanceOverlay, false); allowanceFlow = { mode: null }; };
+  const openAllowanceModal  = () => {
+    showAllowanceChoice();
+    setDisplay(allowanceOverlay, true);
+  };
+  const closeAllowanceModal = () => {
+    setDisplay(allowanceOverlay, false);
+    allowanceFlow = { mode: null };
+  };
 
   function showAllowanceChoice(){
     allowanceFlow.mode = null;
@@ -623,8 +823,11 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceSubmit().style.display = "inline-block";
     allowanceSubmit().textContent = "Set Global Allowance";
     allowanceStage().innerHTML = `
-      <label for="allowanceManualInput" style="font-size:14px; color:#333;">Allowance Amount</label>
-      <input id="allowanceManualInput" type="number" step="0.01" min="0" placeholder="Enter amount"
+      <label for="allowanceManualInput" style="font-size:14px; color:#333;">
+        Allowance Amount
+      </label>
+      <input id="allowanceManualInput" type="number" step="0.01" min="0"
+             placeholder="Enter amount"
              style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" />
     `;
     const inp = $("allowanceManualInput");
@@ -633,8 +836,15 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceBack().onclick = showAllowanceChoice;
     allowanceSubmit().onclick = () => {
       const val = parseFloat(inp.value);
-      if (isNaN(val) || val < 0) { alert("Please enter a valid allowance (0 or more)."); inp.focus(); return; }
-      settings.allowance = val; saveSettings(); renderForCurrentMonth(); closeAllowanceModal();
+      if (isNaN(val) || val < 0) {
+        alert("Please enter a valid allowance (0 or more).");
+        inp.focus();
+        return;
+      }
+      settings.allowance = val;
+      saveSettings();
+      renderForCurrentMonth();
+      closeAllowanceModal();
     };
   }
 
@@ -649,8 +859,10 @@ document.addEventListener("DOMContentLoaded", () => {
         ${["Income","Rent","Car Payments","Bills","Ideal Savings","Other"].map(label => `
           <label style="display:flex; flex-direction:column; gap:6px;">
             <span style="font-size:14px; color:#333;">${label}</span>
-            <input type="number" step="0.01" min="0" placeholder="${label}" data-allowance="${label}"
-                   style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" value="0" />
+            <input type="number" step="0.01" min="0" placeholder="${label}"
+                   data-allowance="${label}"
+                   style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;"
+                   value="0" />
           </label>
         `).join("")}
       </div>
@@ -658,21 +870,37 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceBack().onclick = showAllowanceChoice;
     allowanceSubmit().onclick = () => {
       const vals = {};
-      document.querySelectorAll('[data-allowance]').forEach(el => { vals[el.dataset.allowance] = parseFloat(el.value) || 0; });
+      document
+        .querySelectorAll('[data-allowance]')
+        .forEach(el => {
+          vals[el.dataset.allowance] = parseFloat(el.value) || 0;
+        });
       const income = vals["Income"];
-      const costs = vals["Rent"] + vals["Car Payments"] + vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
+      const costs = vals["Rent"] + vals["Car Payments"] +
+                    vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
       settings.allowance = income - costs;
-      saveSettings(); renderForCurrentMonth(); closeAllowanceModal();
+      saveSettings();
+      renderForCurrentMonth();
+      closeAllowanceModal();
     };
   }
 
-  on(allowanceOverlay, "click", (e)=>{ if (e.target === allowanceOverlay) closeAllowanceModal(); });
-  on(document, "keydown", (e)=>{ if (allowanceOverlay.style.display === "flex" && e.key === "Escape") closeAllowanceModal(); });
+  on(allowanceOverlay, "click", (e)=>{
+    if (e.target === allowanceOverlay) closeAllowanceModal();
+  });
+  on(document, "keydown", (e)=>{
+    if (allowanceOverlay.style.display === "flex" && e.key === "Escape") {
+      closeAllowanceModal();
+    }
+  });
   on(allowanceCancel(), "click", closeAllowanceModal);
   on(setAllowanceBtn, "click", openAllowanceModal);
 
   /* ---------- Favourites Modal ---------- */
-  const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
+  const openFavesModal = () => {
+    renderFavesModal();
+    setDisplay(favesOverlay, true);
+  };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
   const escapeHtml = (s) =>
@@ -686,13 +914,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderFavesModal(){
     const entries = Object.entries(favourites); // [key, fav]
-    if (!entries.length) { favesList.innerHTML = `<p>No favourites yet.</p>`; return; }
+    if (!entries.length) {
+      favesList.innerHTML = `<p>No favourites yet.</p>`;
+      return;
+    }
 
     entries.sort((a,b) => {
       const fa = a[1], fb = b[1];
-      return ( (fb.year|0) - (fa.year|0) ) ||
-             ( (fb.monthIndex|0) - (fa.monthIndex|0) ) ||
-             ( (fb.id|0) - (fa.id|0) );
+      return (
+        ((fb.year|0) - (fa.year|0)) ||
+        ((fb.monthIndex|0) - (fa.monthIndex|0)) ||
+        ((fb.id|0) - (fa.id|0))
+      );
     });
 
     const rows = entries.map(([key, f]) => `
@@ -703,29 +936,40 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${f.card || "-"}</td>
         <td class="fav-actions">
           <button class="fave-add" type="button" data-key="${key}">Add</button>
-          <span class="mini-inline delete-mini fav-delete" title="Delete" data-key="${key}">d</span>
+          <span class="mini-inline delete-mini fav-delete"
+                title="Delete" data-key="${key}">d</span>
         </td>
-      </tr>`).join("");
+      </tr>`
+    ).join("");
 
     favesList.innerHTML = `
       <table>
         <thead>
-          <tr><th>Name</th><th>Amount</th><th>Category</th><th>Card</th><th>Action</th></tr>
+          <tr>
+            <th>Name</th><th>Amount</th><th>Category</th><th>Card</th><th>Action</th>
+          </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
     `;
   }
 
-  on(favesOverlay, "click", (e)=>{ if (e.target === favesOverlay) closeFavesModal(); });
-  on(document, "keydown", (e)=>{ if (favesOverlay.style.display === "flex" && e.key === "Escape") closeFavesModal(); });
+  on(favesOverlay, "click", (e)=>{
+    if (e.target === favesOverlay) closeFavesModal();
+  });
+  on(document, "keydown", (e)=>{
+    if (favesOverlay.style.display === "flex" && e.key === "Escape") {
+      closeFavesModal();
+    }
+  });
   on(favesCloseBtn, "click", closeFavesModal);
   on(showFavouritesBtn, "click", openFavesModal);
 
   on(favesList, "click", (e) => {
     const add = e.target.closest(".fave-add");
     if (add) {
-      const fav = favourites[add.dataset.key]; if (!fav) return;
+      const fav = favourites[add.dataset.key];
+      if (!fav) return;
       const data = getMonthData();
 
       // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
@@ -733,19 +977,30 @@ document.addEventListener("DOMContentLoaded", () => {
       data.noSpending = false;
 
       data.purchaseCount += 1;
-      data.expenses.push({ id: data.purchaseCount, amount: fav.amount, category: fav.category, card: fav.card || "Credit" });
-      data.categoryTotals[fav.category] = (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
-      addScore(1); // +10 for favourite add
-      showGoldPopup("great addition !! + 10 points");
+      data.expenses.push({
+        id: data.purchaseCount,
+        amount: fav.amount,
+        category: fav.category,
+        card: fav.card || "Credit"
+      });
+      data.categoryTotals[fav.category] =
+        (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
-      saveState(); renderForCurrentMonth();
+      // Base + streak for favourite add
+      applyStreakScore(1, "great addition !! + 10 points");
+
+      saveState();
+      renderForCurrentMonth();
       return;
     }
     const del = e.target.closest(".fav-delete");
     if (del) {
-      const key = del.dataset.key; if (!favourites[key]) return;
-      delete favourites[key]; saveFavourites();
-      renderFavesModal(); renderForCurrentMonth();
+      const key = del.dataset.key;
+      if (!favourites[key]) return;
+      delete favourites[key];
+      saveFavourites();
+      renderFavesModal();
+      renderForCurrentMonth();
     }
   });
 
@@ -757,10 +1012,19 @@ document.addEventListener("DOMContentLoaded", () => {
     setDisplay(favNameOverlay, true);
     setTimeout(()=> favNameInput.focus(), 0);
   }
-  function closeFavNameModal(){ setDisplay(favNameOverlay, false); pendingFav = null; }
+  function closeFavNameModal(){
+    setDisplay(favNameOverlay, false);
+    pendingFav = null;
+  }
 
-  on(favNameOverlay, "click", (e)=>{ if (e.target === favNameOverlay) closeFavNameModal(); });
-  on(document, "keydown", (e)=>{ if (favNameOverlay.style.display === "flex" && e.key === "Escape") closeFavNameModal(); });
+  on(favNameOverlay, "click", (e)=>{
+    if (e.target === favNameOverlay) closeFavNameModal();
+  });
+  on(document, "keydown", (e)=>{
+    if (favNameOverlay.style.display === "flex" && e.key === "Escape") {
+      closeFavNameModal();
+    }
+  });
   on(favNameCancel, "click", closeFavNameModal);
   on(favNameSave, "click", () => {
     if (!pendingFav) return;
