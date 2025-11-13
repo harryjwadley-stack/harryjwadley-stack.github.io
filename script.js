@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Day controls
   const prevBtn = $("prevMonthBtn");
   const nextBtn = $("nextMonthBtn");
+  const hardResetBtn = $("hardResetBtn");
   const monthSelect = $("monthSelect");
   const yearSelect = $("yearSelect");
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -156,6 +157,38 @@ document.addEventListener("DOMContentLoaded", () => {
       renderForCurrentMonth();
     });
   })();
+
+    // ---------- Hard Reset (global wipe) ----------
+  on(hardResetBtn, "click", () => {
+    if (!confirm(
+      "This will reset EVERYTHING:\n\n" +
+      "• All days' expenses and category totals\n" +
+      "• All favourites\n" +
+      "• Allowance and score\n\n" +
+      "Are you sure?"
+    )) {
+      return;
+    }
+
+    // Reset settings (allowance + score)
+    settings = { allowance: 0, score: 0 };
+    saveSettings();
+
+    // Clear all day/month state
+    monthlyState = {};
+    saveState();
+
+    // Clear all favourites
+    favourites = {};
+    saveFavourites();
+
+    // Optionally reset day back to 1
+    currentDay = 1;
+    if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
+
+    // Re-render UI
+    renderForCurrentMonth();
+  });
 
   // Remove stray "Actions" thead if present
   (function stripActionsHeaderIfPresent(){
@@ -642,7 +675,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const openFavesModal = () => { renderFavesModal(); setDisplay(favesOverlay, true); };
   const closeFavesModal = () => setDisplay(favesOverlay, false);
 
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const escapeHtml = (s) =>
+    String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[c]));
 
   function renderFavesModal(){
     const entries = Object.entries(favourites); // [key, fav]

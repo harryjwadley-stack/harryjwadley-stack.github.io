@@ -461,3 +461,16 @@ button:hover { transform: translateY(-2px); }
   letter-spacing: 0.5px;
   background: #ffe9e7;
 }
+
+#hardResetBtn {
+  margin-left: auto;              /* push it to the right on the bar */
+  background: #ff3b30;            /* same red family as noSpendBtn */
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+#hardResetBtn:hover {
+  background: #ff5b50;
+}
