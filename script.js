@@ -28,7 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const allowanceRemainingDiv = $("allowanceRemaining");
 
   // Sidebar stats
-  const expenseCountEl = $("expenseCount");
   const scoreTotalEl   = $("scoreTotal");
   const streakEl       = $("streakDisplay");
 
@@ -263,23 +262,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateStatsUI(){
+    // We still fetch data in case you ever want to extend this,
+    // but we no longer show "Expenses" here.
     const data = getMonthData();
-    const count = data.expenses.length;
-
-    if (expenseCountEl) {
-      expenseCountEl.textContent = `Expenses: ${count}`;
-    }
 
     if (scoreTotalEl) {
-      scoreTotalEl.textContent = `Score: ${Number(settings.score || 0)}`;
+      const xp = Number(settings.score || 0);
+      scoreTotalEl.textContent = `📈 XP: ${xp}`;
     }
 
     if (streakEl) {
       const st = Number(settings.streak || 0);
       streakEl.textContent =
         st > 0
-          ? `Streak: ${st} day${st === 1 ? "" : "s"}`
-          : "Streak: 0 days";
+          ? `🔥 Streak: ${st} day${st === 1 ? "" : "s"}`
+          : "🔥 Streak: 0 days`;
     }
   }
 
