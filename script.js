@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Sidebar stats
   const expenseCountEl = $("expenseCount");
   const scoreTotalEl   = $("scoreTotal");
+  const streakEl       = $("streakDisplay");
 
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
@@ -261,12 +262,25 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
-  // EXPENSE COUNT (per current day) + SCORE (global)
   function updateStatsUI(){
     const data = getMonthData();
     const count = data.expenses.length;
-    if (expenseCountEl) expenseCountEl.textContent = `Expenses: ${count}`;
-    if (scoreTotalEl)   scoreTotalEl.textContent   = `Score: ${Number(settings.score || 0)}`;
+
+    if (expenseCountEl) {
+      expenseCountEl.textContent = `Expenses: ${count}`;
+    }
+
+    if (scoreTotalEl) {
+      scoreTotalEl.textContent = `Score: ${Number(settings.score || 0)}`;
+    }
+
+    if (streakEl) {
+      const st = Number(settings.streak || 0);
+      streakEl.textContent =
+        st > 0
+          ? `Streak: ${st} day${st === 1 ? "" : "s"}`
+          : "Streak: 0 days";
+    }
   }
 
   function renderForCurrentMonth(){
