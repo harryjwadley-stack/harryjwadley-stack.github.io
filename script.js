@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
       streakEl.textContent =
         st > 0
           ? `🔥 Streak: ${st} day${st === 1 ? "" : "s"}`
-          : "🔥 Streak: 0 days`;
+          : `🔥 Streak: 0 days`;
     }
   }
 
