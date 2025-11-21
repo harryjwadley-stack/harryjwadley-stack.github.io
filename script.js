@@ -483,7 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Change this path/URL to your image
       imgEl.src = "images/penny.jpg";
       imgEl.alt = "XP celebration";
-      imgEl.style.borderRadius = "50%";
+      imgEl.style.borderRadius = "hidden";
 
       // Body: dynamic message (XP / streak text)
       const bodyEl = document.createElement("div");
