@@ -28,8 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const allowanceRemainingDiv = $("allowanceRemaining");
 
   // Sidebar stats
-  const scoreTotalEl   = $("scoreTotal");
-  const streakEl       = $("streakDisplay");
+  const scoreTotalEl = $("scoreTotal");
+  const streakEl = $("streakDisplay");
 
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
@@ -38,9 +38,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Favourite Name Modal
   const favNameOverlay = $("favNameModalOverlay");
-  const favNameInput   = $("favNameInput");
-  const favNameCancel  = $("favNameCancelBtn");
-  const favNameSave    = $("favNameSaveBtn");
+  const favNameInput = $("favNameInput");
+  const favNameCancel = $("favNameCancelBtn");
+  const favNameSave = $("favNameSaveBtn");
 
   // Day controls
   const prevBtn = $("prevMonthBtn");
@@ -90,24 +90,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const FAV_KEY = "savr-favourites-v1";
 
   let monthlyState = loadJSON(STATE_KEY) || {};
-  let settings     = loadJSON(SETTINGS_KEY) || {
+  let settings = loadJSON(SETTINGS_KEY) || {
     allowance: 0,
     score: 0,
     streak: 0,
     lastActiveDay: null
   };
-  let favourites   = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
+  let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
 
   // Backfill missing fields
-  if (typeof settings.allowance !== "number") settings.allowance = Number(settings.allowance)||0;
+  if (typeof settings.allowance !== "number") settings.allowance = Number(settings.allowance) || 0;
   if (typeof settings.score !== "number") settings.score = 0;
   if (typeof settings.streak !== "number") settings.streak = 0;
   if (typeof settings.lastActiveDay !== "number") settings.lastActiveDay = null;
 
-  function loadJSON(k){
+  function loadJSON(k) {
     try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
   }
-  function saveJSON(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+  function saveJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
   const saveState = () => saveJSON(STATE_KEY, monthlyState);
   const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
   const saveFavourites = () => saveJSON(FAV_KEY, favourites);
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const yyyymmKey = (y,m) => `${y}-${String(m+1).padStart(2,"0")}`;
+  const yyyymmKey = (y, m) => `${y}-${String(m + 1).padStart(2,"0")}`;
 
   // Use day buckets when the Day UI exists (day-1…day-7), otherwise fall back to month key.
   const periodKey = () =>
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentYear, currentMonthIndex;
 
-  function ensureMonth(key){
+  function ensureMonth(key) {
     if (!monthlyState[key]) {
       monthlyState[key] = {
         expenses: [],
@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const isFavourited = (id) => !!favourites[compositeId(id)];
 
   /* ---------- Day pickers ---------- */
-  (function initMonthYearPickers(){
+  (function initMonthYearPickers() {
     const now = new Date();
     currentYear = now.getFullYear();
     currentMonthIndex = now.getMonth();
@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Reset settings (allowance + score + streak)
+    // Reset settings (allowance +score +streak)
     settings = {
       allowance: 0,
       score: 0,
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Remove stray "Actions" thead if present
-  (function stripActionsHeaderIfPresent(){
+  (function stripActionsHeaderIfPresent() {
     const tr = submittedTable.querySelector("thead tr");
     if (!tr) return;
     [...tr.children].forEach(th => {
@@ -246,14 +246,14 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 
   /* ---------- Render ---------- */
-  function updateAllowanceRemaining(){
+  function updateAllowanceRemaining() {
     const data = getMonthData();
     const spent = Object.values(data.categoryTotals).reduce((a,b)=>a+b,0);
     allowanceRemainingDiv.textContent =
       `Allowance Remaining: ${((settings.allowance || 0) - spent).toFixed(2)}`;
   }
 
-  function updatePieChart(){
+  function updatePieChart() {
     const d = getMonthData().categoryTotals;
     categoryChart.data.datasets[0].data = [
       d.Groceries, d.Social, d.Treat, d.Unexpected
@@ -261,10 +261,8 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
-  function updateStatsUI(){
-    // We still fetch data in case you ever want to extend this,
-    // but we no longer show "Expenses" here.
-    const data = getMonthData();
+  function updateStatsUI() {
+    const data = getMonthData(); // currently unused but kept for possible future use
 
     if (scoreTotalEl) {
       const xp = Number(settings.score || 0);
@@ -280,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function renderForCurrentMonth(){
+  function renderForCurrentMonth() {
     const data = getMonthData();
     allowanceDisplay.textContent =
       `Allowance: ${(Number(settings.allowance)||0).toFixed(2)}`;
@@ -317,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
     positionFavStars();
   };
 
-  function eachRow(cb){
+  function eachRow(cb) {
     const containerRect = tableWrap.getBoundingClientRect();
     [...submittedTableBody.querySelectorAll("tr")].forEach(tr => {
       const id = +(tr.getAttribute("data-row-id") || NaN);
@@ -328,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function positionEditDeleteDots(){
+  function positionEditDeleteDots() {
     if (!deleteRail) return;
     deleteRail.innerHTML = "";
     eachRow(({id, top}) => {
@@ -349,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function positionFavStars(){
+  function positionFavStars() {
     if (!leftRail) return;
     leftRail.innerHTML = "";
     eachRow(({id, top}) => {
@@ -367,12 +365,12 @@ document.addEventListener("DOMContentLoaded", () => {
   on(window, "resize", updateRails);
 
   /* ---------- SCORE helpers ---------- */
-  function addScore(n = 1){
+  function addScore(n = 1) {
     settings.score = Math.max(0, (settings.score || 0) + 10 * n);
     saveSettings();
     updateStatsUI();
   }
-  function subtractScore(n = 1){
+  function subtractScore(n = 1) {
     settings.score = Math.max(0, (settings.score || 0) - 10 * n);
     saveSettings();
     updateStatsUI();
@@ -380,10 +378,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * Apply scoring and streak bonus for “good” activity on the current day.
-   * baseUnits: how many 10-point units to add (1 = 10 pts, 5 = 50 pts, etc.)
-   * baseMessage: primary text (“great addition !! + 10 points”, etc.)
+   * baseUnits: how many 10-point units to add (1 = 10XP, 5 = 50XP, etc.)
+   * baseMessage: primary text (“great addition !! +10XP”, etc.)
    */
-  function applyStreakScore(baseUnits, baseMessage){
+  function applyStreakScore(baseUnits, baseMessage) {
     const prevDay = (typeof settings.lastActiveDay === "number")
       ? settings.lastActiveDay
       : null;
@@ -408,26 +406,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Base score for this action
     addScore(baseUnits);
-    const basePoints = baseUnits * 10;
+    const baseXP = baseUnits * 10;
 
     // Streak bonus only when we moved to a *new* day and are on a streak
     let bonusUnits = 0;
     if (prevDay !== null && today !== prevDay && streak > 1) {
-      bonusUnits = streak;          // e.g. 2 => +20 pts, 3 => +30 pts
+      bonusUnits = streak; // e.g. 2 => +20XP, 3 => +30XP
       addScore(bonusUnits);
     }
-    const bonusPoints = bonusUnits * 10;
+    const bonusXP = bonusUnits * 10;
+    const totalXP = baseXP + bonusXP;
 
     let msg = baseMessage;
     if (bonusUnits > 0) {
-      msg += `  |  ${streak} day streak, +${bonusPoints} points`;
+      msg += `  |  ${streak} day streak, +${bonusXP}XP`;
     }
-    showGoldPopup(msg || `Streak day ${streak}`);
+
+    showGoldPopup(msg || `Streak day ${streak}`, totalXP);
   }
 
   /* ---------- Gold popup helper ---------- */
   let goldPopupTimer = null;
-  function showGoldPopup(message = "Congratulations !! you're on the right track. + 50 points.") {
+  function showGoldPopup(
+    message = "Congratulations !! you're on the right track. +50XP.",
+    earnedXP = 0
+  ) {
     let popup = document.querySelector(".gold-popup-toast");
 
     if (!popup) {
@@ -455,7 +458,6 @@ document.addEventListener("DOMContentLoaded", () => {
         minWidth: "260px"
       });
 
-      // Title: "Nice!"
       const titleEl = document.createElement("div");
       titleEl.className = "gold-popup-title";
       Object.assign(titleEl.style, {
@@ -464,9 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
         letterSpacing: "0.5px",
         marginBottom: "6px"
       });
-      titleEl.textContent = "Nice!";
 
-      // Body: dynamic message (XP / streak text)
       const bodyEl = document.createElement("div");
       bodyEl.className = "gold-popup-body";
       Object.assign(bodyEl.style, {
@@ -480,8 +480,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(popup);
     }
 
-    // Update the message underneath "Nice!"
+    const titleEl = popup.querySelector(".gold-popup-title");
     const bodyEl = popup.querySelector(".gold-popup-body");
+
+    if (titleEl) {
+      titleEl.textContent = earnedXP > 0
+        ? `Nice! +${earnedXP}XP`
+        : "Nice!";
+    }
     if (bodyEl) {
       bodyEl.textContent = message;
     }
@@ -515,8 +521,8 @@ document.addEventListener("DOMContentLoaded", () => {
     saveState();
     renderForCurrentMonth();
 
-    // Base 50 points + streak bonus
-    applyStreakScore(5, "Congratulations !! you're on the right track. + 50 points");
+    // Base 50XP +streak bonus
+    applyStreakScore(5, "Congratulations !! you're on the right track. +50XP");
   });
 
   /* ---------- Rail actions ---------- */
@@ -582,7 +588,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!n && !data.noSpending) return;
     if (!confirm("Are you sure you want to delete all expenses for this day?")) return;
 
-    if (n > 0) subtractScore(n); // subtract 10 × items cleared
+    if (n > 0) subtractScore(n); // subtract 10×items cleared
     data.expenses = [];
     data.categoryTotals = {
       Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
@@ -607,13 +613,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const quickStage = $("drinkQuickStage");
   const btnGuinness = $("drinkGuinnessBtn");
-  const btnCoffee   = $("drinkCoffeeBtn");
-  const btnOther    = $("drinkOtherBtn");
+  const btnCoffee = $("drinkCoffeeBtn");
+  const btnOther = $("drinkOtherBtn");
 
   const amountLabel = document.querySelector('label[for="modalExpenseAmount"]');
-  const cardLabel   = document.querySelector('label[for="modalExpenseCard"]');
+  const cardLabel = document.querySelector('label[for="modalExpenseCard"]');
 
-  function toggleFormFields(show){
+  function toggleFormFields(show) {
     const disp = show ? "block" : "none";
     if (amountLabel) amountLabel.style.display = disp;
     if (modalAmount()) modalAmount().style.display = disp;
@@ -628,7 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function openExpenseModal(
     expense = null,
     { hideCategory=false, quickDrinkOnly=false } = {}
-  ){
+  ) {
     const isEdit = expense && typeof expense.id === "number";
 
     if (!isEdit && quickStage) {
@@ -661,7 +667,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!quickDrinkOnly) setTimeout(() => modalAmount()?.focus(), 0);
   }
 
-  function closeExpenseModal(){
+  function closeExpenseModal() {
     setDisplay(expenseOverlay, false);
     if (quickStage) quickStage.style.display = "none";
     toggleFormFields(true);
@@ -720,7 +726,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
-        // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
+        // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
         if (data.noSpending) subtractScore(5);
         data.noSpending = false;
 
@@ -728,8 +734,8 @@ document.addEventListener("DOMContentLoaded", () => {
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
 
-        // Base + streak for a new expense
-        applyStreakScore(1, "great addition !! + 10 points");
+        // Base +streak for a new expense
+        applyStreakScore(1, "great addition !! +10XP");
       }
 
       saveState();
@@ -773,7 +779,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const quickAdd = (amt) => {
     const data = getMonthData();
 
-    // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
+    // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
     if (data.noSpending) subtractScore(5);
     data.noSpending = false;
 
@@ -786,8 +792,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     data.categoryTotals.Social += amt;
 
-    // Base + streak for quick add
-    applyStreakScore(1, "great addition !! + 10 points");
+    // Base +streak for quick add
+    applyStreakScore(1, "great addition !! +10XP");
 
     saveState();
     renderForCurrentMonth();
@@ -810,11 +816,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailsBody = () => $("detailsModalBody");
   const detailsClose = () => $("detailsModalCloseBtn");
 
-  function openDetailsModal(text){
+  function openDetailsModal(text) {
     (detailsBody()).textContent = text || "No details.";
     setDisplay(detailsOverlay, true);
   }
-  function closeDetailsModal(){
+  function closeDetailsModal() {
     setDisplay(detailsOverlay, false);
   }
   on(detailsOverlay, "click", (e)=>{
@@ -829,14 +835,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Allowance Modal ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
-  const allowanceStage   = () => $("allowanceModalStage");
-  const allowanceCancel  = () => $("allowanceModalCancelBtn");
-  const allowanceBack    = () => $("allowanceModalBackBtn");
-  const allowanceSubmit  = () => $("allowanceModalSubmitBtn");
+  const allowanceStage = () => $("allowanceModalStage");
+  const allowanceCancel = () => $("allowanceModalCancelBtn");
+  const allowanceBack = () => $("allowanceModalBackBtn");
+  const allowanceSubmit = () => $("allowanceModalSubmitBtn");
 
   let allowanceFlow = { mode: null };
 
-  const openAllowanceModal  = () => {
+  const openAllowanceModal = () => {
     showAllowanceChoice();
     setDisplay(allowanceOverlay, true);
   };
@@ -845,7 +851,7 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceFlow = { mode: null };
   };
 
-  function showAllowanceChoice(){
+  function showAllowanceChoice() {
     allowanceFlow.mode = null;
     allowanceBack().style.display = "none";
     allowanceSubmit().style.display = "none";
@@ -860,7 +866,7 @@ document.addEventListener("DOMContentLoaded", () => {
     on($("allowanceCalcBtn"), "click", showAllowanceCalc);
   }
 
-  function showAllowanceManual(){
+  function showAllowanceManual() {
     allowanceFlow.mode = "manual";
     allowanceBack().style.display = "inline-block";
     allowanceSubmit().style.display = "inline-block";
@@ -891,13 +897,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  function showAllowanceCalc(){
+  function showAllowanceCalc() {
     allowanceFlow.mode = "calc";
     allowanceBack().style.display = "inline-block";
     allowanceSubmit().style.display = "inline-block";
     allowanceSubmit().textContent = "Set Global Allowance";
     allowanceStage().innerHTML = `
-      <p>Allowance = Income − (Rent + Car + Bills + Savings + Other)</p>
+      <p>Allowance = Income −(Rent +Car +Bills +Savings +Other)</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         ${["Income","Rent","Car Payments","Bills","Ideal Savings","Other"].map(label => `
           <label style="display:flex; flex-direction:column; gap:6px;">
@@ -955,7 +961,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "'": "&#39;",
     }[c]));
 
-  function renderFavesModal(){
+  function renderFavesModal() {
     const entries = Object.entries(favourites); // [key, fav]
     if (!entries.length) {
       favesList.innerHTML = `<p>No favourites yet.</p>`;
@@ -1015,7 +1021,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!fav) return;
       const data = getMonthData();
 
-      // If we’re breaking a previously marked no-spend day, remove the +50 bonus first
+      // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
       if (data.noSpending) subtractScore(5);
       data.noSpending = false;
 
@@ -1029,8 +1035,8 @@ document.addEventListener("DOMContentLoaded", () => {
       data.categoryTotals[fav.category] =
         (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
-      // Base + streak for favourite add
-      applyStreakScore(1, "great addition !! + 10 points");
+      // Base +streak for favourite add
+      applyStreakScore(1, "great addition !! +10XP");
 
       saveState();
       renderForCurrentMonth();
@@ -1049,13 +1055,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Favourite Name Modal ---------- */
   let pendingFav = null;
-  function openFavNameModal(snapshot, defaultName = ""){
+  function openFavNameModal(snapshot, defaultName = "") {
     pendingFav = { ...snapshot, name: defaultName || "" };
     favNameInput.value = pendingFav.name;
     setDisplay(favNameOverlay, true);
     setTimeout(()=> favNameInput.focus(), 0);
   }
-  function closeFavNameModal(){
+  function closeFavNameModal() {
     setDisplay(favNameOverlay, false);
     pendingFav = null;
   }
