@@ -429,33 +429,65 @@ document.addEventListener("DOMContentLoaded", () => {
   let goldPopupTimer = null;
   function showGoldPopup(message = "Congratulations !! you're on the right track. + 50 points.") {
     let popup = document.querySelector(".gold-popup-toast");
+
     if (!popup) {
       popup = document.createElement("div");
       popup.className = "gold-popup-toast";
       popup.setAttribute("role", "alert");
       popup.setAttribute("aria-live", "polite");
+
+      // Base container styles (center of screen)
       Object.assign(popup.style, {
         position: "fixed",
-        inset: "auto 50% 30px auto",
-        transform: "translateX(50%)",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
         zIndex: "10000",
         background: "linear-gradient(180deg, #ffd866, #ffb000)",
         color: "#1a1a1a",
         border: "2px solid #d39b00",
         borderRadius: "12px",
-        padding: "14px 18px",
+        padding: "18px 22px",
         boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-        fontWeight: "700",
         fontFamily: "inherit",
-        letterSpacing: "0.3px",
         textAlign: "center",
         maxWidth: "90vw",
         minWidth: "260px"
       });
+
+      // Title: "Nice!"
+      const titleEl = document.createElement("div");
+      titleEl.className = "gold-popup-title";
+      Object.assign(titleEl.style, {
+        fontSize: "26px",
+        fontWeight: "800",
+        letterSpacing: "0.5px",
+        marginBottom: "6px"
+      });
+      titleEl.textContent = "Nice!";
+
+      // Body: dynamic message (XP / streak text)
+      const bodyEl = document.createElement("div");
+      bodyEl.className = "gold-popup-body";
+      Object.assign(bodyEl.style, {
+        fontSize: "16px",
+        fontWeight: "600",
+        letterSpacing: "0.2px"
+      });
+
+      popup.appendChild(titleEl);
+      popup.appendChild(bodyEl);
       document.body.appendChild(popup);
     }
-    popup.textContent = message;
+
+    // Update the message underneath "Nice!"
+    const bodyEl = popup.querySelector(".gold-popup-body");
+    if (bodyEl) {
+      bodyEl.textContent = message;
+    }
+
     popup.style.display = "block";
+
     if (goldPopupTimer) clearTimeout(goldPopupTimer);
     goldPopupTimer = setTimeout(() => {
       if (popup) popup.style.display = "none";
