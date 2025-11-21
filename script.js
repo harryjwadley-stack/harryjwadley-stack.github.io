@@ -458,6 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
         minWidth: "260px"
       });
 
+      // Title: "Nice!"
       const titleEl = document.createElement("div");
       titleEl.className = "gold-popup-title";
       Object.assign(titleEl.style, {
@@ -467,6 +468,22 @@ document.addEventListener("DOMContentLoaded", () => {
         marginBottom: "6px"
       });
 
+      // Image: celebration picture
+      const imgEl = document.createElement("img");
+      imgEl.className = "gold-popup-image";
+      Object.assign(imgEl.style, {
+        width: "80px",
+        height: "80px",
+        margin: "0 auto 8px",
+        display: "block",
+        objectFit: "contain",
+        borderRadius: "50%"
+      });
+      // Change this path/URL to your image
+      imgEl.src = "images/penny.jpg";
+      imgEl.alt = "XP celebration";
+
+      // Body: dynamic message (XP / streak text)
       const bodyEl = document.createElement("div");
       bodyEl.className = "gold-popup-body";
       Object.assign(bodyEl.style, {
@@ -475,13 +492,17 @@ document.addEventListener("DOMContentLoaded", () => {
         letterSpacing: "0.2px"
       });
 
+      // Order: title → image → message
       popup.appendChild(titleEl);
+      popup.appendChild(imgEl);
       popup.appendChild(bodyEl);
       document.body.appendChild(popup);
     }
 
     const titleEl = popup.querySelector(".gold-popup-title");
     const bodyEl = popup.querySelector(".gold-popup-body");
+    // If you ever want to swap image dynamically later:
+    // const imgEl = popup.querySelector(".gold-popup-image");
 
     if (titleEl) {
       titleEl.textContent = earnedXP > 0
@@ -499,6 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (popup) popup.style.display = "none";
     }, 4000);
   }
+
 
   /* ---------- "No spending today" button ---------- */
   on(noSpendBtn, "click", () => {
@@ -522,7 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderForCurrentMonth();
 
     // Base 50XP +streak bonus
-    applyStreakScore(5, "Congratulations !! you're on the right track. +50XP");
+    applyStreakScore(5, "Congratulations, you're on the right track! +50XP");
   });
 
   /* ---------- Rail actions ---------- */
@@ -735,7 +757,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.categoryTotals[category] += amount;
 
         // Base +streak for a new expense
-        applyStreakScore(1, "great addition !! +10XP");
+        applyStreakScore(1, "great addition! +10XP");
       }
 
       saveState();
@@ -793,7 +815,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.categoryTotals.Social += amt;
 
     // Base +streak for quick add
-    applyStreakScore(1, "great addition !! +10XP");
+    applyStreakScore(1, "great addition! +10XP");
 
     saveState();
     renderForCurrentMonth();
@@ -1036,7 +1058,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
       // Base +streak for favourite add
-      applyStreakScore(1, "great addition !! +10XP");
+      applyStreakScore(1, "great addition! +10XP");
 
       saveState();
       renderForCurrentMonth();
