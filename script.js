@@ -472,16 +472,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const imgEl = document.createElement("img");
       imgEl.className = "gold-popup-image";
       Object.assign(imgEl.style, {
-        width: "80px",
-        height: "80px",
-        margin: "0 auto 8px",
+        width: "90px",
+        height: "90px",
+        margin: "10px auto 12px",
         display: "block",
         objectFit: "contain",
-        borderRadius: "50%"
+        backgroundColor: "transparent"
       });
+
       // Change this path/URL to your image
       imgEl.src = "images/penny.jpg";
       imgEl.alt = "XP celebration";
+      imgEl.style.borderRadius = "50%";
 
       // Body: dynamic message (XP / streak text)
       const bodyEl = document.createElement("div");
