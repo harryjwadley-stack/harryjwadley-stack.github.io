@@ -392,8 +392,21 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: "bottom" } }
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                boxWidth: 18,
+                padding: 15,
+                font: {
+                  size: 14
+                }
+              }
+            }
+          }
         }
+
       });
     } else {
       analyticsChart.data.datasets[0].data = dataArr;
@@ -432,9 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeComingSoonModal() {
     setDisplay(comingSoonOverlay, false);
   }
-
-
-
+  
   function renderForCurrentMonth() {
     const data = getMonthData();
     const mode = settings.allowanceMode || "weekly";
