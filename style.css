@@ -265,10 +265,10 @@ button:hover { transform: translateY(-2px); }
 /* ===== Modals ===== */
 /* Smaller analytics pie chart */
 #analyticsChart {
-  width: 120px !important;
-  height: 120px !important;
-  max-width: 120px;
-  max-height: 120px;
+  width: 260px !important;
+  height: 126px !important;
+  max-width: 260px;
+  max-height: 260px;
   margin: 6px auto 0;
   display: block;
 }
