@@ -71,20 +71,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteRail = $("deleteRail");
   const leftRail = $("leftRail");
 
-  /* ---------- Chart ---------- */
-  const ctx = $("categoryChart").getContext("2d");
-  const categoryChart = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: ["Groceries", "Social", "Treat", "Unexpected"],
-      datasets: [{
-        label: "Category Breakdown",
-        data: [0, 0, 0, 0],
-        backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"]
-      }]
-    },
-    options: { responsive: true, plugins: { legend: { position: "bottom" } } }
-  });
+  /* ---------- Chart (main sidebar pie - REMOVED safely) ---------- */
+  let categoryChart = null;
+
+  const chartCanvas = $("categoryChart");
+  if (chartCanvas) {
+    const ctx = chartCanvas.getContext("2d");
+    categoryChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: ["Groceries", "Social", "Treat", "Unexpected"],
+        datasets: [{
+          label: "Category Breakdown",
+          data: [0, 0, 0, 0],
+          backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } }
+      }
+    });
+  }
+
   (() => {
     const css = getComputedStyle(document.documentElement);
     const themed = ["--turquoise","--navy","--teal","--amber"]
@@ -298,6 +307,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updatePieChart() {
+    if (!categoryChart) return; // prevents crash when chart doesn't exist
+
     const d = getMonthData().categoryTotals;
     categoryChart.data.datasets[0].data = [
       d.Groceries, d.Social, d.Treat, d.Unexpected
