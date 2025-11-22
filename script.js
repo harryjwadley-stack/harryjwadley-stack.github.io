@@ -435,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addScore(baseUnits);   // +10 XP per unit
 
     // Gold popup: XP only, no streak info
-    showGoldPopup(baseMessage || `+${baseXP}XP`, baseXP);
+    showGoldPopup("Great addition!", baseXP);
 
     // --- Streak bonus (if streak extends) ---
     let bonusUnits = 0;
@@ -535,10 +535,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (titleEl) {
       titleEl.textContent =
-        earnedXP > 0 ? `+${earnedXP}XP` : "XP increased!";
+        earnedXP > 0 ? `Nice! +${earnedXP}XP` : "Nice!";
     }
     if (bodyEl) {
-      bodyEl.textContent = message;
+      // message will be "Great addition!" from applyStreakScore
+      bodyEl.textContent = message || "Great addition!";
     }
 
     popup.style.display = "block";
@@ -627,10 +628,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const bodyEl = popup.querySelector(".streak-popup-body");
 
     if (titleEl) {
-      titleEl.textContent = "Streak extended!";
+      titleEl.textContent =
+        bonusXP > 0 ? `Streak extended! +${bonusXP}XP` : "Streak extended!";
     }
     if (bodyEl) {
-      bodyEl.textContent = `Day ${streak} streak · +${bonusXP}XP`;
+      bodyEl.textContent = "You're on fire!";
     }
 
     popup.style.display = "block";
