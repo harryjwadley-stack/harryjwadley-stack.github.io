@@ -266,7 +266,7 @@ button:hover { transform: translateY(-2px); }
 /* Smaller analytics pie chart */
 #analyticsChart {
   width: 260px !important;
-  height: 126px !important;
+  height: 260px !important;
   max-width: 260px;
   max-height: 260px;
   margin: 6px auto 0;
