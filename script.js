@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Weekly view: total allowance minus ALL expenses across all days
       const spentAll = getGlobalSpent();
       allowanceRemainingDiv.textContent =
-        `Allowance Remaining: ${(weeklyAllowance - spentAll).toFixed(2)}`;
+        `Remaining: ${(weeklyAllowance - spentAll).toFixed(2)}`;
     } else {
       // Daily view: (weekly allowance / 7) minus current-day expenses only
       const data = getMonthData();
@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .reduce((a, b) => a + b, 0);
 
       allowanceRemainingDiv.textContent =
-        `Allowance Remaining: ${(dailyAllowance - spentToday).toFixed(2)}`;
+        `Remaining: ${(dailyAllowance - spentToday).toFixed(2)}`;
     }
   }
 
@@ -350,10 +350,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (mode === "weekly") {
       allowanceDisplay.textContent =
-        `Total Allowance: ${weeklyAllowance.toFixed(2)}`;
+        `Total: ${weeklyAllowance.toFixed(2)}`;
     } else {
       allowanceDisplay.textContent =
-        `Total Allowance: ${dailyAllowance.toFixed(2)}`;
+        `Total: ${dailyAllowance.toFixed(2)}`;
     }
 
     if (data.noSpending) {

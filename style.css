@@ -139,23 +139,22 @@ h3 {
 #categoryTotals { font-weight: normal; margin-top: 0; }
 #categoryChart { margin-top: 10px; max-width: 100%; }
 
-/* Allowance Weekly / Daily toggle */
+/* Allowance toggle buttons */
 .allowance-toggle {
   display: flex;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .allowance-toggle button {
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 8px 18px;      /* bigger click area */
+  font-size: 14px;        /* slightly larger text */
   border-radius: 999px;
   background: #fff;
   color: var(--navy);
   border: 1px solid var(--border);
-  box-shadow: none;
-  margin-bottom: 0;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .allowance-toggle button.active {
@@ -163,6 +162,7 @@ h3 {
   color: #000;
   border-color: var(--turquoise);
 }
+
 
 
 /* ===== Buttons ===== */
