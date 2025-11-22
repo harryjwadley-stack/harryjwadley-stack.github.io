@@ -1369,42 +1369,59 @@ document.addEventListener("DOMContentLoaded", () => {
   on(showFavouritesBtn, "click", openFavesModal);
 
   on(favesList, "click", (e) => {
-    const add = e.target.closest(".fave-add");
-    if (add) {
-      const fav = favourites[add.dataset.key];
-      if (!fav) return;
-      const data = getMonthData();
+  const add = e.target.closest(".fave-add");
+  if (add) {
+    const favKey = add.dataset.key;
+    const fav = favourites[favKey];
+    if (!fav) return;
 
-      // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
-      if (data.noSpending) subtractScore(5);
-      data.noSpending = false;
+    const data = getMonthData();
 
-      data.purchaseCount += 1;
-      data.expenses.push({
-        id: data.purchaseCount,
-        amount: fav.amount,
-        category: fav.category,
-        card: fav.card || "Credit"
-      });
-      data.categoryTotals[fav.category] =
-        (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
+    if (data.noSpending) subtractScore(5);
+    data.noSpending = false;
 
-      // Base +streak for favourite add
-      applyStreakScore(1, "great addition! +10XP");
+    data.purchaseCount += 1;
+    const newId = data.purchaseCount;
 
-      saveState();
-      renderForCurrentMonth();
-      return;
-    }
-    const del = e.target.closest(".fav-delete");
-    if (del) {
-      const key = del.dataset.key;
-      if (!favourites[key]) return;
-      delete favourites[key];
-      saveFavourites();
-      renderFavesModal();
-      renderForCurrentMonth();
-    }
+    data.expenses.push({
+      id: newId,
+      amount: fav.amount,
+      category: fav.category,
+      card: fav.card || "Credit"
+    });
+
+    data.categoryTotals[fav.category] =
+      (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
+
+    const newFavKey = compositeId(newId);
+    favourites[newFavKey] = {
+      id: newId,
+      year: currentYear,
+      monthIndex: currentMonthIndex,
+      amount: fav.amount,
+      category: fav.category,
+      card: fav.card || "Credit",
+      name: fav.name || "Favourite"
+    };
+    saveFavourites();
+
+    applyStreakScore(1, "great addition! +10XP");
+
+    saveState();
+    renderForCurrentMonth();
+    return;
+  }
+
+  // 🔻 keep delete behaviour too
+  const del = e.target.closest(".fav-delete");
+  if (del) {
+    const key = del.dataset.key;
+    if (!favourites[key]) return;
+    delete favourites[key];
+    saveFavourites();
+    renderFavesModal();
+    renderForCurrentMonth();
+  }
   });
 
   /* ---------- Favourite Name Modal ---------- */
