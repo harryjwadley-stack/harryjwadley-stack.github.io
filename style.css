@@ -249,7 +249,9 @@ button:hover { transform: translateY(-2px); }
 #detailsModalOverlay,
 #allowanceModalOverlay,
 #favesModalOverlay,
-#favNameModalOverlay {
+#favNameModalOverlay,
+#analyticsModalOverlay,
+#comingSoonOverlay {
   position: fixed;
   inset: 0;
   display: none;
@@ -258,6 +260,7 @@ button:hover { transform: translateY(-2px); }
   background: rgba(0,0,0,0.45);
   z-index: 9999;
 }
+
 
 /* ===== Modals ===== */
 .expense-modal {
