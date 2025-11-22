@@ -263,6 +263,17 @@ button:hover { transform: translateY(-2px); }
 
 
 /* ===== Modals ===== */
+/* Smaller analytics pie chart */
+#analyticsChart {
+  width: 120px !important;
+  height: 120px !important;
+  max-width: 120px;
+  max-height: 120px;
+  margin: 6px auto 0;
+  display: block;
+}
+
+
 .expense-modal {
   width: min(92vw, 520px);
   background: #fff;
