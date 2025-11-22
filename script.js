@@ -27,6 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const allowanceDisplay = $("allowanceDisplay");
   const allowanceRemainingDiv = $("allowanceRemaining");
 
+  // Sidebar feature buttons
+  const analyticsBtn = $("analyticsBtn");
+  const leaderboardBtn = $("leaderboardBtn");
+  const rewardsBtn = $("rewardsBtn");
+
   // Allowance mode toggle
   const weeklyBtn = $("allowWeeklyBtn");
   const dailyBtn = $("allowDailyBtn");
@@ -341,6 +346,82 @@ document.addEventListener("DOMContentLoaded", () => {
       levelEl.textContent = `${emoji} Level: ${level}`;
     }
   }
+
+  /* ---------- Analytics modal helpers ---------- */
+  let analyticsChart = null;
+
+  function renderAnalyticsChart() {
+    const canvas = analyticsChartEl();
+    if (!canvas) return;
+
+    const ctxA = canvas.getContext("2d");
+    const d = getMonthData().categoryTotals;
+    const dataArr = [
+      d.Groceries || 0,
+      d.Social || 0,
+      d.Treat || 0,
+      d.Unexpected || 0
+    ];
+
+    if (!analyticsChart) {
+      analyticsChart = new Chart(ctxA, {
+        type: "pie",
+        data: {
+          labels: ["Groceries", "Social", "Treat", "Unexpected"],
+          datasets: [{
+            label: "Category Breakdown",
+            data: dataArr.slice(),
+            // reuse colours from the main chart
+            backgroundColor: categoryChart.data.datasets[0].backgroundColor
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    } else {
+      analyticsChart.data.datasets[0].data = dataArr;
+      analyticsChart.update();
+    }
+  }
+
+  function openAnalyticsModal() {
+    const d = getMonthData().categoryTotals;
+    const totalsHtml = `
+      Groceries: ${(d.Groceries || 0).toFixed(2)}<br>
+      Social: ${(d.Social || 0).toFixed(2)}<br>
+      Treat: ${(d.Treat || 0).toFixed(2)}<br>
+      Unexpected: ${(d.Unexpected || 0).toFixed(2)}
+    `;
+
+    const totalsEl = analyticsTotalsEl();
+    if (totalsEl) totalsEl.innerHTML = totalsHtml;
+
+    setDisplay(analyticsOverlay, true);
+    // let layout settle before drawing
+    setTimeout(renderAnalyticsChart, 0);
+  }
+
+  function closeAnalyticsModal() {
+    setDisplay(analyticsOverlay, false);
+  }
+
+    function openComingSoonModal(featureName) {
+    const title = comingSoonTitleEl();
+    const body = comingSoonBodyEl();
+    if (title) title.textContent = `${featureName} – coming soon`;
+    if (body) {
+      body.textContent = `The ${featureName.toLowerCase()} feature is coming soon. Stay tuned!`;
+    }
+    setDisplay(comingSoonOverlay, true);
+  }
+
+  function closeComingSoonModal() {
+    setDisplay(comingSoonOverlay, false);
+  }
+
+
 
   function renderForCurrentMonth() {
     const data = getMonthData();
@@ -1039,6 +1120,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   on(detailsClose(), "click", closeDetailsModal);
+  
+
+  /* ---------- Analytics & Coming Soon Modals ---------- */
+  const analyticsOverlay = $("analyticsModalOverlay");
+  const analyticsTotalsEl = () => $("analyticsTotals");
+  const analyticsChartEl = () => $("analyticsChart");
+  const analyticsCloseBtn = () => $("analyticsCloseBtn");
+
+  const comingSoonOverlay = $("comingSoonOverlay");
+  const comingSoonTitleEl = () => $("comingSoonTitle");
+  const comingSoonBodyEl = () => $("comingSoonBody");
+  const comingSoonCloseBtn = () => $("comingSoonCloseBtn");
+
+  /* ---------- Sidebar feature buttons ---------- */
+  on(analyticsBtn, "click", openAnalyticsModal);
+  on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
+  on(rewardsBtn, "click", () => openComingSoonModal("Rewards"));
+
+  /* ---------- Analytics modal close behaviour ---------- */
+  on(analyticsOverlay, "click", (e) => {
+    if (e.target === analyticsOverlay) closeAnalyticsModal();
+  });
+  on(analyticsCloseBtn(), "click", closeAnalyticsModal);
+
+  /* ---------- Coming soon modal close behaviour ---------- */
+  on(comingSoonOverlay, "click", (e) => {
+    if (e.target === comingSoonOverlay) closeComingSoonModal();
+  });
+  on(comingSoonCloseBtn(), "click", closeComingSoonModal);
+
+  // Escape closes both if open
+  on(document, "keydown", (e) => {
+    if (e.key === "Escape") {
+      if (analyticsOverlay && analyticsOverlay.style.display === "flex") {
+        closeAnalyticsModal();
+      }
+      if (comingSoonOverlay && comingSoonOverlay.style.display === "flex") {
+        closeComingSoonModal();
+      }
+    }
+  });
+
 
   /* ---------- Allowance Modal ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
@@ -1151,6 +1274,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   on(allowanceCancel(), "click", closeAllowanceModal);
   on(setAllowanceBtn, "click", openAllowanceModal);
+
 
   /* ---------- Favourites Modal ---------- */
   const openFavesModal = () => {

@@ -163,6 +163,30 @@ h3 {
   border-color: var(--turquoise);
 }
 
+/* Sidebar feature buttons (Analytics / Leaderboard / Rewards) */
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 4px;
+  width: 100%;
+}
+
+.sidebar-actions button {
+  background: #f3f7ff;
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.sidebar-actions button:hover {
+  background: #e4efff;
+}
+
 
 
 /* ===== Buttons ===== */

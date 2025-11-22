@@ -95,6 +95,12 @@
       <div id="allowanceDisplay">Total: 0.00</div>
       <div id="allowanceRemaining">Remaining: 0.00</div>
 
+      <!-- NEW: Sidebar feature buttons -->
+      <div class="sidebar-actions">
+        <button id="analyticsBtn" type="button">Analytics</button>
+        <button id="leaderboardBtn" type="button">Leaderboard</button>
+        <button id="rewardsBtn" type="button">Rewards</button>
+      </div>
 
       <h3>Category Totals</h3>
       <div id="categoryTotals">
@@ -162,6 +168,34 @@
       </div>
     </div>
   </div>
+
+  <!-- Analytics Modal -->
+  <div id="analyticsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="analyticsModalTitle">
+    <div class="expense-modal">
+      <h3 id="analyticsModalTitle">Analytics</h3>
+
+      <div id="analyticsTotals" class="details-text"></div>
+      <canvas id="analyticsChart" width="200" height="200" aria-label="Analytics category chart"></canvas>
+
+      <div class="modal-actions">
+        <button id="analyticsCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coming Soon Modal (for Leaderboard / Rewards) -->
+  <div id="comingSoonOverlay" role="dialog" aria-modal="true" aria-labelledby="comingSoonTitle">
+    <div class="expense-modal">
+      <h3 id="comingSoonTitle">Coming soon</h3>
+      <div id="comingSoonBody" class="details-text">
+        This feature is coming soon.
+      </div>
+      <div class="modal-actions">
+        <button id="comingSoonCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Allowance Modal -->
   <div id="allowanceModalOverlay" role="dialog" aria-modal="true" aria-labelledby="allowanceModalTitle">
