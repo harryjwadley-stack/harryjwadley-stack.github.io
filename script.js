@@ -511,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔁 CHANGE THIS PATH TO YOUR NEW IMAGE
       // (same folder as the old pig image, e.g. images/my-new-xp-image.png)
-      imgEl.src = "images/xp-popup.png";
+      imgEl.src = "images/penny.jpg";
       imgEl.alt = "XP celebration";
       imgEl.style.borderRadius = "50%";
 
@@ -605,7 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔁 CHANGE THIS PATH TO YOUR NEW *STREAK* IMAGE
       // (same folder as the pig image)
-      imgEl.src = "images/streak-popup.png";
+      imgEl.src = "images/fire.jpg";
       imgEl.alt = "Streak celebration";
       imgEl.style.borderRadius = "50%";
 
