@@ -433,10 +433,14 @@ button:hover { transform: translateY(-2px); }
   border-top: 1px dashed var(--border);
   width: 100%;
 }
-#expenseCount, #scoreTotal {
-  font-weight: 600;
+
+#scoreTotal,
+#streakDisplay,
+#levelDisplay {
+  font-weight: 700;
   color: var(--navy);
   margin: 4px 0;
+  font-size: 17px; /* slightly bigger than default text */
 }
 
 :root {

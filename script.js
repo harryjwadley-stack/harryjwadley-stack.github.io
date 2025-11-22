@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Sidebar stats
   const scoreTotalEl = $("scoreTotal");
   const streakEl = $("streakDisplay");
+  const levelEl = $("levelDisplay");
 
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
@@ -276,6 +277,11 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `🔥 Streak: ${st} day${st === 1 ? "" : "s"}`
           : `🔥 Streak: 0 days`;
     }
+
+    if (levelEl) {
+      // Static for now – we can make this dynamic off XP later if you want
+      levelEl.textContent = "🛡️ Level: Bronze";
+    }
   }
 
   function renderForCurrentMonth() {
@@ -483,7 +489,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Change this path/URL to your image
       imgEl.src = "images/penny.jpg";
       imgEl.alt = "XP celebration";
-      imgEl.style.borderRadius = "hidden";
+      imgEl.style.borderRadius = "50%";
 
       // Body: dynamic message (XP / streak text)
       const bodyEl = document.createElement("div");
