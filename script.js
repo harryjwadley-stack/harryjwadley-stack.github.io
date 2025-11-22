@@ -277,10 +277,30 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `🔥 Streak: ${st} day${st === 1 ? "" : "s"}`
           : `🔥 Streak: 0 days`;
     }
-
+    
     if (levelEl) {
-      // Static for now – we can make this dynamic off XP later if you want
-      levelEl.textContent = "🛡️ Level: Bronze";
+      const xp = Number(settings.score || 0);
+      let level = "Bronze";
+      let emoji = "🥉";
+
+      if (xp >= 251) {
+        level = "Platinum";
+        emoji = "💠";
+      } else if (xp >= 181) {
+        level = "Diamond";
+        emoji = "💎";
+      } else if (xp >= 91) {
+        level = "Gold";
+        emoji = "🥇";
+      } else if (xp >= 31) {
+        level = "Silver";
+        emoji = "🥈";
+      } else {
+        level = "Bronze";
+        emoji = "🥉";
+      }
+
+      levelEl.textContent = `${emoji} Level: ${level}`;
     }
   }
 
