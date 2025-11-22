@@ -27,6 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const allowanceDisplay = $("allowanceDisplay");
   const allowanceRemainingDiv = $("allowanceRemaining");
 
+  // Allowance mode toggle
+  const weeklyBtn = $("allowWeeklyBtn");
+  const dailyBtn = $("allowDailyBtn");
+
   // Sidebar stats
   const scoreTotalEl = $("scoreTotal");
   const streakEl = $("streakDisplay");
@@ -95,7 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
     allowance: 0,
     score: 0,
     streak: 0,
-    lastActiveDay: null
+    lastActiveDay: null,
+    allowanceMode: "weekly"
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
 
@@ -104,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof settings.score !== "number") settings.score = 0;
   if (typeof settings.streak !== "number") settings.streak = 0;
   if (typeof settings.lastActiveDay !== "number") settings.lastActiveDay = null;
+  if (typeof settings.allowanceMode !== "string") settings.allowanceMode = "weekly";
 
   function loadJSON(k) {
     try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
@@ -217,7 +223,8 @@ document.addEventListener("DOMContentLoaded", () => {
       allowance: 0,
       score: 0,
       streak: 0,
-      lastActiveDay: null
+      lastActiveDay: null,
+      allowanceMode: "weekly"
     };
     saveSettings();
 
@@ -246,12 +253,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  /* ---------- Render ---------- */
+  /* ---------- Allowance helpers ---------- */
+
+  // Sum ALL spending across ALL days
+  function getGlobalSpent() {
+    let total = 0;
+    for (const key of Object.keys(monthlyState)) {
+      const d = ensureMonth(key);
+      const ct = d.categoryTotals || {};
+      total += (ct.Groceries || 0) +
+               (ct.Social || 0) +
+               (ct.Treat || 0) +
+               (ct.Unexpected || 0);
+    }
+    return total;
+  }
+
+  // Update "Allowance Remaining" based on mode
   function updateAllowanceRemaining() {
-    const data = getMonthData();
-    const spent = Object.values(data.categoryTotals).reduce((a,b)=>a+b,0);
-    allowanceRemainingDiv.textContent =
-      `Allowance Remaining: ${((settings.allowance || 0) - spent).toFixed(2)}`;
+    const mode = settings.allowanceMode || "weekly";
+    const weeklyAllowance = Number(settings.allowance || 0);
+    const dailyAllowance = weeklyAllowance / 7;
+
+    if (mode === "weekly") {
+      // Weekly view: total allowance minus ALL expenses across all days
+      const spentAll = getGlobalSpent();
+      allowanceRemainingDiv.textContent =
+        `Allowance Remaining: ${(weeklyAllowance - spentAll).toFixed(2)}`;
+    } else {
+      // Daily view: (weekly allowance / 7) minus current-day expenses only
+      const data = getMonthData();
+      const spentToday = Object
+        .values(data.categoryTotals)
+        .reduce((a, b) => a + b, 0);
+
+      allowanceRemainingDiv.textContent =
+        `Allowance Remaining: ${(dailyAllowance - spentToday).toFixed(2)}`;
+    }
   }
 
   function updatePieChart() {
@@ -306,8 +344,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderForCurrentMonth() {
     const data = getMonthData();
-    allowanceDisplay.textContent =
-      `Allowance: ${(Number(settings.allowance)||0).toFixed(2)}`;
+    const mode = settings.allowanceMode || "weekly";
+    const weeklyAllowance = Number(settings.allowance || 0);
+    const dailyAllowance = weeklyAllowance / 7;
+
+    if (mode === "weekly") {
+      allowanceDisplay.textContent =
+        `Total Allowance: ${weeklyAllowance.toFixed(2)}`;
+    } else {
+      allowanceDisplay.textContent =
+        `Total Allowance: ${dailyAllowance.toFixed(2)}`;
+    }
 
     if (data.noSpending) {
       submittedTableBody.innerHTML =
@@ -487,7 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
         minWidth: "260px"
       });
 
-      // Title: "+XXXP"
+      // Title
       const titleEl = document.createElement("div");
       titleEl.className = "gold-popup-title";
       Object.assign(titleEl.style, {
@@ -509,8 +556,6 @@ document.addEventListener("DOMContentLoaded", () => {
         backgroundColor: "transparent"
       });
 
-      // 🔁 CHANGE THIS PATH TO YOUR NEW IMAGE
-      // (same folder as the old pig image, e.g. images/my-new-xp-image.png)
       imgEl.src = "images/penny.jpg";
       imgEl.alt = "XP celebration";
       imgEl.style.borderRadius = "50%";
@@ -604,8 +649,6 @@ document.addEventListener("DOMContentLoaded", () => {
         backgroundColor: "transparent"
       });
 
-      // 🔁 CHANGE THIS PATH TO YOUR NEW *STREAK* IMAGE
-      // (same folder as the pig image)
       imgEl.src = "images/fire.jpg";
       imgEl.alt = "Streak celebration";
       imgEl.style.borderRadius = "50%";
@@ -643,7 +686,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
+  /* ---------- Allowance mode toggle wiring ---------- */
+  function refreshAllowanceToggleButtons() {
+    if (!weeklyBtn || !dailyBtn) return;
+    const mode = settings.allowanceMode || "weekly";
+    weeklyBtn.classList.toggle("active", mode === "weekly");
+    dailyBtn.classList.toggle("active", mode === "daily");
+  }
 
+  function setAllowanceMode(mode) {
+    settings.allowanceMode = mode === "daily" ? "daily" : "weekly";
+    saveSettings();
+    refreshAllowanceToggleButtons();
+    renderForCurrentMonth();
+  }
+
+  on(weeklyBtn, "click", () => setAllowanceMode("weekly"));
+  on(dailyBtn, "click", () => setAllowanceMode("daily"));
+
+  // Initialise toggle button visual state on load
+  refreshAllowanceToggleButtons();
 
   /* ---------- "No spending today" button ---------- */
   on(noSpendBtn, "click", () => {

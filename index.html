@@ -85,8 +85,16 @@
     <!-- Right column: Sidebar -->
     <aside class="sidebar" aria-label="Insights">
       <h3>Allowance Info</h3>
-      <div id="allowanceDisplay">Allowance: 0.00</div>
+
+      <!-- Weekly / Daily toggle -->
+      <div id="allowanceModeToggle" class="allowance-toggle">
+        <button id="allowWeeklyBtn" type="button" class="active">Weekly</button>
+        <button id="allowDailyBtn" type="button">Daily</button>
+      </div>
+
+      <div id="allowanceDisplay">Total Allowance: 0.00</div>
       <div id="allowanceRemaining">Allowance Remaining: 0.00</div>
+
 
       <h3>Category Totals</h3>
       <div id="categoryTotals">
