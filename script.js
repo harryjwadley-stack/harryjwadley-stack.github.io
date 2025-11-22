@@ -95,11 +95,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   (() => {
+    if (!categoryChart) return; // ✅ CRITICAL: prevents page-wide crash
+
     const css = getComputedStyle(document.documentElement);
     const themed = ["--turquoise","--navy","--teal","--amber"]
       .map(v => css.getPropertyValue(v).trim());
+
     categoryChart.data.datasets[0].backgroundColor =
       themed.map((c,i)=> c || categoryChart.data.datasets[0].backgroundColor[i]);
+
     categoryChart.update();
   })();
 
@@ -383,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
             label: "Category Breakdown",
             data: dataArr.slice(),
             // reuse colours from the main chart
-            backgroundColor: categoryChart.data.datasets[0].backgroundColor
+            backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"]
           }]
         },
         options: {
