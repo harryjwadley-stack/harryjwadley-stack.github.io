@@ -277,7 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `🔥 Streak: ${st} day${st === 1 ? "" : "s"}`
           : `🔥 Streak: 0 days`;
     }
-    
+
     if (levelEl) {
       const xp = Number(settings.score || 0);
       let level = "Bronze";
@@ -414,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let streak = typeof settings.streak === "number" ? settings.streak : 0;
     const today = currentDay;
 
-    // Update streak only when we move to a new day
+    // --- Streak logic (unchanged behaviour) ---
     if (prevDay === null) {
       streak = 1;
     } else if (today === prevDay) {
@@ -430,31 +430,34 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.streak = streak;
     saveSettings();
 
-    // Base score for this action
-    addScore(baseUnits);
+    // --- Base XP (for the action itself) ---
     const baseXP = baseUnits * 10;
+    addScore(baseUnits);   // +10 XP per unit
 
-    // Streak bonus only when we moved to a *new* day and are on a streak
+    // Gold popup: XP only, no streak info
+    showGoldPopup(baseMessage || `+${baseXP}XP`, baseXP);
+
+    // --- Streak bonus (if streak extends) ---
     let bonusUnits = 0;
     if (prevDay !== null && today !== prevDay && streak > 1) {
+      // only when we moved to a *new* day and are on a streak
       bonusUnits = streak; // e.g. 2 => +20XP, 3 => +30XP
       addScore(bonusUnits);
     }
+
     const bonusXP = bonusUnits * 10;
-    const totalXP = baseXP + bonusXP;
-
-    let msg = baseMessage;
-    if (bonusUnits > 0) {
-      msg += `  |  ${streak} day streak, +${bonusXP}XP`;
+    if (bonusXP > 0) {
+      // Show red streak popup *after* the gold XP popup finishes
+      setTimeout(() => {
+        showStreakPopup(streak, bonusXP);
+      }, 4200); // slightly more than the 4s XP popup duration
     }
-
-    showGoldPopup(msg || `Streak day ${streak}`, totalXP);
   }
 
-  /* ---------- Gold popup helper ---------- */
+  /* ---------- Gold XP popup (XP only) ---------- */
   let goldPopupTimer = null;
   function showGoldPopup(
-    message = "Congratulations !! you're on the right track. +50XP.",
+    message = "XP increased!",
     earnedXP = 0
   ) {
     let popup = document.querySelector(".gold-popup-toast");
@@ -484,7 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
         minWidth: "260px"
       });
 
-      // Title: "Nice!"
+      // Title: "+XXXP"
       const titleEl = document.createElement("div");
       titleEl.className = "gold-popup-title";
       Object.assign(titleEl.style, {
@@ -494,7 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
         marginBottom: "6px"
       });
 
-      // Image: celebration picture
+      // Image: XP celebration picture
       const imgEl = document.createElement("img");
       imgEl.className = "gold-popup-image";
       Object.assign(imgEl.style, {
@@ -506,12 +509,13 @@ document.addEventListener("DOMContentLoaded", () => {
         backgroundColor: "transparent"
       });
 
-      // Change this path/URL to your image
-      imgEl.src = "images/penny.jpg";
+      // 🔁 CHANGE THIS PATH TO YOUR NEW IMAGE
+      // (same folder as the old pig image, e.g. images/my-new-xp-image.png)
+      imgEl.src = "images/xp-popup.png";
       imgEl.alt = "XP celebration";
       imgEl.style.borderRadius = "50%";
 
-      // Body: dynamic message (XP / streak text)
+      // Body: description text
       const bodyEl = document.createElement("div");
       bodyEl.className = "gold-popup-body";
       Object.assign(bodyEl.style, {
@@ -520,7 +524,6 @@ document.addEventListener("DOMContentLoaded", () => {
         letterSpacing: "0.2px"
       });
 
-      // Order: title → image → message
       popup.appendChild(titleEl);
       popup.appendChild(imgEl);
       popup.appendChild(bodyEl);
@@ -529,13 +532,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const titleEl = popup.querySelector(".gold-popup-title");
     const bodyEl = popup.querySelector(".gold-popup-body");
-    // If you ever want to swap image dynamically later:
-    // const imgEl = popup.querySelector(".gold-popup-image");
 
     if (titleEl) {
-      titleEl.textContent = earnedXP > 0
-        ? `Nice! +${earnedXP}XP`
-        : "Nice!";
+      titleEl.textContent =
+        earnedXP > 0 ? `+${earnedXP}XP` : "XP increased!";
     }
     if (bodyEl) {
       bodyEl.textContent = message;
@@ -546,8 +546,101 @@ document.addEventListener("DOMContentLoaded", () => {
     if (goldPopupTimer) clearTimeout(goldPopupTimer);
     goldPopupTimer = setTimeout(() => {
       if (popup) popup.style.display = "none";
+    }, 4000); // same duration as before
+  }
+
+  /* ---------- Red streak popup (streak extension) ---------- */
+  let streakPopupTimer = null;
+  function showStreakPopup(streak, bonusXP) {
+    let popup = document.querySelector(".streak-popup-toast");
+
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.className = "streak-popup-toast";
+      popup.setAttribute("role", "alert");
+      popup.setAttribute("aria-live", "polite");
+
+      // Get the same red as the no-spend button if available
+      const css = getComputedStyle(document.documentElement);
+      const red = css.getPropertyValue("--red").trim() || "#ff3b30";
+
+      Object.assign(popup.style, {
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: "10001",
+        background: red,
+        color: "#fff",
+        border: "2px solid #b30000",
+        borderRadius: "12px",
+        padding: "18px 22px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+        fontFamily: "inherit",
+        textAlign: "center",
+        maxWidth: "90vw",
+        minWidth: "260px"
+      });
+
+      const titleEl = document.createElement("div");
+      titleEl.className = "streak-popup-title";
+      Object.assign(titleEl.style, {
+        fontSize: "24px",
+        fontWeight: "800",
+        letterSpacing: "0.5px",
+        marginBottom: "6px"
+      });
+
+      // Image for streaks
+      const imgEl = document.createElement("img");
+      imgEl.className = "streak-popup-image";
+      Object.assign(imgEl.style, {
+        width: "90px",
+        height: "90px",
+        margin: "10px auto 12px",
+        display: "block",
+        objectFit: "contain",
+        backgroundColor: "transparent"
+      });
+
+      // 🔁 CHANGE THIS PATH TO YOUR NEW *STREAK* IMAGE
+      // (same folder as the pig image)
+      imgEl.src = "images/streak-popup.png";
+      imgEl.alt = "Streak celebration";
+      imgEl.style.borderRadius = "50%";
+
+      const bodyEl = document.createElement("div");
+      bodyEl.className = "streak-popup-body";
+      Object.assign(bodyEl.style, {
+        fontSize: "16px",
+        fontWeight: "600",
+        letterSpacing: "0.2px"
+      });
+
+      popup.appendChild(titleEl);
+      popup.appendChild(imgEl);
+      popup.appendChild(bodyEl);
+      document.body.appendChild(popup);
+    }
+
+    const titleEl = popup.querySelector(".streak-popup-title");
+    const bodyEl = popup.querySelector(".streak-popup-body");
+
+    if (titleEl) {
+      titleEl.textContent = "Streak extended!";
+    }
+    if (bodyEl) {
+      bodyEl.textContent = `Day ${streak} streak · +${bonusXP}XP`;
+    }
+
+    popup.style.display = "block";
+
+    if (streakPopupTimer) clearTimeout(streakPopupTimer);
+    streakPopupTimer = setTimeout(() => {
+      if (popup) popup.style.display = "none";
     }, 4000);
   }
+
 
 
   /* ---------- "No spending today" button ---------- */
