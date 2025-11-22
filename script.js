@@ -411,9 +411,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const title = comingSoonTitleEl();
     const body = comingSoonBodyEl();
     if (title) title.textContent = `${featureName} – coming soon`;
-    if (body) {
-      body.textContent = `The ${featureName.toLowerCase()} feature is coming soon. Stay tuned!`;
-    }
     setDisplay(comingSoonOverlay, true);
   }
 
