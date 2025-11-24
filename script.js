@@ -8,14 +8,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", (e) => {
     const closeBtn = e.target.closest(".modal-close-x");
     if (!closeBtn) return;
-
     const modalOverlay = closeBtn.closest('[role="dialog"]');
-    if (modalOverlay) {
-      modalOverlay.style.display = "none";
-    }
+    if (modalOverlay) modalOverlay.style.display = "none";
   });
 
-  const CATEGORIES = new Set(["Groceries", "Social", "Treat", "Unexpected"]);
+  /* ---------- Categories (no card concept) ---------- */
+  const CATEGORIES = new Set([
+    "Essential Living",
+    "Social & Leisure",
+    "Personal Treats",
+    "Unexpected"
+  ]);
 
   /* ---------- Grabs ---------- */
   const addBtn = $("addExpenseBtn");
@@ -50,12 +53,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
   const favesList = $("favesList");
-  const favesCloseBtn = $("favesCloseBtn"); // harmless if missing
+  const favesCloseBtn = $("favesCloseBtn");
 
   // Favourite Name Modal
   const favNameOverlay = $("favNameModalOverlay");
   const favNameInput = $("favNameInput");
-  const favNameCancel = $("favNameCancelBtn"); // harmless if missing
   const favNameSave = $("favNameSaveBtn");
 
   // Day controls
@@ -86,7 +88,12 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart = new Chart(ctx, {
       type: "pie",
       data: {
-        labels: ["Groceries", "Social", "Treat", "Unexpected"],
+        labels: [
+          "Essential Living",
+          "Social & Leisure",
+          "Personal Treats",
+          "Unexpected"
+        ],
         datasets: [{
           label: "Category Breakdown",
           data: [0, 0, 0, 0],
@@ -131,8 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lastActiveDay: null,
     allowanceMode: "weekly"
   };
-  // { "<period>-id": { id, year, monthIndex, amount, category, name } }
-  let favourites = loadJSON(FAV_KEY) || {};
+  let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, name } }
 
   const saveState = () => saveJSON(STATE_KEY, monthlyState);
   const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
@@ -152,9 +158,67 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- Migrate old categories & strip card fields (one-time on load) ---
+  (function migrateOldData() {
+    const MAP = {
+      "Groceries": "Essential Living",
+      "Social": "Social & Leisure",
+      "Treat": "Personal Treats",
+      "Unexpected": "Unexpected"
+    };
+
+    // Migrate monthlyState: categoryTotals + each expense.category; strip card
+    for (const key of Object.keys(monthlyState)) {
+      const month = monthlyState[key];
+      if (!month) continue;
+
+      const oldTotals = month.categoryTotals || {};
+      const newTotals = {
+        "Essential Living": 0,
+        "Social & Leisure": 0,
+        "Personal Treats": 0,
+        "Unexpected": 0
+      };
+
+      for (const [oldCat, valRaw] of Object.entries(oldTotals)) {
+        const val = Number(valRaw) || 0;
+        const newCat = MAP[oldCat] || oldCat;
+        if (!(newCat in newTotals)) newTotals[newCat] = 0;
+        newTotals[newCat] += val;
+      }
+      month.categoryTotals = newTotals;
+
+      if (Array.isArray(month.expenses)) {
+        month.expenses = month.expenses.map(e => {
+          if (!e) return e;
+          const mappedCat = MAP[e.category] || e.category;
+          const { card, ...rest } = e;
+          return { ...rest, category: mappedCat };
+        });
+      }
+
+      // Ensure flags exist
+      if (typeof month.purchaseCount !== "number") month.purchaseCount = 0;
+      if (typeof month.noSpending !== "boolean") month.noSpending = false;
+    }
+
+    // Migrate favourites: update category + remove card
+    for (const key of Object.keys(favourites)) {
+      const fav = favourites[key];
+      if (!fav) continue;
+      if (fav.category && MAP[fav.category]) {
+        fav.category = MAP[fav.category];
+      }
+      if ("card" in fav) delete fav.card;
+    }
+
+    saveState();
+    saveFavourites();
+  })();
+
   const yyyymmKey = (y, m) => `${y}-${String(m + 1).padStart(2,"0")}`;
 
-  // Use day buckets when the Day UI exists (day-1…day-7), otherwise fall back to month key.
+  // Use day buckets when the Day UI exists (day-1..day-7), otherwise fall back to month key.
   const periodKey = () =>
     (dayBtn ? `day-${currentDay}` : yyyymmKey(currentYear, currentMonthIndex));
 
@@ -167,25 +231,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!monthlyState[key]) {
       monthlyState[key] = {
         expenses: [],
-        categoryTotals: { Groceries: 0, Social: 0, Treat: 0, Unexpected: 0 },
+        categoryTotals: {
+          "Essential Living": 0,
+          "Social & Leisure": 0,
+          "Personal Treats": 0,
+          "Unexpected": 0
+        },
         purchaseCount: 0,
         noSpending: false
       };
     } else {
-      if (typeof monthlyState[key].purchaseCount !== "number") {
-        monthlyState[key].purchaseCount = 0;
-      }
-      if (!monthlyState[key].categoryTotals) {
-        monthlyState[key].categoryTotals = {
-          Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
+      const m = monthlyState[key];
+      if (typeof m.purchaseCount !== "number") m.purchaseCount = 0;
+      if (!m.categoryTotals) {
+        m.categoryTotals = {
+          "Essential Living": 0,
+          "Social & Leisure": 0,
+          "Personal Treats": 0,
+          "Unexpected": 0
         };
+      } else {
+        // backfill missing keys
+        for (const cat of CATEGORIES) {
+          if (typeof m.categoryTotals[cat] !== "number") {
+            m.categoryTotals[cat] = 0;
+          }
+        }
       }
-      if (typeof monthlyState[key].noSpending !== "boolean") {
-        monthlyState[key].noSpending = false;
-      }
+      if (typeof m.noSpending !== "boolean") m.noSpending = false;
     }
     return monthlyState[key];
   }
+
   const currentKey = () => periodKey();
   const getMonthData = () => ensureMonth(currentKey());
   const findExpenseById = (id) => getMonthData().expenses.find(e => e.id === id);
@@ -287,10 +364,10 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const key of Object.keys(monthlyState)) {
       const d = ensureMonth(key);
       const ct = d.categoryTotals || {};
-      total += (ct.Groceries || 0) +
-               (ct.Social || 0) +
-               (ct.Treat || 0) +
-               (ct.Unexpected || 0);
+      total += (ct["Essential Living"] || 0) +
+               (ct["Social & Leisure"] || 0) +
+               (ct["Personal Treats"] || 0) +
+               (ct["Unexpected"] || 0);
     }
     return total;
   }
@@ -323,7 +400,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const d = getMonthData().categoryTotals;
     categoryChart.data.datasets[0].data = [
-      d.Groceries, d.Social, d.Treat, d.Unexpected
+      d["Essential Living"],
+      d["Social & Leisure"],
+      d["Personal Treats"],
+      d["Unexpected"]
     ];
     categoryChart.update();
   }
@@ -361,9 +441,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (xp >= 31) {
         level = "Silver";
         emoji = "🥈";
-      } else {
-        level = "Bronze";
-        emoji = "🥉";
       }
 
       levelEl.textContent = `${emoji} Level: ${level}`;
@@ -373,6 +450,11 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Analytics modal helpers ---------- */
   let analyticsChart = null;
 
+  const analyticsOverlay = $("analyticsModalOverlay");
+  const analyticsTotalsEl = () => $("analyticsTotals");
+  const analyticsChartEl = () => $("analyticsChart");
+  const analyticsCloseBtn = () => $("analyticsCloseBtn");
+
   function renderAnalyticsChart() {
     const canvas = analyticsChartEl();
     if (!canvas) return;
@@ -380,17 +462,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctxA = canvas.getContext("2d");
     const d = getMonthData().categoryTotals;
     const dataArr = [
-      d.Groceries || 0,
-      d.Social || 0,
-      d.Treat || 0,
-      d.Unexpected || 0
+      d["Essential Living"] || 0,
+      d["Social & Leisure"] || 0,
+      d["Personal Treats"] || 0,
+      d["Unexpected"] || 0
     ];
 
     if (!analyticsChart) {
       analyticsChart = new Chart(ctxA, {
         type: "pie",
         data: {
-          labels: ["Groceries", "Social", "Treat", "Unexpected"],
+          labels: [
+            "Essential Living",
+            "Social & Leisure",
+            "Personal Treats",
+            "Unexpected"
+          ],
           datasets: [{
             label: "Category Breakdown",
             data: dataArr.slice(),
@@ -423,10 +510,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function openAnalyticsModal() {
     const d = getMonthData().categoryTotals;
     const totalsHtml = `
-      Groceries: ${(d.Groceries || 0).toFixed(2)}<br>
-      Social: ${(d.Social || 0).toFixed(2)}<br>
-      Treat: ${(d.Treat || 0).toFixed(2)}<br>
-      Unexpected: ${(d.Unexpected || 0).toFixed(2)}
+      Essential Living: ${(d["Essential Living"] || 0).toFixed(2)}<br>
+      Social & Leisure: ${(d["Social & Leisure"] || 0).toFixed(2)}<br>
+      Personal Treats: ${(d["Personal Treats"] || 0).toFixed(2)}<br>
+      Unexpected: ${(d["Unexpected"] || 0).toFixed(2)}
     `;
 
     const totalsEl = analyticsTotalsEl();
@@ -440,9 +527,14 @@ document.addEventListener("DOMContentLoaded", () => {
     setDisplay(analyticsOverlay, false);
   }
 
+  /* ---------- Coming Soon modal helpers ---------- */
+  const comingSoonOverlay = $("comingSoonOverlay");
+  const comingSoonTitleEl = () => $("comingSoonTitle");
+  const comingSoonBodyEl = () => $("comingSoonBody");
+  const comingSoonCloseBtn = () => $("comingSoonCloseBtn");
+
   function openComingSoonModal(featureName) {
     const title = comingSoonTitleEl();
-    const body = comingSoonBodyEl();
     if (title) title.textContent = `${featureName} – coming soon`;
     setDisplay(comingSoonOverlay, true);
   }
@@ -802,7 +894,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (n > 0) {
       data.expenses = [];
       data.categoryTotals = {
-        Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
+        "Essential Living": 0,
+        "Social & Leisure": 0,
+        "Personal Treats": 0,
+        "Unexpected": 0
       };
       data.purchaseCount = 0;
     }
@@ -837,7 +932,7 @@ document.addEventListener("DOMContentLoaded", () => {
       subtractScore(1);
       saveState();
       renderForCurrentMonth();
-      if (favesOverlay.style.display === "flex") renderFavesModal();
+      if (favesOverlay && favesOverlay.style.display === "flex") renderFavesModal();
     }
   });
 
@@ -854,7 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
       delete favourites[key];
       saveFavourites();
       renderForCurrentMonth();
-      if (favesOverlay.style.display === "flex") renderFavesModal();
+      if (favesOverlay && favesOverlay.style.display === "flex") renderFavesModal();
       return;
     }
     openFavNameModal({
@@ -877,14 +972,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (n > 0) subtractScore(n);
     data.expenses = [];
     data.categoryTotals = {
-      Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
+      "Essential Living": 0,
+      "Social & Leisure": 0,
+      "Personal Treats": 0,
+      "Unexpected": 0
     };
     data.purchaseCount = 0;
     data.noSpending = false;
 
     saveState();
     renderForCurrentMonth();
-    if (favesOverlay.style.display === "flex") renderFavesModal();
+    if (favesOverlay && favesOverlay.style.display === "flex") renderFavesModal();
   });
 
   /* ---------- Add/Edit Expense Modal ---------- */
@@ -892,7 +990,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalAmount = () => $("modalExpenseAmount");
   const modalCat = () => $("modalExpenseCategory");
   const modalSubmit = () => $("modalSubmitBtn");
-  const modalCancel = () => $("modalCancelBtn"); // harmless if null
   const modalTitle = () => expenseOverlay.querySelector(".expense-modal h3");
   const modalCategoryWrapper = () => $("modalCategoryWrapper");
 
@@ -940,7 +1037,7 @@ document.addEventListener("DOMContentLoaded", () => {
       editingId = null;
       modalTitle().textContent = quickDrinkOnly ? "Add Drink" : "Add Expense";
       modalAmount().value = (expense && "amount" in expense) ? expense.amount : "";
-      modalCat().value = expense?.category || "Groceries";
+      modalCat().value = expense?.category || "Essential Living";
     }
 
     setDisplay(expenseOverlay, true);
@@ -959,11 +1056,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === expenseOverlay) closeExpenseModal();
   });
   on(document, "keydown", (e)=>{
-    if (expenseOverlay.style.display === "flex" && e.key === "Escape") {
+    if (expenseOverlay && expenseOverlay.style.display === "flex" && e.key === "Escape") {
       closeExpenseModal();
     }
   });
-  on(modalCancel(), "click", closeExpenseModal);
 
   on(modalSubmit(), "click", () => {
     try {
@@ -1012,7 +1108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       saveState();
       renderForCurrentMonth();
-      if (favesOverlay.style.display === "flex") renderFavesModal();
+      if (favesOverlay && favesOverlay.style.display === "flex") renderFavesModal();
       closeExpenseModal();
     } catch (err) {
       console.error("Submit failed:", err);
@@ -1048,36 +1144,36 @@ document.addEventListener("DOMContentLoaded", () => {
   // Map the four choices to the existing behaviours
   on(addTypeDrinkBtn(), "click", () => {
     closeAddTypeModal();
-    // previously Add Drink button
+    // Drink → Social & Leisure
     openExpenseModal(
-      { category: "Social", amount: "" },
+      { category: "Social & Leisure", amount: "" },
       { hideCategory: true, quickDrinkOnly: true }
     );
   });
 
   on(addTypeGroceriesBtn(), "click", () => {
     closeAddTypeModal();
-    // previously Add Groceries button
+    // Groceries → Essential Living
     openExpenseModal(
-      { category: "Groceries", amount: "" },
+      { category: "Essential Living", amount: "" },
       { hideCategory: true, quickDrinkOnly: false }
     );
   });
 
   on(addTypeBigNightBtn(), "click", () => {
     closeAddTypeModal();
-    // previously Big Night Out button
+    // Big Night → Social & Leisure
     openExpenseModal(
-      { category: "Social", amount: "" },
+      { category: "Social & Leisure", amount: "" },
       { hideCategory: true, quickDrinkOnly: false }
     );
   });
 
   on(addTypeOtherBtn(), "click", () => {
     closeAddTypeModal();
-    // previously generic Add Expense button
+    // Other → Essential Living (with full form)
     openExpenseModal(
-      { category: "Groceries", amount: "" },
+      { category: "Essential Living", amount: "" },
       { hideCategory: false, quickDrinkOnly: false }
     );
   });
@@ -1093,9 +1189,10 @@ document.addEventListener("DOMContentLoaded", () => {
     data.expenses.push({
       id: data.purchaseCount,
       amount: amt,
-      category: "Social"
+      category: "Social & Leisure"
     });
-    data.categoryTotals.Social += amt;
+    data.categoryTotals["Social & Leisure"] =
+      (data.categoryTotals["Social & Leisure"] || 0) + amt;
 
     applyStreakScore(1, "great addition! +10XP");
 
@@ -1110,7 +1207,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleFormFields(true);
     if (modalCategoryWrapper()) modalCategoryWrapper().style.display = "none";
     modalTitle().textContent = "Add Expense";
-    modalCat().value = "Social";
+    modalCat().value = "Social & Leisure";
     modalAmount().value = "";
     setTimeout(()=> modalAmount()?.focus(), 0);
   });
@@ -1118,10 +1215,9 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Details Modal ---------- */
   const detailsOverlay = $("detailsModalOverlay");
   const detailsBody = () => $("detailsModalBody");
-  const detailsClose = () => $("detailsModalCloseBtn"); // harmless if null
 
   function openDetailsModal(text) {
-    (detailsBody()).textContent = text || "No details.";
+    if (detailsBody()) detailsBody().textContent = text || "No details.";
     setDisplay(detailsOverlay, true);
   }
   function closeDetailsModal() {
@@ -1131,23 +1227,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === detailsOverlay) closeDetailsModal();
   });
   on(document, "keydown", (e)=>{
-    if (detailsOverlay.style.display === "flex" && e.key === "Escape") {
+    if (detailsOverlay && detailsOverlay.style.display === "flex" && e.key === "Escape") {
       closeDetailsModal();
     }
   });
-  on(detailsClose(), "click", closeDetailsModal);
 
-  /* ---------- Analytics & Coming Soon Modals ---------- */
-  const analyticsOverlay = $("analyticsModalOverlay");
-  const analyticsTotalsEl = () => $("analyticsTotals");
-  const analyticsChartEl = () => $("analyticsChart");
-  const analyticsCloseBtn = () => $("analyticsCloseBtn"); // harmless
-
-  const comingSoonOverlay = $("comingSoonOverlay");
-  const comingSoonTitleEl = () => $("comingSoonTitle");
-  const comingSoonBodyEl = () => $("comingSoonBody");
-  const comingSoonCloseBtn = () => $("comingSoonCloseBtn"); // harmless
-
+  /* ---------- Analytics & Coming Soon Modals wiring ---------- */
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
   on(rewardsBtn, "click", () => openComingSoonModal("Rewards"));
@@ -1176,7 +1261,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Allowance Modal ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
   const allowanceStage = () => $("allowanceModalStage");
-  const allowanceCancel = () => $("allowanceModalCancelBtn"); // harmless
+  const allowanceCancel = () => $("allowanceModalCancelBtn");
   const allowanceBack = () => $("allowanceModalBackBtn");
   const allowanceSubmit = () => $("allowanceModalSubmitBtn");
 
@@ -1193,8 +1278,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showAllowanceChoice() {
     allowanceFlow.mode = null;
-    allowanceBack().style.display = "none";
-    allowanceSubmit().style.display = "none";
+    if (allowanceBack()) allowanceBack().style.display = "none";
+    if (allowanceSubmit()) allowanceSubmit().style.display = "none";
     allowanceStage().innerHTML = `
       <p>How would you like to set your global allowance?</p>
       <div style="display:flex; gap:10px;">
@@ -1208,9 +1293,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showAllowanceManual() {
     allowanceFlow.mode = "manual";
-    allowanceBack().style.display = "inline-block";
-    allowanceSubmit().style.display = "inline-block";
-    allowanceSubmit().textContent = "Set Global Allowance";
+    if (allowanceBack()) allowanceBack().style.display = "inline-block";
+    if (allowanceSubmit()) {
+      allowanceSubmit().style.display = "inline-block";
+      allowanceSubmit().textContent = "Set Global Allowance";
+    }
     allowanceStage().innerHTML = `
       <label for="allowanceManualInput" style="font-size:14px; color:#333;">
         Allowance Amount
@@ -1222,8 +1309,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const inp = $("allowanceManualInput");
     inp.value = Number(settings.allowance || 0);
     inp.focus({ preventScroll:true });
-    allowanceBack().onclick = showAllowanceChoice;
-    allowanceSubmit().onclick = () => {
+    if (allowanceBack()) allowanceBack().onclick = showAllowanceChoice;
+    if (allowanceSubmit()) allowanceSubmit().onclick = () => {
       const val = parseFloat(inp.value);
       if (isNaN(val) || val < 0) {
         alert("Please enter a valid allowance (0 or more).");
@@ -1239,9 +1326,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showAllowanceCalc() {
     allowanceFlow.mode = "calc";
-    allowanceBack().style.display = "inline-block";
-    allowanceSubmit().style.display = "inline-block";
-    allowanceSubmit().textContent = "Set Global Allowance";
+    if (allowanceBack()) allowanceBack().style.display = "inline-block";
+    if (allowanceSubmit()) {
+      allowanceSubmit().style.display = "inline-block";
+      allowanceSubmit().textContent = "Set Global Allowance";
+    }
     allowanceStage().innerHTML = `
       <p>Allowance = Income −(Rent +Car +Bills +Savings +Other)</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1256,8 +1345,8 @@ document.addEventListener("DOMContentLoaded", () => {
         `).join("")}
       </div>
     `;
-    allowanceBack().onclick = showAllowanceChoice;
-    allowanceSubmit().onclick = () => {
+    if (allowanceBack()) allowanceBack().onclick = showAllowanceChoice;
+    if (allowanceSubmit()) allowanceSubmit().onclick = () => {
       const vals = {};
       document
         .querySelectorAll('[data-allowance]')
@@ -1278,7 +1367,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === allowanceOverlay) closeAllowanceModal();
   });
   on(document, "keydown", (e)=>{
-    if (allowanceOverlay.style.display === "flex" && e.key === "Escape") {
+    if (allowanceOverlay && allowanceOverlay.style.display === "flex" && e.key === "Escape") {
       closeAllowanceModal();
     }
   });
@@ -1346,7 +1435,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === favesOverlay) closeFavesModal();
   });
   on(document, "keydown", (e)=>{
-    if (favesOverlay.style.display === "flex" && e.key === "Escape") {
+    if (favesOverlay && favesOverlay.style.display === "flex" && e.key === "Escape") {
       closeFavesModal();
     }
   });
@@ -1404,10 +1493,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (del) {
       const key = del.dataset.key;
-      if (!key || !favourites[key]) return;
+      if (!key) return;
       delete favourites[key];
       saveFavourites();
       renderFavesModal();
+      // Keep rails in sync: unfilling stars for rows that lost favourites
+      renderForCurrentMonth();
     }
   });
 
@@ -1428,11 +1519,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === favNameOverlay) closeFavNameModal();
   });
   on(document, "keydown", (e)=>{
-    if (favNameOverlay.style.display === "flex" && e.key === "Escape") {
+    if (favNameOverlay && favNameOverlay.style.display === "flex" && e.key === "Escape") {
       closeFavNameModal();
     }
   });
-  on(favNameCancel, "click", closeFavNameModal);
   on(favNameSave, "click", () => {
     if (!pendingFav) return;
     const name = favNameInput.value.trim() || "Favourite";
@@ -1441,7 +1531,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveFavourites();
     closeFavNameModal();
     renderForCurrentMonth();
-    if (favesOverlay.style.display === "flex") renderFavesModal();
+    if (favesOverlay && favesOverlay.style.display === "flex") renderFavesModal();
   });
 
   /* ---------- Openers ---------- */
