@@ -306,6 +306,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     on(nextBtn, "click", () => {
+      const previousDay = currentDay;
+      const last = (typeof settings.lastActiveDay === "number")
+        ? settings.lastActiveDay
+        : null;
+
+      // If we are leaving a day that comes *after* the last day
+      // we actually logged something on, treat it as a missed day
+      // and nuke the streak.
+      //
+      // Example:
+      //   lastActiveDay = 3 (streak built on days 1–3)
+      //   currentDay    = 4
+      //   → user clicks "next" to go 4 → 5 with no activity on 4
+      //   previousDay = 4, last = 3 ⇒ streak reset to 0.
+      if (last !== null && previousDay > last) {
+        settings.streak = 0;
+        settings.lastActiveDay = null;
+        saveSettings();
+        updateStatsUI();
+      }
+
       currentDay = currentDay >= 7 ? 1 : currentDay + 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
       renderForCurrentMonth();
