@@ -232,6 +232,16 @@ button:hover { transform: translateY(-2px); }
   background: #0fb8d6;
 }
 
+/* Set Goal button (teal/green like pie chart) */
+#setGoalBtn {
+  background: var(--teal);
+  color: #fff;
+}
+
+#setGoalBtn:hover {
+  background: #0b5b54; /* slightly darker teal on hover */
+}
+
 /* Two-line Big Night Out button */
 #bigNightBtn.btn-subtext {
   display: flex;

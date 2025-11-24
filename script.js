@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const addBtn = $("addExpenseBtn");
   const showFavouritesBtn = $("showFavouritesBtn");
   const noSpendBtn = $("noSpendBtn");
+  const setGoalBtn = $("setGoalBtn");
 
   const submittedTable = $("submittedExpenses");
   let submittedTableBody =
@@ -1236,6 +1237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
   on(rewardsBtn, "click", () => openComingSoonModal("Rewards"));
+  on(setGoalBtn, "click", () => openComingSoonModal("Set goal"));
 
   on(analyticsOverlay, "click", (e) => {
     if (e.target === analyticsOverlay) closeAnalyticsModal();
