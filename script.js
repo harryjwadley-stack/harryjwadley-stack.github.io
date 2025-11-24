@@ -9,9 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Grabs ---------- */
   const addBtn = $("addExpenseBtn");
-  const addGroceriesBtn = $("addGroceriesBtn");
-  const addDrinkBtn = $("addDrinkBtn");
-  const bigNightBtn = $("bigNightBtn");
   const showFavouritesBtn = $("showFavouritesBtn");
   const noSpendBtn = $("noSpendBtn");
 
@@ -1026,31 +1023,67 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* ---------- Openers ---------- */
-  on(addBtn, "click", () =>
-    openExpenseModal(
-      { category: "Groceries", card: "Credit", amount: "" },
-      { hideCategory:false, quickDrinkOnly:false }
-    )
-  );
-  on(addGroceriesBtn, "click", () =>
-    openExpenseModal(
-      { category: "Groceries", card: "Credit", amount: "" },
-      { hideCategory:true, quickDrinkOnly:false }
-    )
-  );
-  on(addDrinkBtn, "click", () =>
+  /* ---------- Add Type Modal (Drink / Groceries / Big Night / Other) ---------- */
+  const addTypeOverlay = $("addTypeModalOverlay");
+  const addTypeDrinkBtn = () => $("addTypeDrinkBtn");
+  const addTypeGroceriesBtn = () => $("addTypeGroceriesBtn");
+  const addTypeBigNightBtn = () => $("addTypeBigNightBtn");
+  const addTypeOtherBtn = () => $("addTypeOtherBtn");
+
+  function openAddTypeModal() {
+    setDisplay(addTypeOverlay, true);
+  }
+
+  function closeAddTypeModal() {
+    setDisplay(addTypeOverlay, false);
+  }
+
+  on(addTypeOverlay, "click", (e) => {
+    if (e.target === addTypeOverlay) closeAddTypeModal();
+  });
+
+  on(document, "keydown", (e) => {
+    if (addTypeOverlay && addTypeOverlay.style.display === "flex" && e.key === "Escape") {
+      closeAddTypeModal();
+    }
+  });
+
+  // Map the four choices to the existing behaviours
+  on(addTypeDrinkBtn(), "click", () => {
+    closeAddTypeModal();
+    // previously Add Drink button
     openExpenseModal(
       { category: "Social", card: "Credit", amount: "" },
-      { hideCategory:true, quickDrinkOnly:true }
-    )
-  );
-  on(bigNightBtn, "click", () =>
+      { hideCategory: true, quickDrinkOnly: true }
+    );
+  });
+
+  on(addTypeGroceriesBtn(), "click", () => {
+    closeAddTypeModal();
+    // previously Add Groceries button
+    openExpenseModal(
+      { category: "Groceries", card: "Credit", amount: "" },
+      { hideCategory: true, quickDrinkOnly: false }
+    );
+  });
+
+  on(addTypeBigNightBtn(), "click", () => {
+    closeAddTypeModal();
+    // previously Big Night Out button
     openExpenseModal(
       { category: "Social", card: "Credit", amount: "" },
-      { hideCategory:true, quickDrinkOnly:false }
-    )
-  );
+      { hideCategory: true, quickDrinkOnly: false }
+    );
+  });
+
+  on(addTypeOtherBtn(), "click", () => {
+    closeAddTypeModal();
+    // previously generic Add Expense button
+    openExpenseModal(
+      { category: "Groceries", card: "Credit", amount: "" },
+      { hideCategory: false, quickDrinkOnly: false }
+    );
+  });
 
   /* ---------- Quick pick ---------- */
   const quickAdd = (amt) => {
@@ -1363,7 +1396,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       saveState();
       renderForCurrentMonth();
-      closeFavesModal(); // 👈 close the favourites popup after selection
+      closeFavesModal(); // close favourites popup after selection
       return;
     }
 
@@ -1410,6 +1443,9 @@ document.addEventListener("DOMContentLoaded", () => {
     renderForCurrentMonth();
     if (favesOverlay.style.display === "flex") renderFavesModal();
   });
+
+  /* ---------- Openers ---------- */
+  on(addBtn, "click", openAddTypeModal);
 
   /* ---------- Initial render ---------- */
   renderForCurrentMonth();

@@ -33,20 +33,10 @@
           <div id="allowanceContainer"></div>
 
           <button id="addExpenseBtn">Add Expense</button>
-          <button id="addGroceriesBtn">Add Groceries</button>
-          <button id="addDrinkBtn">Add Drink</button>
-
-          <!-- Big Night Out (two-line button with caption inside) -->
-          <button id="bigNightBtn" class="btn-subtext">
-            <span class="btn-title">Big Night Out?</span>
-            <span class="btn-sub">Don't worry, we've all been there...</span>
-          </button>
-          
           <button id="showFavouritesBtn" type="button">Show Favourites</button>
 
           <!-- New: No spending today -->
           <button id="noSpendBtn" type="button" aria-label="No spending today">No spending today</button>
-
           <div id="expenseContainer"></div>
 
           <!-- Stats + Streak at bottom of right-hand bar -->
@@ -102,6 +92,20 @@
         <button id="rewardsBtn" type="button">Rewards</button>
       </div>
     </aside>
+  </div>
+
+  <!-- Add Type Modal (chooses Drink / Groceries / Big Night / Other) -->
+  <div id="addTypeModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addTypeModalTitle">
+    <div class="expense-modal">
+      <h3 id="addTypeModalTitle">What kind of expense?</h3>
+      <div class="add-type-grid">
+        <button id="addTypeDrinkBtn" type="button">Drink</button>
+        <button id="addTypeGroceriesBtn" type="button">Groceries</button>
+        <button id="addTypeBigNightBtn" type="button">Big night out?</button>
+      </div>
+      <hr />
+      <button id="addTypeOtherBtn" type="button" class="add-type-other">Other</button>
+    </div>
   </div>
 
   <!-- Add/Edit Expense Modal -->
