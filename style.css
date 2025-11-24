@@ -4,7 +4,6 @@
   --navy: #0b2a4a;
   --teal: #0f766e;
   --amber: #ffb000;
-  --red: #ff3b30;
 
   /* Derived colors */
   --page-bg: linear-gradient(to bottom, #e9f9ff, #fffaf2);
@@ -53,14 +52,141 @@ h3 {
   gap: 8px;
   margin-bottom: 12px;
 }
+#monthControls select {
+  padding: 4px 6px;
+  font-size: 14px;
+}
+
+/* ===== Top row ===== */
+.top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 50px;
+}
 
 /* ===== Left panel ===== */
 .left-panel {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   min-width: 240px;
   width: 240px;
 }
+
+#expenseContainer,
+#allowanceContainer {
+  margin-top: 10px;
+}
+
+/* ===== Table ===== */
+.table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.table-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+#submittedExpenses {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+#submittedExpenses th,
+#submittedExpenses td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: center;
+}
+
+#submittedExpenses th {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+}
+
+#submittedExpenses tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 220px;
+  gap: 15px;
+  padding: 10px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  align-self: start;
+}
+@media (min-width: 900px) {
+  .sidebar { position: sticky; top: 0; }
+}
+.sidebar h3 { font-weight: bold; margin-bottom: 5px; color: var(--navy); }
+#allowanceDisplay, #allowanceRemaining { font-weight: 500; font-size: 16px; margin-bottom: 5px; }
+#categoryChart { margin-top: 10px; max-width: 100%; }
+
+/* Allowance toggle buttons */
+.allowance-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.allowance-toggle button {
+  padding: 8px 18px;      /* bigger click area */
+  font-size: 14px;        /* slightly larger text */
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.allowance-toggle button.active {
+  background: var(--turquoise);
+  color: #000;
+  border-color: var(--turquoise);
+}
+
+/* Sidebar feature buttons (Analytics / Leaderboard / Rewards) */
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 4px;
+  width: 100%;
+}
+
+.sidebar-actions button {
+  background: #f3f7ff;
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.sidebar-actions button:hover {
+  background: #e4efff;
+}
+
+
 
 /* ===== Buttons ===== */
 button {
@@ -73,10 +199,49 @@ button {
   color: white;
   font-weight: 600;
   transition: 0.2s ease;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+.left-panel button { width: 100%; }
+button:hover { transform: translateY(-2px); }
+
+/* Colour groups */
+#setAllowanceBtn,
+#showFavouritesBtn {
+  background: var(--amber);
+  color: #000;
+}
+#setAllowanceBtn:hover,
+#showFavouritesBtn:hover {
+  background: #ffcb40;
 }
 
-button:hover { transform: translateY(-2px); }
+/* Turquoise action buttons (Add, Clear, Big Night) */
+#addExpenseBtn,
+#addGroceriesBtn,
+#addDrinkBtn,
+#bigNightBtn,
+#clearAllBtn {
+  background: var(--turquoise);
+  color: #000;
+}
+#addExpenseBtn:hover,
+#addGroceriesBtn:hover,
+#addDrinkBtn:hover,
+#bigNightBtn:hover,
+#clearAllBtn:hover {
+  background: #0fb8d6;
+}
+
+/* Two-line Big Night Out button */
+#bigNightBtn.btn-subtext {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  padding: 12px 20px;
+}
+#bigNightBtn .btn-title { font-size: 16px; font-weight: 700; }
+#bigNightBtn .btn-sub { font-size: 12px; font-weight: 500; opacity: 0.8; margin-top: 2px; }
 
 /* ===== Overlays ===== */
 #expenseModalOverlay,
@@ -97,74 +262,308 @@ button:hover { transform: translateY(-2px); }
 }
 
 /* ===== Modals ===== */
-.expense-modal {
-  position: relative;
-  width: min(92vw, 520px);
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px 18px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* Smaller analytics pie chart */
+#analyticsChart {
+  width: 260px !important;
+  height: 260px !important;
+  max-width: 260px;
+  max-height: 260px;
+  margin: 6px auto 0;
+  display: block;
 }
 
-/* ===== Modal Close X ===== */
-.modal-close-x {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--navy);
-  cursor: pointer;
-  line-height: 1;
-}
-
-.modal-close-x:hover {
-  color: var(--red);
-  transform: scale(1.15);
-}
-
-/* ===== Add Type modal layout ===== */
+/* Add Type modal layout (Drink / Groceries / Big Night / Other) */
 .add-type-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  margin-top: 6px;
+}
+
+.add-type-grid button {
+  width: 100%;
+  margin-bottom: 0;
 }
 
 .add-type-other {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
-/* ===== Favourites table ===== */
+/* Use the same turquoise style for buttons inside this modal */
+#addTypeModalOverlay button {
+  background: var(--turquoise);
+  color: #000;
+}
+#addTypeModalOverlay button:hover {
+  background: #0fb8d6;
+}
+
+.expense-modal {
+  width: min(92vw, 520px);
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.expense-modal h3 { margin: 0 0 6px 0; color: var(--navy); }
+.expense-modal label { font-size: 14px; color: #333; }
+.expense-modal input,
+.expense-modal select,
+.expense-modal textarea {
+  padding: 8px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ===== Rails (edit/delete/fav) ===== */
+#deleteRail {
+  position: absolute;
+  top: 0;
+  right: -36px;
+  width: 36px;
+  pointer-events: none;
+}
+
+.delete-mini, .edit-mini {
+  position: absolute;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.15s;
+  pointer-events: auto;
+  user-select: none;
+}
+.delete-mini { color: #ff0000; right: 0; }
+.delete-mini:hover { color: #b30000; transform: scale(1.2); }
+.edit-mini { color: var(--turquoise); right: 18px; }
+.edit-mini:hover { color: var(--teal); transform: scale(1.2); }
+
+#leftRail {
+  position: absolute;
+  top: 0;
+  left: -24px;
+  width: 16px;
+  pointer-events: none;
+}
+.fav-mini {
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--amber);
+  transition: 0.15s;
+  pointer-events: auto;
+  user-select: none;
+}
+.fav-mini.filled { color: #ffc93a; }
+.fav-mini:hover { transform: scale(1.2); }
+
+/* ===== Quick-pick (drinks) ===== */
+.quick-stage { margin-top: 2px; }
+.quick-title { margin: 0 0 6px 0; font-weight: 600; color: var(--navy); }
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.quick-grid button { margin-bottom: 0; width: 100%; }
+
+/* ===== Responsive ===== */
+@media (max-width: 799px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .sidebar { position: static; margin-top: 16px; }
+}
+
+/* ===== Table Enhancements ===== */
+#submittedExpenses th:first-child { border-top-left-radius: 10px; }
+#submittedExpenses th:last-child { border-top-right-radius: 10px; }
+
+/* ===== Favourites Modal ===== */
 #favesList table {
-  width: 90%;
+  width: 100%;
   border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed;
 }
-
+#favesList th, #favesList td {
+  padding: 10px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
 #favesList th {
   background: var(--navy);
   color: white;
+  font-weight: 600;
+}
+#favesList tbody tr:nth-child(even) { background: #f9f9f9; }
+
+#favesList {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+#favesList table {
+  width: 90%; /* gives breathing room on the sides */
 }
 
-/* ===== Sidebar Stats ===== */
+
+/* ===== Favourites modal action cell alignment ===== */
+.fav-actions {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;              /* spacing between Add and d */
+  white-space: nowrap;   /* keep them on one line */
+}
+
+.fav-actions button.fave-add {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: var(--turquoise);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.fav-actions button.fave-add:hover {
+  background: #0fb8d6;
+}
+
+.fav-actions .mini-inline.delete-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff0000;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.fav-actions .mini-inline.delete-mini:hover {
+  transform: scale(1.15);
+  opacity: 0.85;
+}
+
+.mini-inline {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.mini-inline.delete-mini { color: #ff0000; }
+.mini-inline.edit-mini { color: var(--turquoise); }
+.mini-inline:hover { transform: scale(1.15); opacity: 0.85; }
+
+/* ===== Pop-up Buttons ===== */
+#expenseModalOverlay button,
+#detailsModalOverlay button,
+#allowanceModalOverlay button,
+#favesModalOverlay button,
+#favNameModalOverlay button {
+  background: var(--turquoise);
+  color: #000;
+}
+#expenseModalOverlay button:hover,
+#detailsModalOverlay button:hover,
+#allowanceModalOverlay button:hover,
+#favesModalOverlay button:hover,
+#favNameModalOverlay button:hover {
+  background: #0fb8d6;
+}
+
+/* Reset rail positioning for the 'd' inside the Favourites table */
+#favesList .fav-actions .mini-inline.delete-mini {
+  position: static;   /* was absolute from the rail styles */
+  right: auto;
+}
+
+/* limit absolute positioning to the right rail only */
+#deleteRail .delete-mini,
+#deleteRail .edit-mini {
+  position: absolute;
+}
+
+#dayCounterBtn {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  cursor: default;
+  min-width: 90px;
+}
+
+#sidebarStats {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  width: 100%;
+}
+
 #scoreTotal,
 #streakDisplay,
 #levelDisplay {
   font-weight: 700;
   color: var(--navy);
-  font-size: 17px;
+  margin: 4px 0;
+  font-size: 17px; /* slightly bigger than default text */
 }
 
-/* ===== No Spend Button ===== */
+:root {
+  /* ...existing vars... */
+  --red: #ff3b30; /* Apple-esque red; vivid like --turquoise */
+}
+
 #noSpendBtn {
   background: var(--red);
+  color: #fff;
+}
+#noSpendBtn:hover {
+  background: #ff5b50;
 }
 
-/* ===== Hard Reset ===== */
+/* Full-width banner row when day is marked as no-spend */
+.no-spending-row {
+  font-weight: 700;
+  font-size: 16px;
+  color: #a00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #ffe9e7;
+}
+
 #hardResetBtn {
-  background: var(--red);
+  margin-left: auto;              /* push it to the right on the bar */
+  background: #ff3b30;            /* same red family as noSpendBtn */
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+#hardResetBtn:hover {
+  background: #ff5b50;
 }
