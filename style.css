@@ -282,6 +282,35 @@ button:hover { transform: translateY(-2px); }
   display: block;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;          /* JS toggles to flex */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  max-width: 400px;
+  width: 90%;
+}
+
+/* Whatever your Add Expense button uses – example: */
+.primary-btn {
+  background: #0b5ed7;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+
 /* Add Type modal layout (Drink / Groceries / Big Night / Other) */
 .add-type-grid {
   display: grid;

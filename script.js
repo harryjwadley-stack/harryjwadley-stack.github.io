@@ -80,7 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteRail = $("deleteRail");
   const leftRail = $("leftRail");
 
-  
   // Streak warning modal
   const streakWarnOverlay = $("streakWarningOverlay");
   const streakWarnAddBtn = $("streakWarningAddBtn");
@@ -308,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })();
 
-    /* ---------- Streak / day-completion helpers ---------- */
+  /* ---------- Streak / day-completion helpers ---------- */
 
   function currentDayHasActivity() {
     const data = getMonthData();
@@ -624,7 +623,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setDisplay(analyticsOverlay, false);
   }
 
-    /* ---------- Streak-at-risk warning modal ---------- */
+  /* ---------- Streak-at-risk warning modal ---------- */
 
   function closeStreakWarningModal() {
     if (streakWarnOverlay) streakWarnOverlay.style.display = "none";
@@ -650,9 +649,6 @@ document.addEventListener("DOMContentLoaded", () => {
       closeStreakWarningModal();
     }
   });
-
-  // Top-right X is already handled globally by your ".modal-close-x" listener,
-  // as long as the X is inside streakWarningOverlay and that overlay has role="dialog".
 
   // "Add expense" → stay on this day, open the Add Type modal
   on(streakWarnAddBtn, "click", () => {
@@ -687,7 +683,6 @@ document.addEventListener("DOMContentLoaded", () => {
       goToPrevDay();
     }
   });
-
 
   /* ---------- Coming Soon modal helpers ---------- */
   const comingSoonOverlay = $("comingSoonOverlay");
@@ -1771,7 +1766,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(favesList, "click", (e) => {
     const add = e.target.closest(".fave-add");
-    const del = e.target.closest(".fav-delete");
+       const del = e.target.closest(".fav-delete");
 
     if (add) {
       const oldKey = add.dataset.key;
