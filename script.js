@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteRail = $("deleteRail");
   const leftRail = $("leftRail");
 
-  /* ---------- Chart (main sidebar pie - REMOVED safely) ---------- */
+  /* ---------- Chart (main sidebar pie - optional) ---------- */
   let categoryChart = null;
 
   const chartCanvas = $("categoryChart");
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   (() => {
-    if (!categoryChart) return; // ✅ CRITICAL: prevents page-wide crash
+    if (!categoryChart) return;
 
     const css = getComputedStyle(document.documentElement);
     const themed = ["--turquoise","--navy","--teal","--amber"]
@@ -111,6 +111,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const SETTINGS_KEY = "savr-settings-v1";
   const FAV_KEY = "savr-favourites-v1";
 
+  function loadJSON(k) {
+    try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
+  }
+  function saveJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
   let monthlyState = loadJSON(STATE_KEY) || {};
   let settings = loadJSON(SETTINGS_KEY) || {
     allowance: 0,
@@ -121,20 +126,16 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
 
+  const saveState = () => saveJSON(STATE_KEY, monthlyState);
+  const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
+  const saveFavourites = () => saveJSON(FAV_KEY, favourites);
+
   // Backfill missing fields
   if (typeof settings.allowance !== "number") settings.allowance = Number(settings.allowance) || 0;
   if (typeof settings.score !== "number") settings.score = 0;
   if (typeof settings.streak !== "number") settings.streak = 0;
   if (typeof settings.lastActiveDay !== "number") settings.lastActiveDay = null;
   if (typeof settings.allowanceMode !== "string") settings.allowanceMode = "weekly";
-
-  function loadJSON(k) {
-    try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
-  }
-  function saveJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
-  const saveState = () => saveJSON(STATE_KEY, monthlyState);
-  const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
-  const saveFavourites = () => saveJSON(FAV_KEY, favourites);
 
   // Clean legacy per-month allowance keys
   for (const k of Object.keys(monthlyState)) {
@@ -310,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updatePieChart() {
-    if (!categoryChart) return; // prevents crash when chart doesn't exist
+    if (!categoryChart) return;
 
     const d = getMonthData().categoryTotals;
     categoryChart.data.datasets[0].data = [
@@ -320,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateStatsUI() {
-    const data = getMonthData(); // currently unused but kept for possible future use
+    const data = getMonthData(); // reserved for future use
 
     if (scoreTotalEl) {
       const xp = Number(settings.score || 0);
@@ -385,7 +386,6 @@ document.addEventListener("DOMContentLoaded", () => {
           datasets: [{
             label: "Category Breakdown",
             data: dataArr.slice(),
-            // reuse colours from the main chart
             backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"]
           }]
         },
@@ -405,7 +405,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
         }
-
       });
     } else {
       analyticsChart.data.datasets[0].data = dataArr;
@@ -426,7 +425,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (totalsEl) totalsEl.innerHTML = totalsHtml;
 
     setDisplay(analyticsOverlay, true);
-    // let layout settle before drawing
     setTimeout(renderAnalyticsChart, 0);
   }
 
@@ -434,7 +432,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setDisplay(analyticsOverlay, false);
   }
 
-    function openComingSoonModal(featureName) {
+  function openComingSoonModal(featureName) {
     const title = comingSoonTitleEl();
     const body = comingSoonBodyEl();
     if (title) title.textContent = `${featureName} – coming soon`;
@@ -444,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeComingSoonModal() {
     setDisplay(comingSoonOverlay, false);
   }
-  
+
   function renderForCurrentMonth() {
     const data = getMonthData();
     const mode = settings.allowanceMode || "weekly";
@@ -547,8 +545,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * Apply scoring and streak bonus for “good” activity on the current day.
-   * baseUnits: how many 10-point units to add (1 = 10XP, 5 = 50XP, etc.)
-   * baseMessage: primary text (“great addition !! +10XP”, etc.)
    */
   function applyStreakScore(baseUnits, baseMessage) {
     const prevDay = (typeof settings.lastActiveDay === "number")
@@ -557,7 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let streak = typeof settings.streak === "number" ? settings.streak : 0;
     const today = currentDay;
 
-    // --- Streak logic (unchanged behaviour) ---
     if (prevDay === null) {
       streak = 1;
     } else if (today === prevDay) {
@@ -565,7 +560,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (today === prevDay + 1) {
       streak = streak + 1;
     } else {
-      // jumped days or backwards → reset streak
       streak = 1;
     }
 
@@ -573,27 +567,22 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.streak = streak;
     saveSettings();
 
-    // --- Base XP (for the action itself) ---
     const baseXP = baseUnits * 10;
-    addScore(baseUnits);   // +10 XP per unit
+    addScore(baseUnits);
 
-    // Gold popup: XP only, no streak info
     showGoldPopup("Great addition!", baseXP);
 
-    // --- Streak bonus (if streak extends) ---
     let bonusUnits = 0;
     if (prevDay !== null && today !== prevDay && streak > 1) {
-      // only when we moved to a *new* day and are on a streak
       bonusUnits = streak; // e.g. 2 => +20XP, 3 => +30XP
       addScore(bonusUnits);
     }
 
     const bonusXP = bonusUnits * 10;
     if (bonusXP > 0) {
-      // Show red streak popup *after* the gold XP popup finishes
       setTimeout(() => {
         showStreakPopup(streak, bonusXP);
-      }, 4200); // slightly more than the 4s XP popup duration
+      }, 4200);
     }
   }
 
@@ -611,7 +600,6 @@ document.addEventListener("DOMContentLoaded", () => {
       popup.setAttribute("role", "alert");
       popup.setAttribute("aria-live", "polite");
 
-      // Base container styles (center of screen)
       Object.assign(popup.style, {
         position: "fixed",
         top: "50%",
@@ -630,7 +618,6 @@ document.addEventListener("DOMContentLoaded", () => {
         minWidth: "260px"
       });
 
-      // Title
       const titleEl = document.createElement("div");
       titleEl.className = "gold-popup-title";
       Object.assign(titleEl.style, {
@@ -640,7 +627,6 @@ document.addEventListener("DOMContentLoaded", () => {
         marginBottom: "6px"
       });
 
-      // Image: XP celebration picture
       const imgEl = document.createElement("img");
       imgEl.className = "gold-popup-image";
       Object.assign(imgEl.style, {
@@ -656,7 +642,6 @@ document.addEventListener("DOMContentLoaded", () => {
       imgEl.alt = "XP celebration";
       imgEl.style.borderRadius = "50%";
 
-      // Body: description text
       const bodyEl = document.createElement("div");
       bodyEl.className = "gold-popup-body";
       Object.assign(bodyEl.style, {
@@ -679,7 +664,6 @@ document.addEventListener("DOMContentLoaded", () => {
         earnedXP > 0 ? `Nice! +${earnedXP}XP` : "Nice!";
     }
     if (bodyEl) {
-      // message will be "Great addition!" from applyStreakScore
       bodyEl.textContent = message || "Great addition!";
     }
 
@@ -688,7 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (goldPopupTimer) clearTimeout(goldPopupTimer);
     goldPopupTimer = setTimeout(() => {
       if (popup) popup.style.display = "none";
-    }, 4000); // same duration as before
+    }, 4000);
   }
 
   /* ---------- Red streak popup (streak extension) ---------- */
@@ -702,7 +686,6 @@ document.addEventListener("DOMContentLoaded", () => {
       popup.setAttribute("role", "alert");
       popup.setAttribute("aria-live", "polite");
 
-      // Get the same red as the no-spend button if available
       const css = getComputedStyle(document.documentElement);
       const red = css.getPropertyValue("--red").trim() || "#ff3b30";
 
@@ -733,7 +716,6 @@ document.addEventListener("DOMContentLoaded", () => {
         marginBottom: "6px"
       });
 
-      // Image for streaks
       const imgEl = document.createElement("img");
       imgEl.className = "streak-popup-image";
       Object.assign(imgEl.style, {
@@ -800,7 +782,6 @@ document.addEventListener("DOMContentLoaded", () => {
   on(weeklyBtn, "click", () => setAllowanceMode("weekly"));
   on(dailyBtn, "click", () => setAllowanceMode("daily"));
 
-  // Initialise toggle button visual state on load
   refreshAllowanceToggleButtons();
 
   /* ---------- "No spending today" button ---------- */
@@ -810,7 +791,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Already marked as 'No spending' for this day.");
       return;
     }
-    // Clear day without subtracting score (special case)
     const n = data.expenses.length;
     if (n > 0) {
       data.expenses = [];
@@ -824,7 +804,6 @@ document.addEventListener("DOMContentLoaded", () => {
     saveState();
     renderForCurrentMonth();
 
-    // Base 50XP +streak bonus
     applyStreakScore(5, "Congratulations, you're on the right track! +50XP");
   });
 
@@ -845,11 +824,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const i = data.expenses.findIndex(x => x.id === id);
       if (i === -1) return;
       const exp = data.expenses[i];
-      // Update state
       data.categoryTotals[exp.category] =
         Math.max(0, (data.categoryTotals[exp.category] || 0) - (exp.amount || 0));
       data.expenses.splice(i,1);
-      // Global score goes down with deletes
       subtractScore(1);
       saveState();
       renderForCurrentMonth();
@@ -891,13 +868,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!n && !data.noSpending) return;
     if (!confirm("Are you sure you want to delete all expenses for this day?")) return;
 
-    if (n > 0) subtractScore(n); // subtract 10×items cleared
+    if (n > 0) subtractScore(n);
     data.expenses = [];
     data.categoryTotals = {
       Groceries: 0, Social: 0, Treat: 0, Unexpected: 0
     };
     data.purchaseCount = 0;
-    data.noSpending = false; // clearing day resets the banner
+    data.noSpending = false;
 
     saveState();
     renderForCurrentMonth();
@@ -1029,7 +1006,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
-        // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
         if (data.noSpending) subtractScore(5);
         data.noSpending = false;
 
@@ -1037,7 +1013,6 @@ document.addEventListener("DOMContentLoaded", () => {
         data.expenses.push({ id: data.purchaseCount, amount, category, card });
         data.categoryTotals[category] += amount;
 
-        // Base +streak for a new expense
         applyStreakScore(1, "great addition! +10XP");
       }
 
@@ -1070,7 +1045,6 @@ document.addEventListener("DOMContentLoaded", () => {
       { hideCategory:true, quickDrinkOnly:true }
     )
   );
-  // Big Night Out → normal form like Add Groceries, but default Social
   on(bigNightBtn, "click", () =>
     openExpenseModal(
       { category: "Social", card: "Credit", amount: "" },
@@ -1082,7 +1056,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const quickAdd = (amt) => {
     const data = getMonthData();
 
-    // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
     if (data.noSpending) subtractScore(5);
     data.noSpending = false;
 
@@ -1095,7 +1068,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     data.categoryTotals.Social += amt;
 
-    // Base +streak for quick add
     applyStreakScore(1, "great addition! +10XP");
 
     saveState();
@@ -1135,7 +1107,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   on(detailsClose(), "click", closeDetailsModal);
-  
 
   /* ---------- Analytics & Coming Soon Modals ---------- */
   const analyticsOverlay = $("analyticsModalOverlay");
@@ -1148,24 +1119,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const comingSoonBodyEl = () => $("comingSoonBody");
   const comingSoonCloseBtn = () => $("comingSoonCloseBtn");
 
-  /* ---------- Sidebar feature buttons ---------- */
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
   on(rewardsBtn, "click", () => openComingSoonModal("Rewards"));
 
-  /* ---------- Analytics modal close behaviour ---------- */
   on(analyticsOverlay, "click", (e) => {
     if (e.target === analyticsOverlay) closeAnalyticsModal();
   });
   on(analyticsCloseBtn(), "click", closeAnalyticsModal);
 
-  /* ---------- Coming soon modal close behaviour ---------- */
   on(comingSoonOverlay, "click", (e) => {
     if (e.target === comingSoonOverlay) closeComingSoonModal();
   });
   on(comingSoonCloseBtn(), "click", closeComingSoonModal);
 
-  // Escape closes both if open
   on(document, "keydown", (e) => {
     if (e.key === "Escape") {
       if (analyticsOverlay && analyticsOverlay.style.display === "flex") {
@@ -1176,7 +1143,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
-
 
   /* ---------- Allowance Modal ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
@@ -1290,7 +1256,6 @@ document.addEventListener("DOMContentLoaded", () => {
   on(allowanceCancel(), "click", closeAllowanceModal);
   on(setAllowanceBtn, "click", openAllowanceModal);
 
-
   /* ---------- Favourites Modal ---------- */
   const openFavesModal = () => {
     renderFavesModal();
@@ -1308,7 +1273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }[c]));
 
   function renderFavesModal() {
-    const entries = Object.entries(favourites); // [key, fav]
+    const entries = Object.entries(favourites);
     if (!entries.length) {
       favesList.innerHTML = `<p>No favourites yet.</p>`;
       return;
@@ -1367,13 +1332,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!fav) return;
       const data = getMonthData();
 
-      // If we’re breaking a previously marked no-spend day, remove the +50XP bonus first
       if (data.noSpending) subtractScore(5);
       data.noSpending = false;
 
       data.purchaseCount += 1;
+      const newId = data.purchaseCount;
+
       data.expenses.push({
-        id: data.purchaseCount,
+        id: newId,
         amount: fav.amount,
         category: fav.category,
         card: fav.card || "Credit"
@@ -1381,13 +1347,25 @@ document.addEventListener("DOMContentLoaded", () => {
       data.categoryTotals[fav.category] =
         (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
-      // Base +streak for favourite add
+      const newKey = compositeId(newId);
+      favourites[newKey] = {
+        id: newId,
+        year: currentYear,
+        monthIndex: currentMonthIndex,
+        amount: fav.amount,
+        category: fav.category,
+        card: fav.card || "Credit",
+        name: fav.name || "Favourite"
+      };
+      saveFavourites();
+
       applyStreakScore(1, "great addition! +10XP");
 
       saveState();
       renderForCurrentMonth();
       return;
     }
+
     const del = e.target.closest(".fav-delete");
     if (del) {
       const key = del.dataset.key;
