@@ -663,19 +663,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- SCORE helpers & level-up wiring ---------- */
   let levelPopupTimer = null;
+  let pendingLevelInfo = null;
 
   function scheduleLevelUpPopupIfNeeded(prevScore, newScore) {
     const prev = getLevelInfo(prevScore);
     const next = getLevelInfo(newScore);
-
     if (next.rank <= prev.rank) return;
-
-    if (levelPopupTimer) clearTimeout(levelPopupTimer);
-
-    // Show AFTER XP popup and AFTER possible streak popup
-    levelPopupTimer = setTimeout(() => {
-      showLevelUpPopup(next);
-    }, 8400);
+    pendingLevelInfo = next;
   }
 
   function addScore(n = 1) {
@@ -688,6 +682,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     scheduleLevelUpPopupIfNeeded(prevScore, newScore);
   }
+
   function subtractScore(n = 1) {
     const prevScore = Number(settings.score || 0);
     const newScore = Math.max(0, prevScore - 10 * n);
@@ -711,10 +706,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // +20XP => 2 "units" because addScore multiplies by 10
     addScore(2);
     showGoldPopup("Allowance set – great start! +20XP", 20);
+
+    // If that XP crossed a level boundary, show the level popup
+    if (pendingLevelInfo) {
+      if (levelPopupTimer) clearTimeout(levelPopupTimer);
+      // Immediately after XP popup: XP toast is 4000ms
+      levelPopupTimer = setTimeout(() => {
+        if (pendingLevelInfo) {
+          showLevelUpPopup(pendingLevelInfo);
+          pendingLevelInfo = null;
+        }
+      }, 4200);
+    }
   }
 
   /**
    * Apply scoring and streak bonus for “good” activity on the current day.
+   * XP popup first, optional streak popup second, level popup last.
    */
   function applyStreakScore(baseUnits, baseMessage) {
     const prevDay = (typeof settings.lastActiveDay === "number")
@@ -740,6 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseXP = baseUnits * 10;
     addScore(baseUnits);
 
+    // XP popup
     showGoldPopup("Great addition!", baseXP);
 
     let bonusUnits = 0;
@@ -750,9 +759,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const bonusXP = bonusUnits * 10;
     if (bonusXP > 0) {
+      // Streak popup after XP popup
       setTimeout(() => {
         showStreakPopup(streak, bonusXP);
       }, 4200);
+    }
+
+    // Finally, if we crossed a level boundary, show level popup AFTER
+    // XP popup, and AFTER streak popup if there was one.
+    if (pendingLevelInfo) {
+      const hasStreak = bonusXP > 0;
+      const baseDelay = 4000; // XP popup time
+      const streakDelay = hasStreak ? 4000 : 0; // streak popup time
+      const extra = 200; // small buffer
+
+      if (levelPopupTimer) clearTimeout(levelPopupTimer);
+      levelPopupTimer = setTimeout(() => {
+        if (pendingLevelInfo) {
+          showLevelUpPopup(pendingLevelInfo);
+          pendingLevelInfo = null;
+        }
+      }, baseDelay + streakDelay + extra);
     }
   }
 
