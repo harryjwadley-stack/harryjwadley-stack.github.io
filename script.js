@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const streakWarnAddBtn = $("streakWarningAddBtn");
   const streakWarnBackBtn = $("streakWarningBackBtn");
   const streakWarnNoSpendBtn = $("streakWarningNoSpendBtn");
+  const streakWarnContinueBtn = $("streakWarningContinueBtn");
 
   /* ---------- Chart (main sidebar pie - optional) ---------- */
   let categoryChart = null;
@@ -305,10 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderForCurrentMonth();
       });
     }
-      currentDay = currentDay >= 7 ? 1 : currentDay + 1;
-      if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth();
-    });
   })();
 
     /* ---------- Streak / day-completion helpers ---------- */
@@ -671,16 +668,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // "Back" → accept that we lose the streak and move to the next day
   on(streakWarnBackBtn, "click", () => {
+    closeStreakWarningModal();
+  });
+
+  // "Continue" → accept that we lose the streak and move to the target day
+  on(streakWarnContinueBtn, "click", () => {
     const dir = pendingDayNav?.direction || "next";
     closeStreakWarningModal();
 
+    // kill the streak 💀
+    resetStreakToZero();
+
+    // then navigate as originally intended
     if (dir === "next") {
-      resetStreakToZero();  // kill the streak 💀
-      goToNextDay();        // then navigate as originally intended
+      goToNextDay();
     } else if (dir === "prev") {
-      resetStreakToZero();
       goToPrevDay();
     }
   });
