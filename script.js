@@ -1645,7 +1645,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     allowanceStage().innerHTML = `
-      <p>Allowance = Income −(Rent +Car +Bills +Savings +Other)</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         ${["Income","Rent","Car Payments","Bills","Ideal Savings","Other"].map(label => `
           <label style="display:flex; flex-direction:column; gap:6px;">
