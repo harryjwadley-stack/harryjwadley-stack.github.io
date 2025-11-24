@@ -205,17 +205,16 @@ button {
 button:hover { transform: translateY(-2px); }
 
 /* Colour groups */
-#setAllowanceBtn,
 #showFavouritesBtn {
   background: var(--amber);
   color: #000;
 }
-#setAllowanceBtn:hover,
 #showFavouritesBtn:hover {
-  background: #0fb8d6;
+  background: #ffcb40;
 }
 
 /* Turquoise action buttons (Add, Clear, Big Night) */
+#setAllowanceBtn,
 #addExpenseBtn,
 #addGroceriesBtn,
 #addDrinkBtn,
@@ -224,6 +223,7 @@ button:hover { transform: translateY(-2px); }
   background: var(--turquoise);
   color: #000;
 }
+#setAllowanceBtn:hover,
 #addExpenseBtn:hover,
 #addGroceriesBtn:hover,
 #addDrinkBtn:hover,
