@@ -330,7 +330,8 @@ document.addEventListener("DOMContentLoaded", () => {
       score: 0,
       streak: 0,
       lastActiveDay: null,
-      allowanceMode: "weekly"
+      allowanceMode: "weekly",
+      allowanceXpAwarded: false
     };
     saveSettings();
 
@@ -1434,7 +1435,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* ---------- Allowance Modal ---------- */
+  /* ---------- Allowance Modal (combined calculate + manual) ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
   const allowanceStage = () => $("allowanceModalStage");
   const allowanceCancel = () => $("allowanceModalCancelBtn");
@@ -1444,7 +1445,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allowanceFlow = { mode: null };
 
   const openAllowanceModal = () => {
-    showAllowanceChoice();
+    showAllowanceCombined();           // go straight to combined view
     setDisplay(allowanceOverlay, true);
   };
   const closeAllowanceModal = () => {
@@ -1452,29 +1453,26 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceFlow = { mode: null };
   };
 
-  function showAllowanceChoice() {
-    allowanceFlow.mode = null;
-    if (allowanceBack()) allowanceBack().style.display = "none";
-    if (allowanceSubmit()) allowanceSubmit().style.display = "none";
-    allowanceStage().innerHTML = `
-      <p>How would you like to set your global allowance?</p>
-      <div style="display:flex; gap:10px;">
-        <button id="allowanceManualBtn" type="button">Manual</button>
-        <button id="allowanceCalcBtn" type="button">Calculate</button>
-      </div>
-    `;
-    on($("allowanceManualBtn"), "click", showAllowanceManual);
-    on($("allowanceCalcBtn"), "click", showAllowanceCalc);
-  }
+  // Calculate button + inline manual input in the same screen
+  function showAllowanceCombined() {
+    allowanceFlow.mode = "combined";
 
-  function showAllowanceManual() {
-    allowanceFlow.mode = "manual";
-    if (allowanceBack()) allowanceBack().style.display = "inline-block";
-    if (allowanceSubmit()) {
-      allowanceSubmit().style.display = "inline-block";
-      allowanceSubmit().textContent = "Set Global Allowance";
+    if (allowanceBack()) allowanceBack().style.display = "none";
+
+    const submit = allowanceSubmit();
+    if (submit) {
+      submit.style.display = "inline-block";
+      submit.textContent = "Set Global Allowance";
     }
+
     allowanceStage().innerHTML = `
+      <button id="allowanceCalcBtn" type="button"
+              style="margin-bottom:10px; width:100%;">
+        Calculate
+      </button>
+      <div style="text-align:center; margin:6px 0; font-size:13px; color:#555;">
+        — OR —
+      </div>
       <label for="allowanceManualInput" style="font-size:14px; color:#333;">
         Allowance Amount
       </label>
@@ -1482,35 +1480,45 @@ document.addEventListener("DOMContentLoaded", () => {
              placeholder="Enter amount"
              style="padding:8px; font-size:16px; width:100%; box-sizing:border-box;" />
     `;
+
     const inp = $("allowanceManualInput");
-    inp.value = Number(settings.allowance || 0);
-    inp.focus({ preventScroll:true });
-    if (allowanceBack()) allowanceBack().onclick = showAllowanceChoice;
-    if (allowanceSubmit()) allowanceSubmit().onclick = () => {
-      const val = parseFloat(inp.value);
-      if (isNaN(val) || val < 0) {
-        alert("Please enter a valid allowance (0 or more).");
-        inp.focus();
-        return;
-      }
-      settings.allowance = val;
-      saveSettings();
+    if (inp) {
+      inp.value = Number(settings.allowance || 0);
+      inp.focus({ preventScroll: true });
+    }
 
-      // Award one-time XP for setting a valid allowance
-      maybeAwardAllowanceXP();
+    const calcBtn = $("allowanceCalcBtn");
+    on(calcBtn, "click", showAllowanceCalc);
 
-      renderForCurrentMonth();
-      closeAllowanceModal();
-    };
+    if (submit) {
+      submit.onclick = () => {
+        const val = parseFloat(inp.value);
+        if (isNaN(val) || val < 0) {
+          alert("Please enter a valid allowance (0 or more).");
+          inp.focus();
+          return;
+        }
+        settings.allowance = val;
+        saveSettings();
+
+        // One-time XP reward for setting a valid allowance
+        maybeAwardAllowanceXP();
+
+        renderForCurrentMonth();
+        closeAllowanceModal();
+      };
+    }
   }
 
   function showAllowanceCalc() {
     allowanceFlow.mode = "calc";
     if (allowanceBack()) allowanceBack().style.display = "inline-block";
-    if (allowanceSubmit()) {
-      allowanceSubmit().style.display = "inline-block";
-      allowanceSubmit().textContent = "Set Global Allowance";
+    const submit = allowanceSubmit();
+    if (submit) {
+      submit.style.display = "inline-block";
+      submit.textContent = "Set Global Allowance";
     }
+
     allowanceStage().innerHTML = `
       <p>Allowance = Income −(Rent +Car +Bills +Savings +Other)</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1525,27 +1533,31 @@ document.addEventListener("DOMContentLoaded", () => {
         `).join("")}
       </div>
     `;
-    if (allowanceBack()) allowanceBack().onclick = showAllowanceChoice;
-    if (allowanceSubmit()) allowanceSubmit().onclick = () => {
-      const vals = {};
-      document
-        .querySelectorAll('[data-allowance]')
-        .forEach(el => {
-          vals[el.dataset.allowance] = parseFloat(el.value) || 0;
-        });
-      const income = vals["Income"];
-      const costs = vals["Rent"] + vals["Car Payments"] +
-                    vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
 
-      settings.allowance = income - costs;
-      saveSettings();
+    if (allowanceBack()) allowanceBack().onclick = showAllowanceCombined;
 
-      // Award one-time XP for setting a valid allowance
-      maybeAwardAllowanceXP();
+    if (submit) {
+      submit.onclick = () => {
+        const vals = {};
+        document
+          .querySelectorAll('[data-allowance]')
+          .forEach(el => {
+            vals[el.dataset.allowance] = parseFloat(el.value) || 0;
+          });
+        const income = vals["Income"];
+        const costs = vals["Rent"] + vals["Car Payments"] +
+                      vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
 
-      renderForCurrentMonth();
-      closeAllowanceModal();
-    };
+        settings.allowance = income - costs;
+        saveSettings();
+
+        // One-time XP reward for setting a valid allowance
+        maybeAwardAllowanceXP();
+
+        renderForCurrentMonth();
+        closeAllowanceModal();
+      };
+    }
   }
 
   on(allowanceOverlay, "click", (e)=>{
