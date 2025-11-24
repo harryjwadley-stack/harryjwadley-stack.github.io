@@ -137,7 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
     score: 0,
     streak: 0,
     lastActiveDay: null,
-    allowanceMode: "weekly"
+    allowanceMode: "weekly",
+    allowanceXpAwarded: false
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, name } }
 
@@ -151,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof settings.streak !== "number") settings.streak = 0;
   if (typeof settings.lastActiveDay !== "number") settings.lastActiveDay = null;
   if (typeof settings.allowanceMode !== "string") settings.allowanceMode = "weekly";
+  if (typeof settings.allowanceXpAwarded !== "boolean") settings.allowanceXpAwarded = false;
 
   // Clean legacy per-month allowance keys
   for (const k of Object.keys(monthlyState)) {
@@ -641,6 +643,22 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.score = Math.max(0, (settings.score || 0) - 10 * n);
     saveSettings();
     updateStatsUI();
+  }
+
+  // One-time XP reward for setting a global allowance
+  function maybeAwardAllowanceXP() {
+    // Only once, and only if allowance is actually > 0
+    if (settings.allowanceXpAwarded) return;
+
+    const allowanceVal = Number(settings.allowance || 0);
+    if (allowanceVal <= 0) return;
+
+    settings.allowanceXpAwarded = true;
+    saveSettings();          // persist the fact we've awarded it
+
+    // +20XP => 2 "units" because addScore multiplies by 10
+    addScore(2);
+    showGoldPopup("Allowance set – great start! +20XP", 20);
   }
 
   /**
@@ -1321,6 +1339,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       settings.allowance = val;
       saveSettings();
+
+      // Award one-time XP for setting a valid allowance
+      maybeAwardAllowanceXP();
+
       renderForCurrentMonth();
       closeAllowanceModal();
     };
@@ -1358,8 +1380,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const income = vals["Income"];
       const costs = vals["Rent"] + vals["Car Payments"] +
                     vals["Bills"] + vals["Ideal Savings"] + vals["Other"];
+
       settings.allowance = income - costs;
       saveSettings();
+
+      // Award one-time XP for setting a valid allowance
+      maybeAwardAllowanceXP();
+
       renderForCurrentMonth();
       closeAllowanceModal();
     };
