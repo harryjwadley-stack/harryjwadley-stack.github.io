@@ -1363,6 +1363,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       saveState();
       renderForCurrentMonth();
+      closeFavesModal(); // 👈 close the favourites popup after selection
       return;
     }
 
