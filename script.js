@@ -411,6 +411,50 @@ document.addEventListener("DOMContentLoaded", () => {
     categoryChart.update();
   }
 
+  /* ---------- Level helper ---------- */
+  function getLevelInfo(score) {
+    const xp = Number(score || 0);
+
+    if (xp >= 251) {
+      return {
+        name: "Platinum",
+        emoji: "💠",
+        color: "#e5e4e2",
+        rank: 4
+      };
+    }
+    if (xp >= 181) {
+      return {
+        name: "Diamond",
+        emoji: "💎",
+        color: "#4fd1c5",
+        rank: 3
+      };
+    }
+    if (xp >= 91) {
+      return {
+        name: "Gold",
+        emoji: "🥇",
+        color: "#ffd700",
+        rank: 2
+      };
+    }
+    if (xp >= 31) {
+      return {
+        name: "Silver",
+        emoji: "🥈",
+        color: "#c0c0c0",
+        rank: 1
+      };
+    }
+    return {
+      name: "Bronze",
+      emoji: "🥉",
+      color: "#cd7f32",
+      rank: 0
+    };
+  }
+
   function updateStatsUI() {
     const data = getMonthData(); // reserved for future use
 
@@ -429,24 +473,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (levelEl) {
       const xp = Number(settings.score || 0);
-      let level = "Bronze";
-      let emoji = "🥉";
-
-      if (xp >= 251) {
-        level = "Platinum";
-        emoji = "💠";
-      } else if (xp >= 181) {
-        level = "Diamond";
-        emoji = "💎";
-      } else if (xp >= 91) {
-        level = "Gold";
-        emoji = "🥇";
-      } else if (xp >= 31) {
-        level = "Silver";
-        emoji = "🥈";
-      }
-
-      levelEl.textContent = `${emoji} Level: ${level}`;
+      const info = getLevelInfo(xp);
+      levelEl.textContent = `${info.emoji} Level: ${info.name}`;
     }
   }
 
@@ -633,14 +661,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(window, "resize", updateRails);
 
-  /* ---------- SCORE helpers ---------- */
+  /* ---------- SCORE helpers & level-up wiring ---------- */
+  let levelPopupTimer = null;
+
+  function scheduleLevelUpPopupIfNeeded(prevScore, newScore) {
+    const prev = getLevelInfo(prevScore);
+    const next = getLevelInfo(newScore);
+
+    if (next.rank <= prev.rank) return;
+
+    if (levelPopupTimer) clearTimeout(levelPopupTimer);
+
+    // Show AFTER XP popup and AFTER possible streak popup
+    levelPopupTimer = setTimeout(() => {
+      showLevelUpPopup(next);
+    }, 8400);
+  }
+
   function addScore(n = 1) {
-    settings.score = Math.max(0, (settings.score || 0) + 10 * n);
+    const prevScore = Number(settings.score || 0);
+    const newScore = Math.max(0, prevScore + 10 * n);
+
+    settings.score = newScore;
     saveSettings();
     updateStatsUI();
+
+    scheduleLevelUpPopupIfNeeded(prevScore, newScore);
   }
   function subtractScore(n = 1) {
-    settings.score = Math.max(0, (settings.score || 0) - 10 * n);
+    const prevScore = Number(settings.score || 0);
+    const newScore = Math.max(0, prevScore - 10 * n);
+
+    settings.score = newScore;
     saveSettings();
     updateStatsUI();
   }
@@ -878,6 +930,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (streakPopupTimer) clearTimeout(streakPopupTimer);
     streakPopupTimer = setTimeout(() => {
+      if (popup) popup.style.display = "none";
+    }, 4000);
+  }
+
+  /* ---------- Level-up popup (third in hierarchy) ---------- */
+  function showLevelUpPopup(levelInfo) {
+    let popup = document.querySelector(".levelup-popup-toast");
+
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.className = "levelup-popup-toast";
+      popup.setAttribute("role", "alert");
+      popup.setAttribute("aria-live", "polite");
+
+      Object.assign(popup.style, {
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: "10002",
+        background: "#333",
+        color: "#000",
+        borderRadius: "14px",
+        padding: "20px 26px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+        fontFamily: "inherit",
+        textAlign: "center",
+        maxWidth: "90vw",
+        minWidth: "240px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "10px"
+      });
+
+      const emojiEl = document.createElement("div");
+      emojiEl.className = "levelup-emoji";
+      Object.assign(emojiEl.style, {
+        fontSize: "42px",
+        lineHeight: "1"
+      });
+      emojiEl.textContent = "🛡️";
+
+      const textEl = document.createElement("div");
+      textEl.className = "levelup-text";
+      Object.assign(textEl.style, {
+        fontSize: "20px",
+        fontWeight: "800",
+        letterSpacing: "0.5px"
+      });
+
+      popup.appendChild(emojiEl);
+      popup.appendChild(textEl);
+      document.body.appendChild(popup);
+    }
+
+    const textEl = popup.querySelector(".levelup-text");
+
+    const bg = levelInfo && levelInfo.color ? levelInfo.color : "#333";
+    popup.style.background = bg;
+    popup.style.border = "2px solid rgba(0,0,0,0.2)";
+
+    const lightLevels = ["Gold", "Platinum", "Silver"];
+    if (lightLevels.includes(levelInfo.name)) {
+      popup.style.color = "#000";
+    } else {
+      popup.style.color = "#fff";
+    }
+
+    if (textEl) {
+      textEl.textContent = `Level: ${levelInfo.name}`;
+    }
+
+    popup.style.display = "block";
+
+    setTimeout(() => {
       if (popup) popup.style.display = "none";
     }, 4000);
   }
