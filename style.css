@@ -212,7 +212,7 @@ button:hover { transform: translateY(-2px); }
 }
 #setAllowanceBtn:hover,
 #showFavouritesBtn:hover {
-  background: #ffcb40;
+  background: #0fb8d6;
 }
 
 /* Turquoise action buttons (Add, Clear, Big Night) */
