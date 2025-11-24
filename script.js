@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
     submittedTable.querySelector("tbody") ||
     submittedTable.appendChild(document.createElement("tbody"));
 
-  const totalsDiv = $("categoryTotals");
   const clearAllBtn = $("clearAllBtn");
 
   const setAllowanceBtn = $("setAllowanceBtn");
@@ -473,13 +472,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </tr>`
       )).join("");
     }
-
-    totalsDiv.innerHTML = `
-      Groceries: ${data.categoryTotals.Groceries.toFixed(2)}<br>
-      Social: ${data.categoryTotals.Social.toFixed(2)}<br>
-      Treat: ${data.categoryTotals.Treat.toFixed(2)}<br>
-      Unexpected: ${data.categoryTotals.Unexpected.toFixed(2)}
-    `;
 
     updateAllowanceRemaining();
     updatePieChart();
