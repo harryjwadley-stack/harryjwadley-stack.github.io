@@ -95,6 +95,22 @@
       </div>
     </aside>
   </div>
+  
+  <div id="streakWarningOverlay" role="dialog" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+      <button type="button" class="modal-close-x">✕</button>
+      <h3>You're at risk of losing your streak!</h3>
+      <p>Don't forget to add an expense today.</p>
+
+      <div class="streak-warning-actions">
+        <button id="streakWarningBackBtn" type="button">Back</button>
+        <button id="streakWarningAddBtn" type="button">Add expense</button>
+        <button id="streakWarningNoSpendBtn" type="button">No spending today</button>
+        <button id="streakWarningContinueBtn" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Add Type Modal (chooses Drink / Groceries / Big Night / Other) -->
   <div id="addTypeModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addTypeModalTitle">

@@ -80,6 +80,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteRail = $("deleteRail");
   const leftRail = $("leftRail");
 
+  
+  // Streak warning modal
+  const streakWarnOverlay = $("streakWarningOverlay");
+  const streakWarnAddBtn = $("streakWarningAddBtn");
+  const streakWarnBackBtn = $("streakWarningBackBtn");
+  const streakWarnNoSpendBtn = $("streakWarningNoSpendBtn");
+
   /* ---------- Chart (main sidebar pie - optional) ---------- */
   let categoryChart = null;
 
@@ -298,40 +305,80 @@ document.addEventListener("DOMContentLoaded", () => {
         renderForCurrentMonth();
       });
     }
-
-    on(prevBtn, "click", () => {
-      currentDay = currentDay <= 1 ? 7 : currentDay - 1;
-      if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-      renderForCurrentMonth();
-    });
-
-    on(nextBtn, "click", () => {
-      const previousDay = currentDay;
-      const last = (typeof settings.lastActiveDay === "number")
-        ? settings.lastActiveDay
-        : null;
-
-      // If we are leaving a day that comes *after* the last day
-      // we actually logged something on, treat it as a missed day
-      // and nuke the streak.
-      //
-      // Example:
-      //   lastActiveDay = 3 (streak built on days 1–3)
-      //   currentDay    = 4
-      //   → user clicks "next" to go 4 → 5 with no activity on 4
-      //   previousDay = 4, last = 3 ⇒ streak reset to 0.
-      if (last !== null && previousDay > last) {
-        settings.streak = 0;
-        settings.lastActiveDay = null;
-        saveSettings();
-        updateStatsUI();
-      }
-
       currentDay = currentDay >= 7 ? 1 : currentDay + 1;
       if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
       renderForCurrentMonth();
     });
   })();
+
+    /* ---------- Streak / day-completion helpers ---------- */
+
+  function currentDayHasActivity() {
+    const data = getMonthData();
+    const hasExpenses = Array.isArray(data.expenses) && data.expenses.length > 0;
+    const hasNoSpendFlag = data.noSpending === true;
+    return hasExpenses || hasNoSpendFlag;
+  }
+
+  function resetStreakToZero() {
+    settings.streak = 0;
+    settings.lastActiveDay = null;
+    saveSettings();
+    updateStatsUI();
+  }
+
+  // Will leaving *forward* from this day cause us to lose a non-zero streak?
+  function willLoseStreakOnForwardLeave() {
+    const streakVal = Number(settings.streak || 0);
+    if (streakVal <= 0) return false;
+
+    const last = (typeof settings.lastActiveDay === "number")
+      ? settings.lastActiveDay
+      : null;
+    if (!last) return false;
+
+    // We only care about the immediate day after the last active day,
+    // e.g. lastActiveDay=3, currentDay=4 and nothing logged on day 4
+    if (currentDay !== last + 1) return false;
+
+    // If the current day already has an expense or "no spending" recorded,
+    // leaving won't break the streak.
+    if (currentDayHasActivity()) return false;
+
+    return true;
+  }
+
+  function goToPrevDay() {
+    currentDay = currentDay <= 1 ? 7 : currentDay - 1;
+    if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
+    renderForCurrentMonth();
+  }
+
+  function goToNextDay() {
+    currentDay = currentDay >= 7 ? 1 : currentDay + 1;
+    if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
+    renderForCurrentMonth();
+  }
+
+  /* ---------- Updated day navigation (prev / next) ---------- */
+
+  let pendingDayNav = null; // { direction: "next" | "prev" } for the warning modal
+
+  on(prevBtn, "click", () => {
+    // Going backwards doesn't break streak – just navigate.
+    goToPrevDay();
+  });
+
+  on(nextBtn, "click", () => {
+    // If leaving this day forward would break the streak, show the warning.
+    if (willLoseStreakOnForwardLeave()) {
+      pendingDayNav = { direction: "next" };
+      if (streakWarnOverlay) setDisplay(streakWarnOverlay, true);
+      return;
+    }
+    // Otherwise, just move to the next day.
+    goToNextDay();
+  });
 
   /* ---------- Hard Reset (global wipe) ---------- */
   on(hardResetBtn, "click", () => {
@@ -579,6 +626,65 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeAnalyticsModal() {
     setDisplay(analyticsOverlay, false);
   }
+
+    /* ---------- Streak-at-risk warning modal ---------- */
+
+  function closeStreakWarningModal() {
+    if (streakWarnOverlay) streakWarnOverlay.style.display = "none";
+    pendingDayNav = null;
+  }
+
+  // Background click closes (no navigation, no streak loss)
+  if (streakWarnOverlay) {
+    on(streakWarnOverlay, "click", (e) => {
+      if (e.target === streakWarnOverlay) {
+        closeStreakWarningModal();
+      }
+    });
+  }
+
+  // ESC closes (no navigation, no streak loss)
+  on(document, "keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      streakWarnOverlay &&
+      streakWarnOverlay.style.display === "flex"
+    ) {
+      closeStreakWarningModal();
+    }
+  });
+
+  // Top-right X is already handled globally by your ".modal-close-x" listener,
+  // as long as the X is inside streakWarningOverlay and that overlay has role="dialog".
+
+  // "Add expense" → stay on this day, open the Add Type modal
+  on(streakWarnAddBtn, "click", () => {
+    closeStreakWarningModal();
+    openAddTypeModal(); // reuse existing Add Expense flow
+  });
+
+  // "No spending today" → reuse your existing noSpend logic (and keep the streak)
+  on(streakWarnNoSpendBtn, "click", () => {
+    closeStreakWarningModal();
+    if (noSpendBtn) {
+      noSpendBtn.click(); // triggers the existing handler that awards XP + streak
+    }
+  });
+
+  // "Back" → accept that we lose the streak and move to the next day
+  on(streakWarnBackBtn, "click", () => {
+    const dir = pendingDayNav?.direction || "next";
+    closeStreakWarningModal();
+
+    if (dir === "next") {
+      resetStreakToZero();  // kill the streak 💀
+      goToNextDay();        // then navigate as originally intended
+    } else if (dir === "prev") {
+      resetStreakToZero();
+      goToPrevDay();
+    }
+  });
+
 
   /* ---------- Coming Soon modal helpers ---------- */
   const comingSoonOverlay = $("comingSoonOverlay");
