@@ -1361,8 +1361,10 @@ document.addEventListener("DOMContentLoaded", () => {
   on(favesList, "click", (e) => {
     const add = e.target.closest(".fave-add");
     if (add) {
-      const fav = favourites[add.dataset.key];
+      const oldKey = add.dataset.key;
+      const fav = favourites[oldKey];
       if (!fav) return;
+
       const data = getMonthData();
 
       if (data.noSpending) subtractScore(5);
@@ -1371,6 +1373,7 @@ document.addEventListener("DOMContentLoaded", () => {
       data.purchaseCount += 1;
       const newId = data.purchaseCount;
 
+      // Add a new expense row based on the favourite
       data.expenses.push({
         id: newId,
         amount: fav.amount,
@@ -1380,7 +1383,11 @@ document.addEventListener("DOMContentLoaded", () => {
       data.categoryTotals[fav.category] =
         (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
+      // Move the favourite to point at the new row (no duplication)
       const newKey = compositeId(newId);
+      if (newKey !== oldKey) {
+        delete favourites[oldKey];
+      }
       favourites[newKey] = {
         id: newId,
         year: currentYear,
@@ -1396,18 +1403,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       saveState();
       renderForCurrentMonth();
-      closeFavesModal(); // close favourites popup after selection
+      closeFavesModal();
       return;
-    }
-
-    const del = e.target.closest(".fav-delete");
-    if (del) {
-      const key = del.dataset.key;
-      if (!favourites[key]) return;
-      delete favourites[key];
-      saveFavourites();
-      renderFavesModal();
-      renderForCurrentMonth();
     }
   });
 
