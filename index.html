@@ -19,7 +19,6 @@
     </button>
   </div>
 
-
   <h1>SavR</h1>
   <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
 
@@ -57,7 +56,6 @@
                   <th scope="col">#</th>
                   <th scope="col">Amount</th>
                   <th scope="col">Category</th>
-                  <th scope="col">Card</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -139,12 +137,6 @@
         </select>
       </div>
 
-      <label for="modalExpenseCard">Select card</label>
-      <select id="modalExpenseCard">
-        <option value="Credit" selected>Credit</option>
-        <option value="Debit">Debit</option>
-      </select>
-
       <div class="modal-actions">
         <button class="modal-close-x" aria-label="Close modal">✕</button>
         <button id="modalSubmitBtn" type="button">Submit</button>
@@ -159,7 +151,6 @@
       <div id="detailsModalBody" class="details-text"></div>
       <div class="modal-actions">
         <button class="modal-close-x" aria-label="Close modal">✕</button>
-
       </div>
     </div>
   </div>
@@ -174,7 +165,6 @@
 
       <div class="modal-actions">
         <button class="modal-close-x" aria-label="Close modal">✕</button>
-
       </div>
     </div>
   </div>
@@ -188,11 +178,9 @@
       </div>
       <div class="modal-actions">
         <button class="modal-close-x" aria-label="Close modal">✕</button>
-
       </div>
     </div>
   </div>
-
 
   <!-- Allowance Modal -->
   <div id="allowanceModalOverlay" role="dialog" aria-modal="true" aria-labelledby="allowanceModalTitle">
@@ -201,7 +189,6 @@
       <div id="allowanceModalStage"></div>
       <div class="modal-actions">
         <button class="modal-close-x" aria-label="Close modal">✕</button>
-
         <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
         <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
       </div>
@@ -211,20 +198,21 @@
   <!-- Favourites Modal -->
   <div id="favesModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favesModalTitle">
     <div class="expense-modal">
+      <button class="modal-close-x" aria-label="Close modal">✕</button>
       <h3 id="favesModalTitle">Favourites</h3>
       <div id="favesList"></div>
-      <div class="modal-actions">
-        <button id="favesCloseBtn" type="button">Close</button>
-      </div>
     </div>
   </div>
 
   <!-- Favourite Name Modal -->
-  <div id="favesModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favesModalTitle">
+  <div id="favNameModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favNameModalTitle">
     <div class="expense-modal">
       <button class="modal-close-x" aria-label="Close modal">✕</button>
-      <h3 id="favesModalTitle">Favourites</h3>
-      <div id="favesList"></div>
+      <h3 id="favNameModalTitle">Name your favourite</h3>
+      <input id="favNameInput" type="text" placeholder="e.g., Friday Guinness, Payday Coffee" />
+      <div class="modal-actions">
+        <button id="favNameSaveBtn" type="button">Save</button>
+      </div>
     </div>
   </div>
 

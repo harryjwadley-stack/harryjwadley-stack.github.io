@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const CATEGORIES = new Set(["Groceries", "Social", "Treat", "Unexpected"]);
-  const CARDS = new Set(["Credit", "Debit"]);
 
   /* ---------- Grabs ---------- */
   const addBtn = $("addExpenseBtn");
@@ -51,12 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
   const favesList = $("favesList");
-  const favesCloseBtn = $("favesCloseBtn");
+  const favesCloseBtn = $("favesCloseBtn"); // harmless if missing
 
   // Favourite Name Modal
   const favNameOverlay = $("favNameModalOverlay");
   const favNameInput = $("favNameInput");
-  const favNameCancel = $("favNameCancelBtn");
+  const favNameCancel = $("favNameCancelBtn"); // harmless if missing
   const favNameSave = $("favNameSaveBtn");
 
   // Day controls
@@ -132,7 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
     lastActiveDay: null,
     allowanceMode: "weekly"
   };
-  let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, card, name } }
+  // { "<period>-id": { id, year, monthIndex, amount, category, name } }
+  let favourites = loadJSON(FAV_KEY) || {};
 
   const saveState = () => saveJSON(STATE_KEY, monthlyState);
   const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
@@ -467,14 +467,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (data.noSpending) {
       submittedTableBody.innerHTML =
-        `<tr><td colspan="4" class="no-spending-row">No spending</td></tr>`;
+        `<tr><td colspan="3" class="no-spending-row">No spending</td></tr>`;
     } else {
       submittedTableBody.innerHTML = data.expenses.map((e,idx)=>(
         `<tr data-row-id="${e.id}">
           <td>${idx+1}</td>
           <td>${e.amount.toFixed(2)}</td>
           <td>${e.category}</td>
-          <td>${e.card || "-"}</td>
         </tr>`
       )).join("");
     }
@@ -864,8 +863,7 @@ document.addEventListener("DOMContentLoaded", () => {
       monthIndex: currentMonthIndex,
       id,
       amount: exp.amount,
-      category: exp.category,
-      card: exp.card || ""
+      category: exp.category
     }, "");
   });
 
@@ -893,9 +891,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const expenseOverlay = $("expenseModalOverlay");
   const modalAmount = () => $("modalExpenseAmount");
   const modalCat = () => $("modalExpenseCategory");
-  const modalCard = () => $("modalExpenseCard");
   const modalSubmit = () => $("modalSubmitBtn");
-  const modalCancel = () => $("modalCancelBtn");
+  const modalCancel = () => $("modalCancelBtn"); // harmless if null
   const modalTitle = () => expenseOverlay.querySelector(".expense-modal h3");
   const modalCategoryWrapper = () => $("modalCategoryWrapper");
 
@@ -905,15 +902,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnOther = $("drinkOtherBtn");
 
   const amountLabel = document.querySelector('label[for="modalExpenseAmount"]');
-  const cardLabel = document.querySelector('label[for="modalExpenseCard"]');
 
   function toggleFormFields(show) {
     const disp = show ? "block" : "none";
     if (amountLabel) amountLabel.style.display = disp;
     if (modalAmount()) modalAmount().style.display = disp;
     if (modalCategoryWrapper()) modalCategoryWrapper().style.display = disp;
-    if (cardLabel) cardLabel.style.display = disp;
-    if (modalCard()) modalCard().style.display = disp;
     if (modalSubmit()) modalSubmit().style.display = show ? "inline-block" : "none";
   }
 
@@ -942,13 +936,11 @@ document.addEventListener("DOMContentLoaded", () => {
       modalTitle().textContent = "Edit Expense";
       modalAmount().value = expense.amount;
       modalCat().value = expense.category;
-      modalCard().value = expense.card || "Credit";
     } else {
       editingId = null;
       modalTitle().textContent = quickDrinkOnly ? "Add Drink" : "Add Expense";
       modalAmount().value = (expense && "amount" in expense) ? expense.amount : "";
       modalCat().value = expense?.category || "Groceries";
-      modalCard().value = expense?.card || "Credit";
     }
 
     setDisplay(expenseOverlay, true);
@@ -977,7 +969,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const amount = parseFloat(modalAmount().value);
       const category = modalCat().value;
-      const card = (modalCard() ? modalCard().value : "").trim();
 
       if (isNaN(amount) || amount <= 0) {
         alert("Please enter a valid amount.");
@@ -989,11 +980,6 @@ document.addEventListener("DOMContentLoaded", () => {
         modalCat().focus();
         return;
       }
-      if (!CARDS.has(card)) {
-        alert("Please choose Credit or Debit.");
-        modalCard().focus();
-        return;
-      }
 
       const data = getMonthData();
 
@@ -1003,13 +989,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const old = data.expenses[idx];
           data.categoryTotals[old.category] =
             Math.max(0, (data.categoryTotals[old.category] || 0) - (old.amount || 0));
-          data.expenses[idx] = { ...old, amount, category, card };
+          data.expenses[idx] = { ...old, amount, category };
           data.categoryTotals[category] =
             (data.categoryTotals[category] || 0) + amount;
 
           const key = compositeId(editingId);
           if (favourites[key]) {
-            Object.assign(favourites[key], { amount, category, card });
+            Object.assign(favourites[key], { amount, category });
             saveFavourites();
           }
         }
@@ -1018,7 +1004,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.noSpending = false;
 
         data.purchaseCount += 1;
-        data.expenses.push({ id: data.purchaseCount, amount, category, card });
+        data.expenses.push({ id: data.purchaseCount, amount, category });
         data.categoryTotals[category] += amount;
 
         applyStreakScore(1, "great addition! +10XP");
@@ -1064,7 +1050,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAddTypeModal();
     // previously Add Drink button
     openExpenseModal(
-      { category: "Social", card: "Credit", amount: "" },
+      { category: "Social", amount: "" },
       { hideCategory: true, quickDrinkOnly: true }
     );
   });
@@ -1073,7 +1059,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAddTypeModal();
     // previously Add Groceries button
     openExpenseModal(
-      { category: "Groceries", card: "Credit", amount: "" },
+      { category: "Groceries", amount: "" },
       { hideCategory: true, quickDrinkOnly: false }
     );
   });
@@ -1082,7 +1068,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAddTypeModal();
     // previously Big Night Out button
     openExpenseModal(
-      { category: "Social", card: "Credit", amount: "" },
+      { category: "Social", amount: "" },
       { hideCategory: true, quickDrinkOnly: false }
     );
   });
@@ -1091,7 +1077,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAddTypeModal();
     // previously generic Add Expense button
     openExpenseModal(
-      { category: "Groceries", card: "Credit", amount: "" },
+      { category: "Groceries", amount: "" },
       { hideCategory: false, quickDrinkOnly: false }
     );
   });
@@ -1107,8 +1093,7 @@ document.addEventListener("DOMContentLoaded", () => {
     data.expenses.push({
       id: data.purchaseCount,
       amount: amt,
-      category: "Social",
-      card: "Credit"
+      category: "Social"
     });
     data.categoryTotals.Social += amt;
 
@@ -1133,7 +1118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Details Modal ---------- */
   const detailsOverlay = $("detailsModalOverlay");
   const detailsBody = () => $("detailsModalBody");
-  const detailsClose = () => $("detailsModalCloseBtn");
+  const detailsClose = () => $("detailsModalCloseBtn"); // harmless if null
 
   function openDetailsModal(text) {
     (detailsBody()).textContent = text || "No details.";
@@ -1156,12 +1141,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const analyticsOverlay = $("analyticsModalOverlay");
   const analyticsTotalsEl = () => $("analyticsTotals");
   const analyticsChartEl = () => $("analyticsChart");
-  const analyticsCloseBtn = () => $("analyticsCloseBtn");
+  const analyticsCloseBtn = () => $("analyticsCloseBtn"); // harmless
 
   const comingSoonOverlay = $("comingSoonOverlay");
   const comingSoonTitleEl = () => $("comingSoonTitle");
   const comingSoonBodyEl = () => $("comingSoonBody");
-  const comingSoonCloseBtn = () => $("comingSoonCloseBtn");
+  const comingSoonCloseBtn = () => $("comingSoonCloseBtn"); // harmless
 
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
@@ -1191,7 +1176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Allowance Modal ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
   const allowanceStage = () => $("allowanceModalStage");
-  const allowanceCancel = () => $("allowanceModalCancelBtn");
+  const allowanceCancel = () => $("allowanceModalCancelBtn"); // harmless
   const allowanceBack = () => $("allowanceModalBackBtn");
   const allowanceSubmit = () => $("allowanceModalSubmitBtn");
 
@@ -1337,7 +1322,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <td class="fav-name">${escapeHtml(f.name || "Favourite")}</td>
         <td>${(f.amount || 0).toFixed(2)}</td>
         <td>${f.category}</td>
-        <td>${f.card || "-"}</td>
         <td class="fav-actions">
           <button class="fave-add" type="button" data-key="${key}">Add</button>
           <span class="mini-inline delete-mini fav-delete"
@@ -1350,7 +1334,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <table>
         <thead>
           <tr>
-            <th>Name</th><th>Amount</th><th>Category</th><th>Card</th><th>Action</th>
+            <th>Name</th><th>Amount</th><th>Category</th><th>Action</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -1371,6 +1355,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(favesList, "click", (e) => {
     const add = e.target.closest(".fave-add");
+    const del = e.target.closest(".fav-delete");
+
     if (add) {
       const oldKey = add.dataset.key;
       const fav = favourites[oldKey];
@@ -1388,8 +1374,7 @@ document.addEventListener("DOMContentLoaded", () => {
       data.expenses.push({
         id: newId,
         amount: fav.amount,
-        category: fav.category,
-        card: fav.card || "Credit"
+        category: fav.category
       });
       data.categoryTotals[fav.category] =
         (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
@@ -1405,7 +1390,6 @@ document.addEventListener("DOMContentLoaded", () => {
         monthIndex: currentMonthIndex,
         amount: fav.amount,
         category: fav.category,
-        card: fav.card || "Credit",
         name: fav.name || "Favourite"
       };
       saveFavourites();
@@ -1416,6 +1400,14 @@ document.addEventListener("DOMContentLoaded", () => {
       renderForCurrentMonth();
       closeFavesModal();
       return;
+    }
+
+    if (del) {
+      const key = del.dataset.key;
+      if (!key || !favourites[key]) return;
+      delete favourites[key];
+      saveFavourites();
+      renderFavesModal();
     }
   });
 
@@ -1444,8 +1436,8 @@ document.addEventListener("DOMContentLoaded", () => {
   on(favNameSave, "click", () => {
     if (!pendingFav) return;
     const name = favNameInput.value.trim() || "Favourite";
-    const { key, year, monthIndex, id, amount, category, card } = pendingFav;
-    favourites[key] = { id, year, monthIndex, amount, category, card, name };
+    const { key, year, monthIndex, id, amount, category } = pendingFav;
+    favourites[key] = { id, year, monthIndex, amount, category, name };
     saveFavourites();
     closeFavNameModal();
     renderForCurrentMonth();
