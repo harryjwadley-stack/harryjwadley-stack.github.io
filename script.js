@@ -4,6 +4,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const on = (el, evt, fn) => el && el.addEventListener(evt, fn);
   const setDisplay = (el, show) => { if (el) el.style.display = show ? "flex" : "none"; };
 
+  /* ---------- Universal Modal Close (X button) ---------- */
+  document.addEventListener("click", (e) => {
+    const closeBtn = e.target.closest(".modal-close-x");
+    if (!closeBtn) return;
+
+    const modalOverlay = closeBtn.closest('[role="dialog"]');
+    if (modalOverlay) {
+      modalOverlay.style.display = "none";
+    }
+  });
+
   const CATEGORIES = new Set(["Groceries", "Social", "Treat", "Unexpected"]);
   const CARDS = new Set(["Credit", "Debit"]);
 

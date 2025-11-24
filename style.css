@@ -300,6 +300,7 @@ button:hover { transform: translateY(-2px); }
 }
 
 .expense-modal {
+  position: relative; 
   width: min(92vw, 520px);
   background: #fff;
   border-radius: 12px;
@@ -566,4 +567,24 @@ button:hover { transform: translateY(-2px); }
 
 #hardResetBtn:hover {
   background: #ff5b50;
+}
+
+/* ===== Modal Close X Button ===== */
+.modal-close-x {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-close-x:hover {
+  color: var(--red);
+  transform: scale(1.15);
 }

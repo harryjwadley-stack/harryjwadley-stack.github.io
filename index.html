@@ -97,6 +97,7 @@
   <!-- Add Type Modal (chooses Drink / Groceries / Big Night / Other) -->
   <div id="addTypeModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addTypeModalTitle">
     <div class="expense-modal">
+      <button class="modal-close-x" aria-label="Close modal">✕</button>
       <h3 id="addTypeModalTitle">What kind of expense?</h3>
       <div class="add-type-grid">
         <button id="addTypeDrinkBtn" type="button">Drink</button>
@@ -145,7 +146,7 @@
       </select>
 
       <div class="modal-actions">
-        <button id="modalCancelBtn" type="button">Cancel</button>
+        <button class="modal-close-x" aria-label="Close modal">✕</button>
         <button id="modalSubmitBtn" type="button">Submit</button>
       </div>
     </div>
@@ -157,7 +158,8 @@
       <h3 id="detailsModalTitle">Expense Details</h3>
       <div id="detailsModalBody" class="details-text"></div>
       <div class="modal-actions">
-        <button id="detailsModalCloseBtn" type="button">Close</button>
+        <button class="modal-close-x" aria-label="Close modal">✕</button>
+
       </div>
     </div>
   </div>
@@ -171,7 +173,8 @@
       <canvas id="analyticsChart" width="200" height="200" aria-label="Analytics category chart"></canvas>
 
       <div class="modal-actions">
-        <button id="analyticsCloseBtn" type="button">Close</button>
+        <button class="modal-close-x" aria-label="Close modal">✕</button>
+
       </div>
     </div>
   </div>
@@ -184,7 +187,8 @@
         This feature is coming soon.
       </div>
       <div class="modal-actions">
-        <button id="comingSoonCloseBtn" type="button">Close</button>
+        <button class="modal-close-x" aria-label="Close modal">✕</button>
+
       </div>
     </div>
   </div>
@@ -196,7 +200,8 @@
       <h3 id="allowanceModalTitle">Set Global Allowance</h3>
       <div id="allowanceModalStage"></div>
       <div class="modal-actions">
-        <button id="allowanceModalCancelBtn" type="button">Cancel</button>
+        <button class="modal-close-x" aria-label="Close modal">✕</button>
+
         <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
         <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
       </div>
@@ -215,14 +220,11 @@
   </div>
 
   <!-- Favourite Name Modal -->
-  <div id="favNameModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favNameModalTitle">
+  <div id="favesModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favesModalTitle">
     <div class="expense-modal">
-      <h3 id="favNameModalTitle">Name your favourite</h3>
-      <input id="favNameInput" type="text" placeholder="e.g., Friday Guinness, Payday Coffee" />
-      <div class="modal-actions">
-        <button id="favNameCancelBtn" type="button">Cancel</button>
-        <button id="favNameSaveBtn" type="button">Save</button>
-      </div>
+      <button class="modal-close-x" aria-label="Close modal">✕</button>
+      <h3 id="favesModalTitle">Favourites</h3>
+      <div id="favesList"></div>
     </div>
   </div>
 
