@@ -620,7 +620,7 @@ document.addEventListener("DOMContentLoaded", () => {
       settings.completedGoals = [];
     }
 
-    // If somehow already completed, just clear and bail
+    // Already completed this preset? Clear it and exit.
     if (settings.completedGoals.some(g => g.preset === preset)) {
       settings.goalPreset = null;
       settings.goalTarget = 0;
@@ -636,11 +636,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const count = getWeekNoSpendCount();
       achieved = count >= 3;
     } else if (preset === "example2") {
-      // Reach Diamond level
+      // Reach Diamond level or above
       const info = getLevelInfo(settings.score);
       achieved = info && (info.name === "Diamond" || info.rank >= 3);
     } else if (preset === "example3") {
-      // Average spend < $20/day this week
+      // Weekly average < $20/day
       const avg = getWeekAverageSpend();
       achieved = avg < 20;
     }
@@ -656,8 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (xp > 0) {
       const units = xp / 10; // addScore multiplies by 10
       if (units > 0) {
-        addScore(units);
-        showGoldPopup(`Goal completed: ${desc}`, xp);
+        addScore(units); // this will set pendingLevelInfo if we cross a level
       }
     }
 
@@ -672,11 +671,15 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.goalDescription = "";
     saveSettings();
 
-    // If the rewards modal is open, re-render it
+    // Queue goal popup; actual timing is handled by the callers
+    pendingGoalPopupInfo = { description: desc, xp };
+
+    // Re-render rewards modal if open
     if (rewardsOverlay && rewardsOverlay.style.display === "flex") {
       openRewardsModal();
     }
   }
+
 
 
   /* ---------- Analytics modal helpers ---------- */
@@ -996,6 +999,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- SCORE helpers & level-up wiring ---------- */
   let levelPopupTimer = null;
   let pendingLevelInfo = null;
+  let pendingGoalPopupInfo = null;
 
   function scheduleLevelUpPopupIfNeeded(prevScore, newScore) {
     const prev = getLevelInfo(prevScore);
@@ -1026,31 +1030,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // One-time XP reward for setting a global allowance
   function maybeAwardAllowanceXP() {
-    // Only once, and only if allowance is actually > 0
     if (settings.allowanceXpAwarded) return;
 
     const allowanceVal = Number(settings.allowance || 0);
     if (allowanceVal <= 0) return;
 
     settings.allowanceXpAwarded = true;
-    saveSettings();          // persist the fact we've awarded it
+    saveSettings();
 
-    // +20XP => 2 "units" because addScore multiplies by 10
+    // +20XP => 2 "units"
     addScore(2);
     showGoldPopup("Allowance set – great start! +20XP", 20);
 
+    // Check goals & queue goal popup if any
     evaluateGoals();
 
-    // If that XP crossed a level boundary, show the level popup
+    const xpDuration = 4000;
+    const toastGap = 200;
+    const goalDuration = 4000;
+
+    let nextDelay = xpDuration + toastGap;
+
+    // Goal toast after XP toast
+    if (pendingGoalPopupInfo && pendingGoalPopupInfo.description) {
+      const goalInfo = pendingGoalPopupInfo;
+      setTimeout(() => {
+        showGoalCompletedPopup(goalInfo.description, goalInfo.xp);
+      }, nextDelay);
+      nextDelay += goalDuration + toastGap;
+      pendingGoalPopupInfo = null;
+    }
+
+    // Level-up after XP (and goal toast if present)
     if (pendingLevelInfo) {
       if (levelPopupTimer) clearTimeout(levelPopupTimer);
-      // Immediately after XP popup: XP toast is 4000ms
       levelPopupTimer = setTimeout(() => {
         if (pendingLevelInfo) {
           showLevelUpPopup(pendingLevelInfo);
           pendingLevelInfo = null;
         }
-      }, 4200);
+      }, nextDelay);
     }
   }
 
@@ -1058,7 +1077,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * Apply scoring and streak bonus for “good” activity on the current day.
    * XP popup first, optional streak popup second, level popup last.
    */
-  function applyStreakScore(baseUnits, baseMessage) {
+  function applyStreakScore(baseUnits, _baseMessage) {
     const prevDay = (typeof settings.lastActiveDay === "number")
       ? settings.lastActiveDay
       : null;
@@ -1082,41 +1101,59 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseXP = baseUnits * 10;
     addScore(baseUnits);
 
-    // XP popup
+    // 1️⃣ XP popup (gold) – always first
     showGoldPopup("Great addition!", baseXP);
 
+    // Optional streak bonus XP
     let bonusUnits = 0;
     if (prevDay !== null && today !== prevDay && streak > 1) {
       bonusUnits = streak; // e.g. 2 => +20XP, 3 => +30XP
       addScore(bonusUnits);
     }
-
     const bonusXP = bonusUnits * 10;
-    if (bonusXP > 0) {
-      // Streak popup after XP popup
+
+    // Evaluate goals (may award XP & set pendingGoalPopupInfo)
+    evaluateGoals();
+
+    // Now orchestrate toast order:
+    // XP → Goal → Streak → Level
+    const xpDuration = 4000;
+    const toastGap = 200;
+    const goalDuration = 4000;
+    const streakDuration = 4000;
+
+    let nextDelay = xpDuration + toastGap;
+
+    // 2️⃣ Goal completed popup, if any
+    if (pendingGoalPopupInfo && pendingGoalPopupInfo.description) {
+      const goalInfo = pendingGoalPopupInfo;
       setTimeout(() => {
-        showStreakPopup(streak, bonusXP);
-      }, 4200);
+        showGoalCompletedPopup(goalInfo.description, goalInfo.xp);
+      }, nextDelay);
+      nextDelay += goalDuration + toastGap;
+      pendingGoalPopupInfo = null;
     }
 
-    // Finally, if we crossed a level boundary, show level popup AFTER
-    // XP popup, and AFTER streak popup if there was one.
-    if (pendingLevelInfo) {
-      const hasStreak = bonusXP > 0;
-      const baseDelay = 4000; // XP popup time
-      const streakDelay = hasStreak ? 4000 : 0; // streak popup time
-      const extra = 200; // small buffer
+    // 3️⃣ Streak popup (red), after goal popup if present
+    if (bonusXP > 0) {
+      setTimeout(() => {
+        showStreakPopup(streak, bonusXP);
+      }, nextDelay);
+      nextDelay += streakDuration + toastGap;
+    }
 
+    // 4️⃣ Level-up popup after everything else
+    if (pendingLevelInfo) {
       if (levelPopupTimer) clearTimeout(levelPopupTimer);
       levelPopupTimer = setTimeout(() => {
         if (pendingLevelInfo) {
           showLevelUpPopup(pendingLevelInfo);
           pendingLevelInfo = null;
         }
-      }, baseDelay + streakDelay + extra);
+      }, nextDelay);
     }
-    evaluateGoals();
   }
+
 
   /* ---------- Gold XP popup (XP only) ---------- */
   let goldPopupTimer = null;
@@ -1206,6 +1243,87 @@ document.addEventListener("DOMContentLoaded", () => {
       if (popup) popup.style.display = "none";
     }, 4000);
   }
+
+  /* ---------- Goal Completed popup (green) ---------- */
+  let goalPopupTimer = null;
+  function showGoalCompletedPopup(description, earnedXP) {
+    let popup = document.querySelector(".goal-popup-toast");
+
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.className = "goal-popup-toast";
+      popup.setAttribute("role", "alert");
+      popup.setAttribute("aria-live", "polite");
+
+      Object.assign(popup.style, {
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: "10001",
+        background: "#16a34a", // fallback, will be overridden by button colour
+        color: "#fff",
+        borderRadius: "12px",
+        padding: "18px 22px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+        fontFamily: "inherit",
+        textAlign: "center",
+        maxWidth: "90vw",
+        minWidth: "260px"
+      });
+
+      const titleEl = document.createElement("div");
+      titleEl.className = "goal-popup-title";
+      Object.assign(titleEl.style, {
+        fontSize: "22px",
+        fontWeight: "800",
+        letterSpacing: "0.5px",
+        marginBottom: "6px"
+      });
+
+      const bodyEl = document.createElement("div");
+      bodyEl.className = "goal-popup-body";
+      Object.assign(bodyEl.style, {
+        fontSize: "16px",
+        fontWeight: "600",
+        letterSpacing: "0.2px"
+      });
+
+      popup.appendChild(titleEl);
+      popup.appendChild(bodyEl);
+      document.body.appendChild(popup);
+    }
+
+    // Match the green to the Set Goal button if possible
+    try {
+      if (setGoalBtn) {
+        const css = getComputedStyle(setGoalBtn);
+        const bg = css.backgroundColor || "#16a34a";
+        popup.style.background = bg;
+      }
+    } catch {
+      // ignore, fallback stays
+    }
+
+    const titleEl = popup.querySelector(".goal-popup-title");
+    const bodyEl = popup.querySelector(".goal-popup-body");
+
+    if (titleEl) {
+      titleEl.textContent = "Mission completed 💪";
+    }
+    if (bodyEl) {
+      const xpText = earnedXP && earnedXP > 0 ? `  +${earnedXP}XP` : "";
+      bodyEl.textContent = (description || "Goal completed!") + xpText;
+    }
+
+    popup.style.display = "block";
+
+    if (goalPopupTimer) clearTimeout(goalPopupTimer);
+    goalPopupTimer = setTimeout(() => {
+      if (popup) popup.style.display = "none";
+    }, 4000);
+  }
+
 
   /* ---------- Red streak popup (streak extension) ---------- */
   let streakPopupTimer = null;
