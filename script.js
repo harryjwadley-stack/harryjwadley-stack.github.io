@@ -27,6 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
     example3: "Spend an average of less than $20/day this week."
   };
 
+  // XP rewards for each goal (in raw XP, not "units")
+  const GOAL_XP_REWARDS = {
+    example1: 20,  // 3 no-spend days
+    example2: 40,  // reach Diamond
+    example3: 60   // <$20/day average
+  };
+
+
   /* ---------- Grabs ---------- */
   const addBtn = $("addExpenseBtn");
   const showFavouritesBtn = $("showFavouritesBtn");
@@ -155,8 +163,9 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceMode: "weekly",
     allowanceXpAwarded: false,
     goalPreset: null,
-    goalTarget: 0, 
-    goalDescription: "" 
+    goalTarget: 0,
+    goalDescription: "",
+    completedGoals: []   // NEW
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, name } }
 
@@ -176,6 +185,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!("goalPreset" in settings)) settings.goalPreset = null;
   if (typeof settings.goalTarget !== "number") settings.goalTarget = Number(settings.goalTarget) || 0;
   if (typeof settings.goalDescription !== "string") settings.goalDescription = "";
+  if (!Array.isArray(settings.completedGoals)) settings.completedGoals = [];
+
 
 
   // Clean legacy per-month allowance keys
@@ -460,6 +471,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return total;
   }
 
+  // Count how many of the 7 days are marked as "no spending"
+  function getWeekNoSpendCount() {
+    let count = 0;
+    for (let d = 1; d <= 7; d++) {
+      const key = `day-${d}`;
+      const data = ensureMonth(key);
+      if (data.noSpending) count++;
+    }
+    return count;
+  }
+
+  // Average spend across all 7 days (sum of categoryTotals / 7)
+  function getWeekAverageSpend() {
+    let total = 0;
+    for (let d = 1; d <= 7; d++) {
+      const key = `day-${d}`;
+      const data = ensureMonth(key);
+      const dayTotal = Object.values(data.categoryTotals || {})
+        .reduce((a, b) => a + (b || 0), 0);
+      total += dayTotal;
+    }
+    return total / 7;
+  }
+
   // Update "Allowance Remaining" + "Savings" based on mode
   function updateAllowanceRemaining() {
     const mode = settings.allowanceMode || "weekly";
@@ -577,6 +612,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function evaluateGoals() {
+    const preset = settings.goalPreset;
+    if (!preset) return;
+
+    if (!Array.isArray(settings.completedGoals)) {
+      settings.completedGoals = [];
+    }
+
+    // If somehow already completed, just clear and bail
+    if (settings.completedGoals.some(g => g.preset === preset)) {
+      settings.goalPreset = null;
+      settings.goalTarget = 0;
+      settings.goalDescription = "";
+      saveSettings();
+      return;
+    }
+
+    let achieved = false;
+
+    if (preset === "example1") {
+      // 3 no-spend days in 7
+      const count = getWeekNoSpendCount();
+      achieved = count >= 3;
+    } else if (preset === "example2") {
+      // Reach Diamond level
+      const info = getLevelInfo(settings.score);
+      achieved = info && (info.name === "Diamond" || info.rank >= 3);
+    } else if (preset === "example3") {
+      // Average spend < $20/day this week
+      const avg = getWeekAverageSpend();
+      achieved = avg < 20;
+    }
+
+    if (!achieved) return;
+
+    const desc =
+      settings.goalDescription ||
+      GOAL_PRESETS[preset] ||
+      "Goal completed";
+
+    const xp = GOAL_XP_REWARDS[preset] || 0;
+    if (xp > 0) {
+      const units = xp / 10; // addScore multiplies by 10
+      if (units > 0) {
+        addScore(units);
+        showGoldPopup(`Goal completed: ${desc}`, xp);
+      }
+    }
+
+    settings.completedGoals.push({
+      preset,
+      description: desc
+    });
+
+    // Clear active goal
+    settings.goalPreset = null;
+    settings.goalTarget = 0;
+    settings.goalDescription = "";
+    saveSettings();
+
+    // If the rewards modal is open, re-render it
+    if (rewardsOverlay && rewardsOverlay.style.display === "flex") {
+      openRewardsModal();
+    }
+  }
+
+
   /* ---------- Analytics modal helpers ---------- */
   let analyticsChart = null;
 
@@ -687,8 +789,16 @@ document.addEventListener("DOMContentLoaded", () => {
       rewardsCurrentList.innerHTML = "<li>No current goals set.</li>";
     }
 
-    // Completed goals (placeholder for now)
-    rewardsCompletedList.innerHTML = "<li>None completed yet.</li>";
+    // Completed goals
+    rewardsCompletedList.innerHTML = "";
+    if (Array.isArray(settings.completedGoals) && settings.completedGoals.length) {
+      rewardsCompletedList.innerHTML = settings.completedGoals
+        .map(g => `<li>${g.description}</li>`)
+        .join("");
+    } else {
+      rewardsCompletedList.innerHTML = "<li>None completed yet.</li>";
+    }
+
 
     setDisplay(rewardsOverlay, true);
   }
@@ -929,6 +1039,8 @@ document.addEventListener("DOMContentLoaded", () => {
     addScore(2);
     showGoldPopup("Allowance set – great start! +20XP", 20);
 
+    evaluateGoals();
+
     // If that XP crossed a level boundary, show the level popup
     if (pendingLevelInfo) {
       if (levelPopupTimer) clearTimeout(levelPopupTimer);
@@ -1003,6 +1115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }, baseDelay + streakDelay + extra);
     }
+    evaluateGoals();
   }
 
   /* ---------- Gold XP popup (XP only) ---------- */
