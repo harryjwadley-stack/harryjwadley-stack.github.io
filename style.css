@@ -142,7 +142,6 @@ h3 {
   font-size: 16px;
   margin-bottom: 5px;
 }
-
 #categoryChart { margin-top: 10px; max-width: 100%; }
 
 /* Allowance toggle buttons */
@@ -549,6 +548,65 @@ button:hover { transform: translateY(-2px); }
 /* ===== Table Enhancements ===== */
 #submittedExpenses th:first-child { border-top-left-radius: 10px; }
 #submittedExpenses th:last-child { border-top-right-radius: 10px; }
+
+/* Leaderboard table – match main/favourites table style */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  background: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* same “card” feel */
+}
+
+.leaderboard-table thead {
+  background: var(--navy);        /* same header colour as main table */
+  color: #fff;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 8px;
+  text-align: center;             /* match submittedExpenses + faves */
+  border: 1px solid var(--border);
+}
+
+.leaderboard-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.leaderboard-table tbody tr:last-child td {
+  border-bottom: 1px solid var(--border);
+}
+
+.leaderboard-table tbody tr:hover {
+  background: rgba(17, 205, 239, 0.08); /* subtle turquoise hover */
+}
+
+
+/* XP / Streak toggle – styled similar to Weekly / Daily toggle */
+#leaderboardToggleXp,
+#leaderboardToggleStreak {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-right: 4px;
+  color: var(--navy);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+#leaderboardToggleXp.active,
+#leaderboardToggleStreak.active {
+  background: var(--turquoise);
+  color: #fff;
+  border-color: var(--turquoise);
+}
+
 
 /* ===== Favourites Modal ===== */
 #favesList table {
