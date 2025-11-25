@@ -589,6 +589,98 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+    /* ---------- Leaderboard logic ---------- */
+
+  let leaderboardSortMode = "xp"; // "xp" or "streak"
+
+  function getLeaderboardData() {
+    const userXp = Number(settings.score || 0);
+    const userStreak = Number(settings.streak || 0);
+    const levelInfo = getLevelInfo(userXp);
+
+    return [
+      { name: "Harry1", level: "Diamond", xp: 300, streak: 14 },
+      { name: "JackL", level: "Bronze",  xp: 1,   streak: 20 },
+      { name: "You",   level: levelInfo.name, xp: userXp, streak: userStreak }
+    ];
+  }
+
+  function sortLeaderboard(data, mode) {
+    const copy = data.slice();
+    if (mode === "streak") {
+      copy.sort((a, b) => b.streak - a.streak);
+    } else {
+      copy.sort((a, b) => b.xp - a.xp);
+    }
+    return copy;
+  }
+
+  function refreshLeaderboardToggleButtons() {
+    if (!leaderboardToggleXp || !leaderboardToggleStreak) return;
+    leaderboardToggleXp.classList.toggle("active", leaderboardSortMode === "xp");
+    leaderboardToggleStreak.classList.toggle("active", leaderboardSortMode === "streak");
+  }
+
+  function renderLeaderboard() {
+    if (!leaderboardTableBody) return;
+
+    const data = sortLeaderboard(getLeaderboardData(), leaderboardSortMode);
+
+    leaderboardTableBody.innerHTML = data.map((row, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${row.name}</td>
+        <td>${row.level}</td>
+        <td>${row.xp}</td>
+        <td>${row.streak} day${row.streak === 1 ? "" : "s"}</td>
+      </tr>
+    `).join("");
+
+    refreshLeaderboardToggleButtons();
+  }
+
+  function openLeaderboardModal() {
+    if (!leaderboardOverlay) return;
+    renderLeaderboard();
+    setDisplay(leaderboardOverlay, true);
+  }
+
+  function closeLeaderboardModal() {
+    if (leaderboardOverlay) leaderboardOverlay.style.display = "none";
+  }
+
+  // Background click closes modal
+  if (leaderboardOverlay) {
+    on(leaderboardOverlay, "click", (e) => {
+      if (e.target === leaderboardOverlay) {
+        closeLeaderboardModal();
+      }
+    });
+  }
+
+  // ESC closes modal
+  on(document, "keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      leaderboardOverlay &&
+      leaderboardOverlay.style.display === "flex"
+    ) {
+      closeLeaderboardModal();
+    }
+  });
+
+  // Toggle buttons
+  on(leaderboardToggleXp, "click", () => {
+    leaderboardSortMode = "xp";
+    renderLeaderboard();
+  });
+
+  on(leaderboardToggleStreak, "click", () => {
+    leaderboardSortMode = "streak";
+    renderLeaderboard();
+  });
+
+
   function updateStatsUI() {
     const data = getMonthData(); // reserved for future use
 
@@ -1993,7 +2085,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- Analytics & Coming Soon Modals wiring ---------- */
   on(analyticsBtn, "click", openAnalyticsModal);
-  on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
+  on(leaderboardBtn, "click", openLeaderboardModal);
   on(rewardsBtn, "click", openRewardsModal);  // NEW
   on(setGoalBtn, "click", openGoalModal);
 
@@ -2017,6 +2109,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  // Leaderboard modal
+  const leaderboardOverlay = $("leaderboardModalOverlay");
+  const leaderboardTableBody = $("leaderboardTableBody");
+  const leaderboardToggleXp = $("leaderboardToggleXp");
+  const leaderboardToggleStreak = $("leaderboardToggleStreak");
+
 
   /* ---------- Allowance Modal (combined calculate + manual) ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
