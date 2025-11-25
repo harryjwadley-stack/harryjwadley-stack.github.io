@@ -67,6 +67,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const streakEl = $("streakDisplay");
   const levelEl = $("levelDisplay");
 
+  // Leaderboard modal elements
+  const leaderboardOverlay = $("leaderboardModalOverlay");
+  const leaderboardTableBody = $("leaderboardTableBody");
+  const leaderboardToggleXp = $("leaderboardToggleXp");
+  const leaderboardToggleStreak = $("leaderboardToggleStreak");
+
+
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
   const favesList = $("favesList");
@@ -2109,13 +2116,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
-
-  // Leaderboard modal
-  const leaderboardOverlay = $("leaderboardModalOverlay");
-  const leaderboardTableBody = $("leaderboardTableBody");
-  const leaderboardToggleXp = $("leaderboardToggleXp");
-  const leaderboardToggleStreak = $("leaderboardToggleStreak");
-
 
   /* ---------- Allowance Modal (combined calculate + manual) ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
