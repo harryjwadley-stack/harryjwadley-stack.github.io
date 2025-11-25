@@ -606,7 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const levelInfo = getLevelInfo(userXp);
 
     return [
-      { name: "Harry1", level: "Diamond", xp: 300, streak: 14 },
+      { name: "Harry1", level: "Diamond", xp: 300, streak: 3 },
       { name: "JackL", level: "Bronze",  xp: 1,   streak: 20 },
       { name: "You",   level: levelInfo.name, xp: userXp, streak: userStreak }
     ];
