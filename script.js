@@ -145,7 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
     streak: 0,
     lastActiveDay: null,
     allowanceMode: "weekly",
-    allowanceXpAwarded: false
+    allowanceXpAwarded: false,
+    goalPreset: null,
+    goalTarget: 0
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, name } }
 
@@ -160,6 +162,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof settings.lastActiveDay !== "number") settings.lastActiveDay = null;
   if (typeof settings.allowanceMode !== "string") settings.allowanceMode = "weekly";
   if (typeof settings.allowanceXpAwarded !== "boolean") settings.allowanceXpAwarded = false;
+  if (!("goalPreset" in settings)) settings.goalPreset = null;
+  if (typeof settings.goalTarget !== "number") settings.goalTarget = Number(settings.goalTarget) || 0;
 
   // Clean legacy per-month allowance keys
   for (const k of Object.keys(monthlyState)) {
@@ -395,7 +399,9 @@ document.addEventListener("DOMContentLoaded", () => {
       streak: 0,
       lastActiveDay: null,
       allowanceMode: "weekly",
-      allowanceXpAwarded: false
+      allowanceXpAwarded: false,
+      goalPreset: null,
+      goalTarget: 0
     };
     saveSettings();
 
@@ -664,6 +670,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // "Back" → simply close and stay on this day
   on(streakWarnBackBtn, "click", () => {
     closeStreakWarningModal();
   });
@@ -1533,11 +1540,81 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  /* ---------- Goals Modal ---------- */
+  const goalOverlay = $("goalModalOverlay");
+  const goalSaveBtn = $("goalSaveBtn");
+  const goalTargetInput = $("goalTargetInput");
+  const goalPresetNodes = () =>
+    document.querySelectorAll('input[name="goalPreset"]');
+
+  function openGoalModal() {
+    if (!goalOverlay) return;
+
+    const preset = settings.goalPreset || null;
+    goalPresetNodes().forEach((node) => {
+      node.checked = node.value === preset;
+    });
+
+    if (goalTargetInput) {
+      goalTargetInput.value =
+        typeof settings.goalTarget === "number" && !Number.isNaN(settings.goalTarget)
+          ? settings.goalTarget
+          : "";
+    }
+
+    setDisplay(goalOverlay, true);
+    setTimeout(() => goalTargetInput?.focus(), 0);
+  }
+
+  function closeGoalModal() {
+    if (goalOverlay) goalOverlay.style.display = "none";
+  }
+
+  if (goalOverlay) {
+    on(goalOverlay, "click", (e) => {
+      if (e.target === goalOverlay) {
+        closeGoalModal();
+      }
+    });
+  }
+
+  on(document, "keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      goalOverlay &&
+      goalOverlay.style.display === "flex"
+    ) {
+      closeGoalModal();
+    }
+  });
+
+  on(goalSaveBtn, "click", () => {
+    const radios = goalPresetNodes();
+    let chosenPreset = null;
+    radios.forEach((r) => {
+      if (r.checked) chosenPreset = r.value;
+    });
+
+    const rawTarget = parseFloat(goalTargetInput?.value || "");
+    const hasTarget = !Number.isNaN(rawTarget) && rawTarget >= 0;
+
+    if (!chosenPreset && !hasTarget) {
+      alert("Please pick a preset goal or enter a savings target.");
+      return;
+    }
+
+    settings.goalPreset = chosenPreset;
+    settings.goalTarget = hasTarget ? rawTarget : 0;
+    saveSettings();
+
+    closeGoalModal();
+  });
+
   /* ---------- Analytics & Coming Soon Modals wiring ---------- */
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
   on(rewardsBtn, "click", () => openComingSoonModal("Rewards"));
-  on(setGoalBtn, "click", () => openComingSoonModal("Set goal"));
+  on(setGoalBtn, "click", openGoalModal);
 
   on(analyticsOverlay, "click", (e) => {
     if (e.target === analyticsOverlay) closeAnalyticsModal();
@@ -1645,6 +1722,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     allowanceStage().innerHTML = `
+      <p>Allowance = Income −(Rent +Car +Bills +Savings +Other)</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         ${["Income","Rent","Car Payments","Bills","Ideal Savings","Other"].map(label => `
           <label style="display:flex; flex-direction:column; gap:6px;">
@@ -1765,7 +1843,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(favesList, "click", (e) => {
     const add = e.target.closest(".fave-add");
-       const del = e.target.closest(".fav-delete");
+    const del = e.target.closest(".fav-delete");
 
     if (add) {
       const oldKey = add.dataset.key;

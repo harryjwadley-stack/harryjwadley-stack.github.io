@@ -282,6 +282,87 @@ button:hover { transform: translateY(-2px); }
   display: block;
 }
 
+/* ===== Goals Modal ===== */
+.goal-modal {
+  max-width: 420px;
+  width: 90%;
+  background: var(--card-bg, #ffffff);
+  border-radius: 16px;
+  padding: 18px 20px 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goal-modal-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.goal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.goal-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #d0d0d0);
+  background: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.goal-option input[type="radio"] {
+  accent-color: var(--turquoise, #11cdef);
+}
+
+.goal-or {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #777;
+  margin: 4px 0;
+}
+
+.goal-manual-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+#goalTargetInput {
+  padding: 8px 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border, #d0d0d0);
+  box-sizing: border-box;
+}
+
+/* Make the Save button match your main blue button */
+.primary-btn.goal-save-btn,
+#goalSaveBtn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: var(--turquoise, #11cdef);
+  color: #ffffff;
+}
+
+
 .modal-overlay {
   position: fixed;
   inset: 0;
