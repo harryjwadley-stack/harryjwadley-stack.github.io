@@ -810,9 +810,8 @@ document.addEventListener("DOMContentLoaded", () => {
     rewardsCurrentList.innerHTML = "";
     let hasAnyCurrent = false;
 
-    // Active preset goal description
+    // Active preset goal
     if (settings.goalPreset && settings.goalDescription) {
-      // Goal title (bold)
       const li = document.createElement("li");
       const strong = document.createElement("strong");
       strong.textContent = settings.goalDescription;
@@ -830,11 +829,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-
-    // Optional raw savings target
+    // Savings target (ALSO bold now)
     if (settings.goalTarget > 0) {
       const li = document.createElement("li");
-      li.textContent = `Savings target: ${settings.goalTarget.toFixed(2)}`;
+      const strong = document.createElement("strong");
+      strong.textContent = `Savings target: ${settings.goalTarget.toFixed(2)}`;
+      li.appendChild(strong);
       rewardsCurrentList.appendChild(li);
       hasAnyCurrent = true;
     }
