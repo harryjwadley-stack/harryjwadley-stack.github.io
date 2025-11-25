@@ -812,12 +812,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Active preset goal description
     if (settings.goalPreset && settings.goalDescription) {
+      // Goal title (bold)
       const li = document.createElement("li");
-      li.textContent = settings.goalDescription; // nice clean text
+      const strong = document.createElement("strong");
+      strong.textContent = settings.goalDescription;
+      li.appendChild(strong);
       rewardsCurrentList.appendChild(li);
       hasAnyCurrent = true;
 
-      // NEW: progress line for this preset
+      // Progress line (normal weight)
       const progressText = getGoalProgressText(settings.goalPreset);
       if (progressText) {
         const progLi = document.createElement("li");
@@ -826,6 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rewardsCurrentList.appendChild(progLi);
       }
     }
+
 
     // Optional raw savings target
     if (settings.goalTarget > 0) {
