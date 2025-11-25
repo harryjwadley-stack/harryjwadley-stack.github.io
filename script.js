@@ -680,6 +680,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+    function getGoalProgressText(preset) {
+    if (!preset) return "";
+
+    if (preset === "example1") {
+      // 3 no-spend days in 7
+      const target = 3;
+      const count = getWeekNoSpendCount();
+      return `${count}/${target} no-spend days achieved (in the last 7 days).`;
+    }
+
+    if (preset === "example2") {
+      // Progress toward Diamond
+      const xp = Number(settings.score || 0);
+      const info = getLevelInfo(xp);
+      const diamondThreshold = 181;
+      const remaining = Math.max(0, diamondThreshold - xp);
+
+      if (info.name === "Diamond" || info.rank >= 3) {
+        return `You're already Diamond 💎 (${xp}XP).`;
+      }
+      return `Current level: ${info.name} (${xp}XP) – ${remaining}XP to Diamond.`;
+    }
+
+    if (preset === "example3") {
+      // Weekly average spend < $20/day
+      const avg = getWeekAverageSpend();
+      const target = 20;
+      if (avg < target) {
+        return `Current weekly average: $${avg.toFixed(2)} (✅ under $${target.toFixed(2)} target).`;
+      }
+      const extra = avg - target;
+      return `Current weekly average: $${avg.toFixed(2)} (needs $${extra.toFixed(2)} less per day to hit $${target.toFixed(2)}).`;
+    }
+
+    return "";
+  }
 
 
   /* ---------- Analytics modal helpers ---------- */
@@ -774,13 +810,24 @@ document.addEventListener("DOMContentLoaded", () => {
     rewardsCurrentList.innerHTML = "";
     let hasAnyCurrent = false;
 
+    // Active preset goal description
     if (settings.goalPreset && settings.goalDescription) {
       const li = document.createElement("li");
-      li.textContent = settings.goalDescription; // string without XP
+      li.textContent = settings.goalDescription; // nice clean text
       rewardsCurrentList.appendChild(li);
       hasAnyCurrent = true;
+
+      // NEW: progress line for this preset
+      const progressText = getGoalProgressText(settings.goalPreset);
+      if (progressText) {
+        const progLi = document.createElement("li");
+        progLi.textContent = progressText;
+        progLi.classList.add("goal-progress-line");
+        rewardsCurrentList.appendChild(progLi);
+      }
     }
 
+    // Optional raw savings target
     if (settings.goalTarget > 0) {
       const li = document.createElement("li");
       li.textContent = `Savings target: ${settings.goalTarget.toFixed(2)}`;
@@ -802,9 +849,9 @@ document.addEventListener("DOMContentLoaded", () => {
       rewardsCompletedList.innerHTML = "<li>None completed yet.</li>";
     }
 
-
     setDisplay(rewardsOverlay, true);
   }
+
 
   function closeRewardsModal() {
     if (rewardsOverlay) rewardsOverlay.style.display = "none";
