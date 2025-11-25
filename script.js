@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const setAllowanceBtn = $("setAllowanceBtn");
   const allowanceDisplay = $("allowanceDisplay");
   const allowanceRemainingDiv = $("allowanceRemaining");
+  const savingsInfoDiv = $("savingsInfo");
 
   // Sidebar feature buttons
   const analyticsBtn = $("analyticsBtn");
@@ -459,7 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return total;
   }
 
-  // Update "Allowance Remaining" based on mode
+  // Update "Allowance Remaining" + "Savings" based on mode
   function updateAllowanceRemaining() {
     const mode = settings.allowanceMode || "weekly";
     const weeklyAllowance = Number(settings.allowance || 0);
@@ -468,8 +469,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (mode === "weekly") {
       // Weekly view: total allowance minus ALL expenses across all days
       const spentAll = getGlobalSpent();
+      const remaining = weeklyAllowance - spentAll;
+
       allowanceRemainingDiv.textContent =
-        `Remaining: ${(weeklyAllowance - spentAll).toFixed(2)}`;
+        `Remaining: ${remaining.toFixed(2)}`;
+
+      if (savingsInfoDiv) {
+        savingsInfoDiv.textContent =
+          `Savings this week: ${(weeklyAllowance - spentAll).toFixed(2)}`;
+      }
     } else {
       // Daily view: (weekly allowance / 7) minus current-day expenses only
       const data = getMonthData();
@@ -477,8 +485,15 @@ document.addEventListener("DOMContentLoaded", () => {
         .values(data.categoryTotals)
         .reduce((a, b) => a + b, 0);
 
+      const remaining = dailyAllowance - spentToday;
+
       allowanceRemainingDiv.textContent =
-        `Remaining: ${(dailyAllowance - spentToday).toFixed(2)}`;
+        `Remaining: ${remaining.toFixed(2)}`;
+
+      if (savingsInfoDiv) {
+        savingsInfoDiv.textContent =
+          `Savings today: ${(dailyAllowance - spentToday).toFixed(2)}`;
+      }
     }
   }
 

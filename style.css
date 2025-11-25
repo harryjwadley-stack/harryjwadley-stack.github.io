@@ -135,7 +135,14 @@ h3 {
   .sidebar { position: sticky; top: 0; }
 }
 .sidebar h3 { font-weight: bold; margin-bottom: 5px; color: var(--navy); }
-#allowanceDisplay, #allowanceRemaining { font-weight: 500; font-size: 16px; margin-bottom: 5px; }
+#allowanceDisplay,
+#allowanceRemaining,
+#savingsInfo {
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
 #categoryChart { margin-top: 10px; max-width: 100%; }
 
 /* Allowance toggle buttons */
