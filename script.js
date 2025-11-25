@@ -20,6 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
     "Unexpected"
   ]);
 
+    /* ---------- Goal preset descriptions (no XP text) ---------- */
+  const GOAL_PRESETS = {
+    example1: "Complete 3 No Spending Days in a 7 day period.",
+    example2: "Achieve diamond level.",
+    example3: "Spend an average of less than $20/day this week."
+  };
+
   /* ---------- Grabs ---------- */
   const addBtn = $("addExpenseBtn");
   const showFavouritesBtn = $("showFavouritesBtn");
@@ -147,7 +154,8 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceMode: "weekly",
     allowanceXpAwarded: false,
     goalPreset: null,
-    goalTarget: 0
+    goalTarget: 0, 
+    goalDescription: "" 
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, name } }
 
@@ -164,6 +172,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof settings.allowanceXpAwarded !== "boolean") settings.allowanceXpAwarded = false;
   if (!("goalPreset" in settings)) settings.goalPreset = null;
   if (typeof settings.goalTarget !== "number") settings.goalTarget = Number(settings.goalTarget) || 0;
+  if (!("goalPreset" in settings)) settings.goalPreset = null;
+  if (typeof settings.goalTarget !== "number") settings.goalTarget = Number(settings.goalTarget) || 0;
+  if (typeof settings.goalDescription !== "string") settings.goalDescription = "";
+
 
   // Clean legacy per-month allowance keys
   for (const k of Object.keys(monthlyState)) {
@@ -401,7 +413,8 @@ document.addEventListener("DOMContentLoaded", () => {
       allowanceMode: "weekly",
       allowanceXpAwarded: false,
       goalPreset: null,
-      goalTarget: 0
+      goalTarget: 0, 
+      goalDescription: ""
     };
     saveSettings();
 
@@ -629,8 +642,69 @@ document.addEventListener("DOMContentLoaded", () => {
     setDisplay(analyticsOverlay, false);
   }
 
-  /* ---------- Streak-at-risk warning modal ---------- */
+  /* ---------- Rewards Modal ---------- */
+  const rewardsOverlay = $("rewardsModalOverlay");
+  const rewardsCurrentList = $("currentGoalsList");
+  const rewardsCompletedList = $("completedGoalsList");
 
+  function openRewardsModal() {
+    if (!rewardsOverlay) return;
+
+    // Current goals
+    rewardsCurrentList.innerHTML = "";
+    let hasAnyCurrent = false;
+
+    if (settings.goalPreset && settings.goalDescription) {
+      const li = document.createElement("li");
+      li.textContent = settings.goalDescription; // string without XP
+      rewardsCurrentList.appendChild(li);
+      hasAnyCurrent = true;
+    }
+
+    if (settings.goalTarget > 0) {
+      const li = document.createElement("li");
+      li.textContent = `Savings target: ${settings.goalTarget.toFixed(2)}`;
+      rewardsCurrentList.appendChild(li);
+      hasAnyCurrent = true;
+    }
+
+    if (!hasAnyCurrent) {
+      rewardsCurrentList.innerHTML = "<li>No current goals set.</li>";
+    }
+
+    // Completed goals (placeholder for now)
+    rewardsCompletedList.innerHTML = "<li>None completed yet.</li>";
+
+    setDisplay(rewardsOverlay, true);
+  }
+
+  function closeRewardsModal() {
+    if (rewardsOverlay) rewardsOverlay.style.display = "none";
+  }
+
+  if (rewardsOverlay) {
+    on(rewardsOverlay, "click", (e) => {
+      if (e.target === rewardsOverlay) {
+        closeRewardsModal();
+      }
+    });
+  }
+
+  on(document, "keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      rewardsOverlay &&
+      rewardsOverlay.style.display === "flex"
+    ) {
+      closeRewardsModal();
+    }
+  });
+
+  const rewardsCloseBtn = $("rewardsCloseBtn");
+  on(rewardsCloseBtn, "click", closeRewardsModal);
+
+
+  /* ---------- Streak-at-risk warning modal ---------- */
   function closeStreakWarningModal() {
     if (streakWarnOverlay) streakWarnOverlay.style.display = "none";
     pendingDayNav = null;
@@ -1605,15 +1679,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     settings.goalPreset = chosenPreset;
     settings.goalTarget = hasTarget ? rawTarget : 0;
+
+    // NEW: store the text for the selected preset WITHOUT the XP bit
+    if (chosenPreset && GOAL_PRESETS[chosenPreset]) {
+      settings.goalDescription = GOAL_PRESETS[chosenPreset];
+    } else {
+      settings.goalDescription = "";
+    }
+
     saveSettings();
 
+    // Close popup and return to home
     closeGoalModal();
   });
+
 
   /* ---------- Analytics & Coming Soon Modals wiring ---------- */
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", () => openComingSoonModal("Leaderboard"));
-  on(rewardsBtn, "click", () => openComingSoonModal("Rewards"));
+  on(rewardsBtn, "click", openRewardsModal);  // NEW
   on(setGoalBtn, "click", openGoalModal);
 
   on(analyticsOverlay, "click", (e) => {

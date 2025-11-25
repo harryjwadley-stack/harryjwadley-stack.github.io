@@ -295,6 +295,35 @@ button:hover { transform: translateY(-2px); }
   gap: 12px;
 }
 
+/* ===== Rewards Modal ===== */
+.rewards-modal {
+  max-width: 420px;
+  width: 90%;
+}
+
+.rewards-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.rewards-section h4 {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+
+.rewards-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  font-size: 0.9rem;
+}
+
+.rewards-list li {
+  padding: 4px 0;
+}
+
 .goal-modal-subtitle {
   margin: 0;
   font-size: 0.9rem;
