@@ -7,13 +7,12 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Month selector row -->
+  <!-- Day controls -->
   <div id="monthControls">
     <button id="prevMonthBtn" type="button" aria-label="Previous day">◀</button>
     <button id="dayCounterBtn" type="button" aria-label="Day counter" disabled>Day 1</button>
     <button id="nextMonthBtn" type="button" aria-label="Next day">▶</button>
 
-    <!-- New: Hard reset button -->
     <button id="hardResetBtn" type="button" aria-label="Hard reset everything">
       Hard reset
     </button>
@@ -28,21 +27,21 @@
       <div class="top-row">
         <!-- Left panel: controls -->
         <div class="left-panel">
-          <button id="setAllowanceBtn">Set Allowance</button>
+          <button id="setAllowanceBtn" type="button">Set Allowance</button>
           <div id="allowanceContainer"></div>
 
-          <button id="addExpenseBtn">Add Expense</button>
+          <button id="addExpenseBtn" type="button">Add Expense</button>
           <button id="showFavouritesBtn" type="button">Favourites</button>
 
-          <!-- New: No spending today -->
-          <button id="noSpendBtn" type="button" aria-label="No spending today">No spending today</button>
+          <button id="noSpendBtn" type="button" aria-label="No spending today">
+            No spending today
+          </button>
 
-          <!-- New: Set Goal button -->
           <button id="setGoalBtn" type="button">Set goal</button>
 
           <div id="expenseContainer"></div>
 
-          <!-- Stats + Streak at bottom of right-hand bar -->
+          <!-- Stats -->
           <div id="sidebarStats" aria-label="Stats">
             <div id="scoreTotal">📈 XP: 0</div>
             <div id="streakDisplay">🔥 Streak: 0 days</div>
@@ -64,6 +63,7 @@
               </thead>
               <tbody></tbody>
             </table>
+
             <!-- Left & right rails -->
             <div id="leftRail" aria-hidden="true"></div>
             <div id="deleteRail" aria-hidden="true"></div>
@@ -88,7 +88,7 @@
       <div id="allowanceRemaining">Remaining: 0.00</div>
       <div id="savingsInfo">Savings: 0.00</div>
 
-      <!-- NEW: Sidebar feature buttons -->
+      <!-- Sidebar feature buttons -->
       <div class="sidebar-actions">
         <button id="analyticsBtn" type="button">Analytics</button>
         <button id="leaderboardBtn" type="button">Leaderboard</button>
@@ -98,29 +98,30 @@
   </div>
 
   <!-- Leaderboard Modal -->
-  <div id="leaderboardModalOverlay"
-      class="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      style="display:none;">
+  <div
+    id="leaderboardModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+  >
     <div class="modal-card leaderboard-modal">
-      <button class="modal-close-x"
-              type="button"
-              aria-label="Close">
-        &times;
-      </button>
+      <button class="modal-close-x" type="button" aria-label="Close">&times;</button>
 
       <h3>Leaderboard</h3>
 
       <div class="leaderboard-toggle">
-        <button id="leaderboardToggleXp"
-                type="button"
-                class="leaderboard-toggle-btn active">
+        <button
+          id="leaderboardToggleXp"
+          type="button"
+          class="leaderboard-toggle-btn active"
+        >
           XP
         </button>
-        <button id="leaderboardToggleStreak"
-                type="button"
-                class="leaderboard-toggle-btn">
+        <button
+          id="leaderboardToggleStreak"
+          type="button"
+          class="leaderboard-toggle-btn"
+        >
           Streak
         </button>
       </div>
@@ -140,7 +141,6 @@
     </div>
   </div>
 
-    
   <!-- Streak warning modal -->
   <div
     id="streakWarningOverlay"
@@ -152,24 +152,18 @@
     <div class="modal-card">
       <button class="modal-close-x" type="button" aria-label="Close">×</button>
       <h3 id="streakWarningTitle">Heads up! Your streak is at risk</h3>
-      <p>
-        If you move to the next day without adding anything, your streak will end.
-      </p>
+      <p>If you move to the next day without adding anything, your streak will end.</p>
 
       <div class="modal-actions">
-        <!-- Blue primary buttons: reuse same class as "Add expense" -->
         <button id="streakWarningBackBtn" class="primary-btn" type="button">
           Back
         </button>
-
         <button id="streakWarningAddBtn" class="primary-btn" type="button">
           Add expense
         </button>
-
         <button id="streakWarningNoSpendBtn" class="primary-btn" type="button">
           No spending today
         </button>
-
         <button id="streakWarningContinueBtn" class="primary-btn" type="button">
           Continue
         </button>
@@ -177,10 +171,16 @@
     </div>
   </div>
 
-  <!-- Add Type Modal (chooses Drink / Groceries / Big Night / Other) -->
-  <div id="addTypeModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addTypeModalTitle">
+  <!-- Add Type Modal -->
+  <div
+    id="addTypeModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="addTypeModalTitle"
+  >
     <div class="expense-modal">
-      <button class="modal-close-x" aria-label="Close modal">✕</button>
+      <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
       <h3 id="addTypeModalTitle">What kind of expense?</h3>
       <div class="add-type-grid">
         <button id="addTypeDrinkBtn" type="button">Drink</button>
@@ -188,9 +188,12 @@
         <button id="addTypeBigNightBtn" type="button">Big night out?</button>
       </div>
       <hr />
-      <button id="addTypeOtherBtn" type="button" class="add-type-other">Other</button>
+      <button id="addTypeOtherBtn" type="button" class="add-type-other">
+        Other
+      </button>
     </div>
   </div>
+
   <!-- Set Goal Modal -->
   <div
     id="goalModalOverlay"
@@ -198,15 +201,12 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="goalModalTitle"
-    style="display:none;"
   >
     <div class="modal goal-modal">
       <button class="modal-close-x" type="button" aria-label="Close">×</button>
 
       <h3 id="goalModalTitle">Set a savings goal</h3>
-      <p class="goal-modal-subtitle">
-        Pick a goal and how much you want to save.
-      </p>
+      <p class="goal-modal-subtitle">Pick a goal and how much you want to save.</p>
 
       <div class="goal-options">
         <label class="goal-option">
@@ -243,11 +243,17 @@
   </div>
 
   <!-- Add/Edit Expense Modal -->
-  <div id="expenseModalOverlay" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
+  <div
+    id="expenseModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="expenseModalTitle"
+  >
     <div class="expense-modal">
       <h3 id="expenseModalTitle">Add Expense</h3>
 
-      <!-- Quick pick stage (shown for Add Drink / Big Night Out) -->
+      <!-- Quick pick stage -->
       <div id="drinkQuickStage" class="quick-stage">
         <p class="quick-title">Quick pick</p>
         <div class="quick-grid">
@@ -259,9 +265,14 @@
       </div>
 
       <label for="modalExpenseAmount">Amount</label>
-      <input id="modalExpenseAmount" type="number" step="0.01" min="0.01" placeholder="Enter amount" />
+      <input
+        id="modalExpenseAmount"
+        type="number"
+        step="0.01"
+        min="0.01"
+        placeholder="Enter amount"
+      />
 
-      <!-- Wrapped so we can hide for Add Groceries / Add Drink -->
       <div id="modalCategoryWrapper">
         <label for="modalExpenseCategory">Category</label>
         <select id="modalExpenseCategory">
@@ -273,59 +284,69 @@
       </div>
 
       <div class="modal-actions">
-        <button class="modal-close-x" aria-label="Close modal">✕</button>
+        <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
         <button id="modalSubmitBtn" type="button">Submit</button>
       </div>
     </div>
   </div>
 
   <!-- Details Modal -->
-  <div id="detailsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle">
+  <div
+    id="detailsModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="detailsModalTitle"
+  >
     <div class="expense-modal">
       <h3 id="detailsModalTitle">Expense Details</h3>
       <div id="detailsModalBody" class="details-text"></div>
       <div class="modal-actions">
-        <button class="modal-close-x" aria-label="Close modal">✕</button>
+        <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
       </div>
     </div>
   </div>
 
   <!-- Analytics Modal -->
-  <div id="analyticsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="analyticsModalTitle">
+  <div
+    id="analyticsModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="analyticsModalTitle"
+  >
     <div class="expense-modal">
       <h3 id="analyticsModalTitle">Analytics</h3>
 
       <div id="analyticsTotals" class="details-text"></div>
-      <canvas id="analyticsChart" width="200" height="200" aria-label="Analytics category chart"></canvas>
+      <canvas
+        id="analyticsChart"
+        width="200"
+        height="200"
+        aria-label="Analytics category chart"
+      ></canvas>
 
       <div class="modal-actions">
-        <button class="modal-close-x" aria-label="Close modal">✕</button>
+        <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
       </div>
     </div>
   </div>
 
-  <!-- Coming Soon Modal (for Leaderboard / Rewards) -->
-  <div id="comingSoonOverlay" role="dialog" aria-modal="true" aria-labelledby="comingSoonTitle">
+  <!-- Coming Soon Modal (Leaderboard / Rewards fallback) -->
+  <div
+    id="comingSoonOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="comingSoonTitle"
+  >
     <div class="expense-modal">
       <h3 id="comingSoonTitle">Coming soon</h3>
       <div id="comingSoonBody" class="details-text">
         This feature is coming soon.
       </div>
       <div class="modal-actions">
-        <button class="modal-close-x" aria-label="Close modal">✕</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Coming Soon Modal (for Leaderboard / Rewards) -->
-  <div id="comingSoonOverlay" role="dialog" aria-modal="true" aria-labelledby="comingSoonTitle">
-    <div class="expense-modal">
-      <h3 id="comingSoonTitle">Coming soon</h3>
-      <div id="comingSoonBody" class="details-text">
-        This feature is coming soon.
-      </div>
-      <div class="modal-actions">
-        <button class="modal-close-x" aria-label="Close modal">✕</button>
+        <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
       </div>
     </div>
   </div>
@@ -337,7 +358,6 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="rewardsModalTitle"
-    style="display:none;"
   >
     <div class="modal-card rewards-modal">
       <button
@@ -345,7 +365,9 @@
         class="modal-close-x"
         type="button"
         aria-label="Close"
-      >×</button>
+      >
+        ×
+      </button>
 
       <h3 id="rewardsModalTitle">Missions & Achievements</h3>
 
@@ -361,36 +383,60 @@
     </div>
   </div>
 
-
-
   <!-- Allowance Modal -->
-  <div id="allowanceModalOverlay" role="dialog" aria-modal="true" aria-labelledby="allowanceModalTitle">
+  <div
+    id="allowanceModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="allowanceModalTitle"
+  >
     <div class="expense-modal">
       <h3 id="allowanceModalTitle">Set Global Allowance</h3>
       <div id="allowanceModalStage"></div>
       <div class="modal-actions">
-        <button class="modal-close-x" aria-label="Close modal">✕</button>
-        <button id="allowanceModalBackBtn" type="button" style="display:none;">Back</button>
-        <button id="allowanceModalSubmitBtn" type="button" style="display:none;">Submit</button>
+        <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
+        <button id="allowanceModalBackBtn" type="button" style="display:none;">
+          Back
+        </button>
+        <button id="allowanceModalSubmitBtn" type="button" style="display:none;">
+          Submit
+        </button>
       </div>
     </div>
   </div>
 
   <!-- Favourites Modal -->
-  <div id="favesModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favesModalTitle">
+  <div
+    id="favesModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="favesModalTitle"
+  >
     <div class="expense-modal">
-      <button class="modal-close-x" aria-label="Close modal">✕</button>
+      <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
       <h3 id="favesModalTitle">Favourites</h3>
       <div id="favesList"></div>
     </div>
   </div>
 
   <!-- Favourite Name Modal -->
-  <div id="favNameModalOverlay" role="dialog" aria-modal="true" aria-labelledby="favNameModalTitle">
+  <div
+    id="favNameModalOverlay"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="favNameModalTitle"
+  >
     <div class="expense-modal">
-      <button class="modal-close-x" aria-label="Close modal">✕</button>
+      <button class="modal-close-x" type="button" aria-label="Close modal">✕</button>
       <h3 id="favNameModalTitle">Name your favourite</h3>
-      <input id="favNameInput" type="text" placeholder="e.g., Friday Guinness, Payday Coffee" />
+      <input
+        id="favNameInput"
+        type="text"
+        placeholder="e.g., Friday Guinness, Payday Coffee"
+      />
       <div class="modal-actions">
         <button id="favNameSaveBtn" type="button">Save</button>
       </div>

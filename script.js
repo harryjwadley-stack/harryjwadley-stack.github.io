@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Unexpected"
   ]);
 
-    /* ---------- Goal preset descriptions (no XP text) ---------- */
+  /* ---------- Goal preset descriptions (no XP text) ---------- */
   const GOAL_PRESETS = {
     example1: "Complete 3 No Spending Days in a 7 day period.",
     example2: "Achieve diamond level.",
@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
     example2: 40,  // reach Diamond
     example3: 60   // <$20/day average
   };
-
 
   /* ---------- Grabs ---------- */
   const addBtn = $("addExpenseBtn");
@@ -73,11 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const leaderboardToggleXp = $("leaderboardToggleXp");
   const leaderboardToggleStreak = $("leaderboardToggleStreak");
 
-
   // Favourites Modal
   const favesOverlay = $("favesModalOverlay");
   const favesList = $("favesList");
-  const favesCloseBtn = $("favesCloseBtn");
 
   // Favourite Name Modal
   const favNameOverlay = $("favNameModalOverlay");
@@ -88,15 +85,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = $("prevMonthBtn");
   const nextBtn = $("nextMonthBtn");
   const hardResetBtn = $("hardResetBtn");
-  const monthSelect = $("monthSelect");
-  const yearSelect = $("yearSelect");
-  const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
-  ];
 
   const dayBtn = $("dayCounterBtn");
   let currentDay = 1; // 1..7
+
+  const now = new Date();
+  let currentYear = now.getFullYear();
+  let currentMonthIndex = now.getMonth();
+
+  if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
 
   // Rails
   const tableWrap = document.querySelector(".table-wrap") || document.body;
@@ -109,47 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const streakWarnBackBtn = $("streakWarningBackBtn");
   const streakWarnNoSpendBtn = $("streakWarningNoSpendBtn");
   const streakWarnContinueBtn = $("streakWarningContinueBtn");
-
-  /* ---------- Chart (main sidebar pie - optional) ---------- */
-  let categoryChart = null;
-
-  const chartCanvas = $("categoryChart");
-  if (chartCanvas) {
-    const ctx = chartCanvas.getContext("2d");
-    categoryChart = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: [
-          "Essential Living",
-          "Social & Leisure",
-          "Personal Treats",
-          "Unexpected"
-        ],
-        datasets: [{
-          label: "Category Breakdown",
-          data: [0, 0, 0, 0],
-          backgroundColor: ["#11cdef","#0b2a4a","#0f766e","#ffb000"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: "bottom" } }
-      }
-    });
-  }
-
-  (() => {
-    if (!categoryChart) return;
-
-    const css = getComputedStyle(document.documentElement);
-    const themed = ["--turquoise","--navy","--teal","--amber"]
-      .map(v => css.getPropertyValue(v).trim());
-
-    categoryChart.data.datasets[0].backgroundColor =
-      themed.map((c,i)=> c || categoryChart.data.datasets[0].backgroundColor[i]);
-
-    categoryChart.update();
-  })();
 
   /* ---------- State ---------- */
   const STATE_KEY = "savr-monthly-state-v1";
@@ -172,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     goalPreset: null,
     goalTarget: 0,
     goalDescription: "",
-    completedGoals: []   // NEW
+    completedGoals: []
   };
   let favourites = loadJSON(FAV_KEY) || {}; // { "<period>-id": { id, year, monthIndex, amount, category, name } }
 
@@ -189,12 +145,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof settings.allowanceXpAwarded !== "boolean") settings.allowanceXpAwarded = false;
   if (!("goalPreset" in settings)) settings.goalPreset = null;
   if (typeof settings.goalTarget !== "number") settings.goalTarget = Number(settings.goalTarget) || 0;
-  if (!("goalPreset" in settings)) settings.goalPreset = null;
-  if (typeof settings.goalTarget !== "number") settings.goalTarget = Number(settings.goalTarget) || 0;
   if (typeof settings.goalDescription !== "string") settings.goalDescription = "";
   if (!Array.isArray(settings.completedGoals)) settings.completedGoals = [];
-
-
 
   // Clean legacy per-month allowance keys
   for (const k of Object.keys(monthlyState)) {
@@ -261,16 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
     saveFavourites();
   })();
 
-  const yyyymmKey = (y, m) => `${y}-${String(m + 1).padStart(2,"0")}`;
-
-  // Use day buckets when the Day UI exists (day-1..day-7), otherwise fall back to month key.
-  const periodKey = () =>
-    (dayBtn ? `day-${currentDay}` : yyyymmKey(currentYear, currentMonthIndex));
-
-  // Favourite keys are tied to the current period (day).
-  const compositeId = (id) => `${periodKey()}-${id}`;
-
-  let currentYear, currentMonthIndex;
+  // Always use day buckets: day-1..day-7
+  const periodKey = () => `day-${currentDay}`;
 
   function ensureMonth(key) {
     if (!monthlyState[key]) {
@@ -311,36 +255,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentKey = () => periodKey();
   const getMonthData = () => ensureMonth(currentKey());
   const findExpenseById = (id) => getMonthData().expenses.find(e => e.id === id);
-  const isFavourited = (id) => !!favourites[compositeId(id)];
+  const isFavourited = (id) => !!favourites[`${periodKey()}-${id}`];
 
-  /* ---------- Day pickers ---------- */
-  (function initMonthYearPickers() {
-    const now = new Date();
-    currentYear = now.getFullYear();
-    currentMonthIndex = now.getMonth();
-
-    if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
-
-    if (monthSelect) {
-      monthNames.forEach((n,i)=> monthSelect.appendChild(new Option(n, i)));
-      monthSelect.value = currentMonthIndex;
-      on(monthSelect, "change", () => {
-        currentMonthIndex = +monthSelect.value;
-        renderForCurrentMonth();
-      });
-    }
-
-    if (yearSelect) {
-      for (let y = currentYear - 3; y <= currentYear + 3; y++) {
-        yearSelect.appendChild(new Option(y, y));
-      }
-      yearSelect.value = currentYear;
-      on(yearSelect, "change", () => {
-        currentYear = +yearSelect.value;
-        renderForCurrentMonth();
-      });
-    }
-  })();
+  const compositeId = (id) => `${periodKey()}-${id}`;
 
   /* ---------- Streak / day-completion helpers ---------- */
 
@@ -368,12 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
       : null;
     if (!last) return false;
 
-    // We only care about the immediate day after the last active day,
-    // e.g. lastActiveDay=3, currentDay=4 and nothing logged on day 4
     if (currentDay !== last + 1) return false;
 
-    // If the current day already has an expense or "no spending" recorded,
-    // leaving won't break the streak.
     if (currentDayHasActivity()) return false;
 
     return true;
@@ -401,13 +314,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   on(nextBtn, "click", () => {
-    // If leaving this day forward would break the streak, show the warning.
     if (willLoseStreakOnForwardLeave()) {
       pendingDayNav = { direction: "next" };
       if (streakWarnOverlay) setDisplay(streakWarnOverlay, true);
       return;
     }
-    // Otherwise, just move to the next day.
     goToNextDay();
   });
 
@@ -423,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Reset settings (allowance +score +streak)
+    // Reset settings
     settings = {
       allowance: 0,
       score: 0,
@@ -432,12 +343,13 @@ document.addEventListener("DOMContentLoaded", () => {
       allowanceMode: "weekly",
       allowanceXpAwarded: false,
       goalPreset: null,
-      goalTarget: 0, 
-      goalDescription: ""
+      goalTarget: 0,
+      goalDescription: "",
+      completedGoals: []
     };
     saveSettings();
 
-    // Clear all day/month state
+    // Clear all day state
     monthlyState = {};
     saveState();
 
@@ -449,7 +361,6 @@ document.addEventListener("DOMContentLoaded", () => {
     currentDay = 1;
     if (dayBtn) dayBtn.textContent = `Day ${currentDay}`;
 
-    // Re-render UI
     renderForCurrentMonth();
   });
 
@@ -489,7 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return count;
   }
 
-  // Average spend across all 7 days (sum of categoryTotals / 7)
+  // Average spend across all 7 days
   function getWeekAverageSpend() {
     let total = 0;
     for (let d = 1; d <= 7; d++) {
@@ -509,7 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const dailyAllowance = weeklyAllowance / 7;
 
     if (mode === "weekly") {
-      // Weekly view: total allowance minus ALL expenses across all days
       const spentAll = getGlobalSpent();
       const remaining = weeklyAllowance - spentAll;
 
@@ -521,7 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
           `Savings this week: ${(weeklyAllowance - spentAll).toFixed(2)}`;
       }
     } else {
-      // Daily view: (weekly allowance / 7) minus current-day expenses only
       const data = getMonthData();
       const spentToday = Object
         .values(data.categoryTotals)
@@ -539,64 +448,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function updatePieChart() {
-    if (!categoryChart) return;
-
-    const d = getMonthData().categoryTotals;
-    categoryChart.data.datasets[0].data = [
-      d["Essential Living"],
-      d["Social & Leisure"],
-      d["Personal Treats"],
-      d["Unexpected"]
-    ];
-    categoryChart.update();
-  }
-
   /* ---------- Level helper ---------- */
   function getLevelInfo(score) {
     const xp = Number(score || 0);
 
     if (xp >= 251) {
-      return {
-        name: "Platinum",
-        emoji: "💠",
-        color: "#e5e4e2",
-        rank: 4
-      };
+      return { name: "Platinum", emoji: "💠", color: "#e5e4e2", rank: 4 };
     }
     if (xp >= 181) {
-      return {
-        name: "Diamond",
-        emoji: "💎",
-        color: "#4fd1c5",
-        rank: 3
-      };
+      return { name: "Diamond", emoji: "💎", color: "#4fd1c5", rank: 3 };
     }
     if (xp >= 91) {
-      return {
-        name: "Gold",
-        emoji: "🥇",
-        color: "#ffd700",
-        rank: 2
-      };
+      return { name: "Gold", emoji: "🥇", color: "#ffd700", rank: 2 };
     }
     if (xp >= 31) {
-      return {
-        name: "Silver",
-        emoji: "🥈",
-        color: "#c0c0c0",
-        rank: 1
-      };
+      return { name: "Silver", emoji: "🥈", color: "#c0c0c0", rank: 1 };
     }
-    return {
-      name: "Bronze",
-      emoji: "🥉",
-      color: "#cd7f32",
-      rank: 0
-    };
+    return { name: "Bronze", emoji: "🥉", color: "#cd7f32", rank: 0 };
   }
 
-    /* ---------- Leaderboard logic ---------- */
+  /* ---------- Leaderboard logic ---------- */
 
   let leaderboardSortMode = "xp"; // "xp" or "streak"
 
@@ -659,9 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Background click closes modal
   if (leaderboardOverlay) {
     on(leaderboardOverlay, "click", (e) => {
-      if (e.target === leaderboardOverlay) {
-        closeLeaderboardModal();
-      }
+      if (e.target === leaderboardOverlay) closeLeaderboardModal();
     });
   }
 
@@ -686,7 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
     leaderboardSortMode = "streak";
     renderLeaderboard();
   });
-
 
   function updateStatsUI() {
     const data = getMonthData(); // reserved for future use
@@ -719,7 +587,6 @@ document.addEventListener("DOMContentLoaded", () => {
       settings.completedGoals = [];
     }
 
-    // Already completed this preset? Clear it and exit.
     if (settings.completedGoals.some(g => g.preset === preset)) {
       settings.goalPreset = null;
       settings.goalTarget = 0;
@@ -731,15 +598,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let achieved = false;
 
     if (preset === "example1") {
-      // 3 no-spend days in 7
       const count = getWeekNoSpendCount();
       achieved = count >= 3;
     } else if (preset === "example2") {
-      // Reach Diamond level or above
       const info = getLevelInfo(settings.score);
       achieved = info && (info.name === "Diamond" || info.rank >= 3);
     } else if (preset === "example3") {
-      // Weekly average < $20/day
       const avg = getWeekAverageSpend();
       achieved = avg < 20;
     }
@@ -753,9 +617,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const xp = GOAL_XP_REWARDS[preset] || 0;
     if (xp > 0) {
-      const units = xp / 10; // addScore multiplies by 10
+      const units = xp / 10;
       if (units > 0) {
-        addScore(units); // this will set pendingLevelInfo if we cross a level
+        addScore(units);
       }
     }
 
@@ -764,33 +628,28 @@ document.addEventListener("DOMContentLoaded", () => {
       description: desc
     });
 
-    // Clear active goal
     settings.goalPreset = null;
     settings.goalTarget = 0;
     settings.goalDescription = "";
     saveSettings();
 
-    // Queue goal popup; actual timing is handled by the callers
     pendingGoalPopupInfo = { description: desc, xp };
 
-    // Re-render rewards modal if open
     if (rewardsOverlay && rewardsOverlay.style.display === "flex") {
       openRewardsModal();
     }
   }
 
-    function getGoalProgressText(preset) {
+  function getGoalProgressText(preset) {
     if (!preset) return "";
 
     if (preset === "example1") {
-      // 3 no-spend days in 7
       const target = 3;
       const count = getWeekNoSpendCount();
       return `${count}/${target} no-spend days achieved (in the last 7 days).`;
     }
 
     if (preset === "example2") {
-      // Progress toward Diamond
       const xp = Number(settings.score || 0);
       const info = getLevelInfo(xp);
       const diamondThreshold = 181;
@@ -803,7 +662,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (preset === "example3") {
-      // Weekly average spend < $20/day
       const avg = getWeekAverageSpend();
       const target = 20;
       if (avg < target) {
@@ -816,14 +674,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return "";
   }
 
-
   /* ---------- Analytics modal helpers ---------- */
   let analyticsChart = null;
 
   const analyticsOverlay = $("analyticsModalOverlay");
   const analyticsTotalsEl = () => $("analyticsTotals");
   const analyticsChartEl = () => $("analyticsChart");
-  const analyticsCloseBtn = () => $("analyticsCloseBtn");
 
   function renderAnalyticsChart() {
     const canvas = analyticsChartEl();
@@ -863,9 +719,7 @@ document.addEventListener("DOMContentLoaded", () => {
               labels: {
                 boxWidth: 18,
                 padding: 15,
-                font: {
-                  size: 14
-                }
+                font: { size: 14 }
               }
             }
           }
@@ -905,11 +759,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function openRewardsModal() {
     if (!rewardsOverlay) return;
 
-    // Current goals
     rewardsCurrentList.innerHTML = "";
     let hasAnyCurrent = false;
 
-    // Active preset goal
     if (settings.goalPreset && settings.goalDescription) {
       const li = document.createElement("li");
       const strong = document.createElement("strong");
@@ -918,7 +770,6 @@ document.addEventListener("DOMContentLoaded", () => {
       rewardsCurrentList.appendChild(li);
       hasAnyCurrent = true;
 
-      // Progress line (normal weight)
       const progressText = getGoalProgressText(settings.goalPreset);
       if (progressText) {
         const progLi = document.createElement("li");
@@ -928,7 +779,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Savings target (ALSO bold now)
     if (settings.goalTarget > 0) {
       const li = document.createElement("li");
       const strong = document.createElement("strong");
@@ -942,7 +792,6 @@ document.addEventListener("DOMContentLoaded", () => {
       rewardsCurrentList.innerHTML = "<li>No current goals set.</li>";
     }
 
-    // Completed goals
     rewardsCompletedList.innerHTML = "";
     if (Array.isArray(settings.completedGoals) && settings.completedGoals.length) {
       rewardsCompletedList.innerHTML = settings.completedGoals
@@ -954,7 +803,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setDisplay(rewardsOverlay, true);
   }
-
 
   function closeRewardsModal() {
     if (rewardsOverlay) rewardsOverlay.style.display = "none";
@@ -981,14 +829,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const rewardsCloseBtn = $("rewardsCloseBtn");
   on(rewardsCloseBtn, "click", closeRewardsModal);
 
-
   /* ---------- Streak-at-risk warning modal ---------- */
   function closeStreakWarningModal() {
     if (streakWarnOverlay) streakWarnOverlay.style.display = "none";
     pendingDayNav = null;
   }
 
-  // Background click closes (no navigation, no streak loss)
   if (streakWarnOverlay) {
     on(streakWarnOverlay, "click", (e) => {
       if (e.target === streakWarnOverlay) {
@@ -997,7 +843,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ESC closes (no navigation, no streak loss)
   on(document, "keydown", (e) => {
     if (
       e.key === "Escape" &&
@@ -1008,56 +853,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // "Add expense" → stay on this day, open the Add Type modal
   on(streakWarnAddBtn, "click", () => {
     closeStreakWarningModal();
-    openAddTypeModal(); // reuse existing Add Expense flow
+    openAddTypeModal();
   });
 
-  // "No spending today" → reuse your existing noSpend logic (and keep the streak)
   on(streakWarnNoSpendBtn, "click", () => {
     closeStreakWarningModal();
-    if (noSpendBtn) {
-      noSpendBtn.click(); // triggers the existing handler that awards XP + streak
-    }
+    if (noSpendBtn) noSpendBtn.click();
   });
 
-  // "Back" → simply close and stay on this day
   on(streakWarnBackBtn, "click", () => {
     closeStreakWarningModal();
   });
 
-  // "Continue" → accept that we lose the streak and move to the target day
   on(streakWarnContinueBtn, "click", () => {
     const dir = pendingDayNav?.direction || "next";
     closeStreakWarningModal();
-
-    // kill the streak 💀
     resetStreakToZero();
-
-    // then navigate as originally intended
-    if (dir === "next") {
-      goToNextDay();
-    } else if (dir === "prev") {
-      goToPrevDay();
-    }
+    if (dir === "next") goToNextDay();
+    else if (dir === "prev") goToPrevDay();
   });
 
-  /* ---------- Coming Soon modal helpers ---------- */
-  const comingSoonOverlay = $("comingSoonOverlay");
-  const comingSoonTitleEl = () => $("comingSoonTitle");
-  const comingSoonBodyEl = () => $("comingSoonBody");
-  const comingSoonCloseBtn = () => $("comingSoonCloseBtn");
-
-  function openComingSoonModal(featureName) {
-    const title = comingSoonTitleEl();
-    if (title) title.textContent = `${featureName} – coming soon`;
-    setDisplay(comingSoonOverlay, true);
-  }
-
-  function closeComingSoonModal() {
-    setDisplay(comingSoonOverlay, false);
-  }
+  /* ---------- Coming Soon helpers REMOVED (unused) ---------- */
 
   function renderForCurrentMonth() {
     const data = getMonthData();
@@ -1066,20 +884,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const dailyAllowance = weeklyAllowance / 7;
 
     if (mode === "weekly") {
-      allowanceDisplay.textContent =
-        `Total: ${weeklyAllowance.toFixed(2)}`;
+      allowanceDisplay.textContent = `Total: ${weeklyAllowance.toFixed(2)}`;
     } else {
-      allowanceDisplay.textContent =
-        `Total: ${dailyAllowance.toFixed(2)}`;
+      allowanceDisplay.textContent = `Total: ${dailyAllowance.toFixed(2)}`;
     }
 
     if (data.noSpending) {
       submittedTableBody.innerHTML =
         `<tr><td colspan="3" class="no-spending-row">No spending</td></tr>`;
     } else {
-      submittedTableBody.innerHTML = data.expenses.map((e,idx)=>(
+      submittedTableBody.innerHTML = data.expenses.map((e, idx) => (
         `<tr data-row-id="${e.id}">
-          <td>${idx+1}</td>
+          <td>${idx + 1}</td>
           <td>${e.amount.toFixed(2)}</td>
           <td>${e.category}</td>
         </tr>`
@@ -1087,7 +903,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     updateAllowanceRemaining();
-    updatePieChart();
     updateStatsUI();
     queueMicrotask(updateRails);
   }
@@ -1101,9 +916,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const containerRect = tableWrap.getBoundingClientRect();
     [...submittedTableBody.querySelectorAll("tr")].forEach(tr => {
       const id = +(tr.getAttribute("data-row-id") || NaN);
-      if (!Number.isFinite(id)) return; // skip "No spending" row
+      if (!Number.isFinite(id)) return;
       const r = tr.getBoundingClientRect();
-      const top = r.top - containerRect.top + (r.height/2) - 8;
+      const top = r.top - containerRect.top + (r.height / 2) - 8;
       cb({ id, top });
     });
   }
@@ -1111,7 +926,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function positionEditDeleteDots() {
     if (!deleteRail) return;
     deleteRail.innerHTML = "";
-    eachRow(({id, top}) => {
+    eachRow(({ id, top }) => {
       const edit = document.createElement("span");
       edit.className = "edit-mini";
       edit.textContent = "e";
@@ -1132,7 +947,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function positionFavStars() {
     if (!leftRail) return;
     leftRail.innerHTML = "";
-    eachRow(({id, top}) => {
+    eachRow(({ id, top }) => {
       const star = document.createElement("span");
       star.className = "fav-mini";
       star.dataset.id = String(id);
@@ -1178,7 +993,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStatsUI();
   }
 
-  // One-time XP reward for setting a global allowance
   function maybeAwardAllowanceXP() {
     if (settings.allowanceXpAwarded) return;
 
@@ -1188,11 +1002,9 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.allowanceXpAwarded = true;
     saveSettings();
 
-    // +20XP => 2 "units"
-    addScore(2);
+    addScore(2); // +20XP
     showGoldPopup("Allowance set – great start! +20XP", 20);
 
-    // Check goals & queue goal popup if any
     evaluateGoals();
 
     const xpDuration = 4000;
@@ -1201,7 +1013,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let nextDelay = xpDuration + toastGap;
 
-    // Goal toast after XP toast
     if (pendingGoalPopupInfo && pendingGoalPopupInfo.description) {
       const goalInfo = pendingGoalPopupInfo;
       setTimeout(() => {
@@ -1211,7 +1022,6 @@ document.addEventListener("DOMContentLoaded", () => {
       pendingGoalPopupInfo = null;
     }
 
-    // Level-up after XP (and goal toast if present)
     if (pendingLevelInfo) {
       if (levelPopupTimer) clearTimeout(levelPopupTimer);
       levelPopupTimer = setTimeout(() => {
@@ -1223,10 +1033,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /**
-   * Apply scoring and streak bonus for “good” activity on the current day.
-   * XP popup first, optional streak popup second, level popup last.
-   */
   function applyStreakScore(baseUnits, _baseMessage) {
     const prevDay = (typeof settings.lastActiveDay === "number")
       ? settings.lastActiveDay
@@ -1237,7 +1043,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (prevDay === null) {
       streak = 1;
     } else if (today === prevDay) {
-      // same day → streak unchanged
     } else if (today === prevDay + 1) {
       streak = streak + 1;
     } else {
@@ -1251,22 +1056,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseXP = baseUnits * 10;
     addScore(baseUnits);
 
-    // 1️⃣ XP popup (gold) – always first
     showGoldPopup("Great addition!", baseXP);
 
-    // Optional streak bonus XP
     let bonusUnits = 0;
     if (prevDay !== null && today !== prevDay && streak > 1) {
-      bonusUnits = streak; // e.g. 2 => +20XP, 3 => +30XP
+      bonusUnits = streak;
       addScore(bonusUnits);
     }
     const bonusXP = bonusUnits * 10;
 
-    // Evaluate goals (may award XP & set pendingGoalPopupInfo)
     evaluateGoals();
 
-    // Now orchestrate toast order:
-    // XP → Goal → Streak → Level
     const xpDuration = 4000;
     const toastGap = 200;
     const goalDuration = 4000;
@@ -1274,7 +1074,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let nextDelay = xpDuration + toastGap;
 
-    // 2️⃣ Goal completed popup, if any
     if (pendingGoalPopupInfo && pendingGoalPopupInfo.description) {
       const goalInfo = pendingGoalPopupInfo;
       setTimeout(() => {
@@ -1284,7 +1083,6 @@ document.addEventListener("DOMContentLoaded", () => {
       pendingGoalPopupInfo = null;
     }
 
-    // 3️⃣ Streak popup (red), after goal popup if present
     if (bonusXP > 0) {
       setTimeout(() => {
         showStreakPopup(streak, bonusXP);
@@ -1292,7 +1090,6 @@ document.addEventListener("DOMContentLoaded", () => {
       nextDelay += streakDuration + toastGap;
     }
 
-    // 4️⃣ Level-up popup after everything else
     if (pendingLevelInfo) {
       if (levelPopupTimer) clearTimeout(levelPopupTimer);
       levelPopupTimer = setTimeout(() => {
@@ -1303,7 +1100,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }, nextDelay);
     }
   }
-
 
   /* ---------- Gold XP popup (XP only) ---------- */
   let goldPopupTimer = null;
@@ -1411,7 +1207,7 @@ document.addEventListener("DOMContentLoaded", () => {
         left: "50%",
         transform: "translate(-50%, -50%)",
         zIndex: "10001",
-        background: "#16a34a", // fallback, will be overridden by button colour
+        background: "#16a34a",
         color: "#fff",
         borderRadius: "12px",
         padding: "18px 22px",
@@ -1444,16 +1240,13 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(popup);
     }
 
-    // Match the green to the Set Goal button if possible
     try {
       if (setGoalBtn) {
         const css = getComputedStyle(setGoalBtn);
         const bg = css.backgroundColor || "#16a34a";
         popup.style.background = bg;
       }
-    } catch {
-      // ignore, fallback stays
-    }
+    } catch {}
 
     const titleEl = popup.querySelector(".goal-popup-title");
     const bodyEl = popup.querySelector(".goal-popup-body");
@@ -1474,8 +1267,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
-
-  /* ---------- Red streak popup (streak extension) ---------- */
+  /* ---------- Red streak popup ---------- */
   let streakPopupTimer = null;
   function showStreakPopup(streak, bonusXP) {
     let popup = document.querySelector(".streak-popup-toast");
@@ -1564,7 +1356,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
-  /* ---------- Level-up popup (third in hierarchy) ---------- */
+  /* ---------- Level-up popup ---------- */
   function showLevelUpPopup(levelInfo) {
     let popup = document.querySelector(".levelup-popup-toast");
 
@@ -1641,7 +1433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
-  /* ---------- Allowance mode toggle wiring ---------- */
+  /* ---------- Allowance mode toggle ---------- */
   function refreshAllowanceToggleButtons() {
     if (!weeklyBtn || !dailyBtn) return;
     const mode = settings.allowanceMode || "weekly";
@@ -1706,7 +1498,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const exp = data.expenses[i];
       data.categoryTotals[exp.category] =
         Math.max(0, (data.categoryTotals[exp.category] || 0) - (exp.amount || 0));
-      data.expenses.splice(i,1);
+      data.expenses.splice(i, 1);
       subtractScore(1);
       saveState();
       renderForCurrentMonth();
@@ -1790,7 +1582,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openExpenseModal(
     expense = null,
-    { hideCategory=false, quickDrinkOnly=false } = {}
+    { hideCategory = false, quickDrinkOnly = false } = {}
   ) {
     const isEdit = expense && typeof expense.id === "number";
 
@@ -1830,10 +1622,10 @@ document.addEventListener("DOMContentLoaded", () => {
     editingId = null;
   }
 
-  on(expenseOverlay, "click", (e)=>{
+  on(expenseOverlay, "click", (e) => {
     if (e.target === expenseOverlay) closeExpenseModal();
   });
-  on(document, "keydown", (e)=>{
+  on(document, "keydown", (e) => {
     if (expenseOverlay && expenseOverlay.style.display === "flex" && e.key === "Escape") {
       closeExpenseModal();
     }
@@ -1894,7 +1686,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* ---------- Add Type Modal (Drink / Groceries / Big Night / Other) ---------- */
+  /* ---------- Add Type Modal ---------- */
   const addTypeOverlay = $("addTypeModalOverlay");
   const addTypeDrinkBtn = () => $("addTypeDrinkBtn");
   const addTypeGroceriesBtn = () => $("addTypeGroceriesBtn");
@@ -1919,10 +1711,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Map the four choices to the existing behaviours
   on(addTypeDrinkBtn(), "click", () => {
     closeAddTypeModal();
-    // Drink → Social & Leisure
     openExpenseModal(
       { category: "Social & Leisure", amount: "" },
       { hideCategory: true, quickDrinkOnly: true }
@@ -1931,7 +1721,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(addTypeGroceriesBtn(), "click", () => {
     closeAddTypeModal();
-    // Groceries → Essential Living
     openExpenseModal(
       { category: "Essential Living", amount: "" },
       { hideCategory: true, quickDrinkOnly: false }
@@ -1940,7 +1729,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(addTypeBigNightBtn(), "click", () => {
     closeAddTypeModal();
-    // Big Night → Social & Leisure
     openExpenseModal(
       { category: "Social & Leisure", amount: "" },
       { hideCategory: true, quickDrinkOnly: false }
@@ -1949,7 +1737,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   on(addTypeOtherBtn(), "click", () => {
     closeAddTypeModal();
-    // Other → Essential Living (with full form)
     openExpenseModal(
       { category: "Essential Living", amount: "" },
       { hideCategory: false, quickDrinkOnly: false }
@@ -1987,27 +1774,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modalTitle().textContent = "Add Expense";
     modalCat().value = "Social & Leisure";
     modalAmount().value = "";
-    setTimeout(()=> modalAmount()?.focus(), 0);
-  });
-
-  /* ---------- Details Modal ---------- */
-  const detailsOverlay = $("detailsModalOverlay");
-  const detailsBody = () => $("detailsModalBody");
-
-  function openDetailsModal(text) {
-    if (detailsBody()) detailsBody().textContent = text || "No details.";
-    setDisplay(detailsOverlay, true);
-  }
-  function closeDetailsModal() {
-    setDisplay(detailsOverlay, false);
-  }
-  on(detailsOverlay, "click", (e)=>{
-    if (e.target === detailsOverlay) closeDetailsModal();
-  });
-  on(document, "keydown", (e)=>{
-    if (detailsOverlay && detailsOverlay.style.display === "flex" && e.key === "Escape") {
-      closeDetailsModal();
-    }
+    setTimeout(() => modalAmount()?.focus(), 0);
   });
 
   /* ---------- Goals Modal ---------- */
@@ -2076,7 +1843,6 @@ document.addEventListener("DOMContentLoaded", () => {
     settings.goalPreset = chosenPreset;
     settings.goalTarget = hasTarget ? rawTarget : 0;
 
-    // NEW: store the text for the selected preset WITHOUT the XP bit
     if (chosenPreset && GOAL_PRESETS[chosenPreset]) {
       settings.goalDescription = GOAL_PRESETS[chosenPreset];
     } else {
@@ -2084,35 +1850,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     saveSettings();
-
-    // Close popup and return to home
     closeGoalModal();
   });
 
-
-  /* ---------- Analytics & Coming Soon Modals wiring ---------- */
+  /* ---------- Analytics & Rewards wiring ---------- */
   on(analyticsBtn, "click", openAnalyticsModal);
   on(leaderboardBtn, "click", openLeaderboardModal);
-  on(rewardsBtn, "click", openRewardsModal);  // NEW
+  on(rewardsBtn, "click", openRewardsModal);
   on(setGoalBtn, "click", openGoalModal);
 
   on(analyticsOverlay, "click", (e) => {
     if (e.target === analyticsOverlay) closeAnalyticsModal();
   });
-  on(analyticsCloseBtn(), "click", closeAnalyticsModal);
-
-  on(comingSoonOverlay, "click", (e) => {
-    if (e.target === comingSoonOverlay) closeComingSoonModal();
-  });
-  on(comingSoonCloseBtn(), "click", closeComingSoonModal);
 
   on(document, "keydown", (e) => {
     if (e.key === "Escape") {
       if (analyticsOverlay && analyticsOverlay.style.display === "flex") {
         closeAnalyticsModal();
-      }
-      if (comingSoonOverlay && comingSoonOverlay.style.display === "flex") {
-        closeComingSoonModal();
       }
     }
   });
@@ -2120,14 +1874,13 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- Allowance Modal (combined calculate + manual) ---------- */
   const allowanceOverlay = $("allowanceModalOverlay");
   const allowanceStage = () => $("allowanceModalStage");
-  const allowanceCancel = () => $("allowanceModalCancelBtn");
   const allowanceBack = () => $("allowanceModalBackBtn");
   const allowanceSubmit = () => $("allowanceModalSubmitBtn");
 
   let allowanceFlow = { mode: null };
 
   const openAllowanceModal = () => {
-    showAllowanceCombined();           // go straight to combined view
+    showAllowanceCombined();
     setDisplay(allowanceOverlay, true);
   };
   const closeAllowanceModal = () => {
@@ -2135,7 +1888,6 @@ document.addEventListener("DOMContentLoaded", () => {
     allowanceFlow = { mode: null };
   };
 
-  // Calculate button + inline manual input in the same screen
   function showAllowanceCombined() {
     allowanceFlow.mode = "combined";
 
@@ -2183,7 +1935,6 @@ document.addEventListener("DOMContentLoaded", () => {
         settings.allowance = val;
         saveSettings();
 
-        // One-time XP reward for setting a valid allowance
         maybeAwardAllowanceXP();
 
         renderForCurrentMonth();
@@ -2233,7 +1984,6 @@ document.addEventListener("DOMContentLoaded", () => {
         settings.allowance = income - costs;
         saveSettings();
 
-        // One-time XP reward for setting a valid allowance
         maybeAwardAllowanceXP();
 
         renderForCurrentMonth();
@@ -2242,15 +1992,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  on(allowanceOverlay, "click", (e)=>{
+  on(allowanceOverlay, "click", (e) => {
     if (e.target === allowanceOverlay) closeAllowanceModal();
   });
-  on(document, "keydown", (e)=>{
+  on(document, "keydown", (e) => {
     if (allowanceOverlay && allowanceOverlay.style.display === "flex" && e.key === "Escape") {
       closeAllowanceModal();
     }
   });
-  on(allowanceCancel(), "click", closeAllowanceModal);
   on(setAllowanceBtn, "click", openAllowanceModal);
 
   /* ---------- Favourites Modal ---------- */
@@ -2276,12 +2025,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    entries.sort((a,b) => {
+    entries.sort((a, b) => {
       const fa = a[1], fb = b[1];
       return (
-        ((fb.year|0) - (fa.year|0)) ||
-        ((fb.monthIndex|0) - (fa.monthIndex|0)) ||
-        ((fb.id|0) - (fa.id|0))
+        ((fb.year | 0) - (fa.year | 0)) ||
+        ((fb.monthIndex | 0) - (fa.monthIndex | 0)) ||
+        ((fb.id | 0) - (fa.id | 0))
       );
     });
 
@@ -2310,15 +2059,14 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  on(favesOverlay, "click", (e)=>{
+  on(favesOverlay, "click", (e) => {
     if (e.target === favesOverlay) closeFavesModal();
   });
-  on(document, "keydown", (e)=>{
+  on(document, "keydown", (e) => {
     if (favesOverlay && favesOverlay.style.display === "flex" && e.key === "Escape") {
       closeFavesModal();
     }
   });
-  on(favesCloseBtn, "click", closeFavesModal);
   on(showFavouritesBtn, "click", openFavesModal);
 
   on(favesList, "click", (e) => {
@@ -2338,7 +2086,6 @@ document.addEventListener("DOMContentLoaded", () => {
       data.purchaseCount += 1;
       const newId = data.purchaseCount;
 
-      // Add a new expense row based on the favourite
       data.expenses.push({
         id: newId,
         amount: fav.amount,
@@ -2347,7 +2094,6 @@ document.addEventListener("DOMContentLoaded", () => {
       data.categoryTotals[fav.category] =
         (data.categoryTotals[fav.category] || 0) + (fav.amount || 0);
 
-      // Move the favourite to point at the new row (no duplication)
       const newKey = compositeId(newId);
       if (newKey !== oldKey) {
         delete favourites[oldKey];
@@ -2376,7 +2122,6 @@ document.addEventListener("DOMContentLoaded", () => {
       delete favourites[key];
       saveFavourites();
       renderFavesModal();
-      // Keep rails in sync: unfilling stars for rows that lost favourites
       renderForCurrentMonth();
     }
   });
@@ -2387,17 +2132,17 @@ document.addEventListener("DOMContentLoaded", () => {
     pendingFav = { ...snapshot, name: defaultName || "" };
     favNameInput.value = pendingFav.name;
     setDisplay(favNameOverlay, true);
-    setTimeout(()=> favNameInput.focus(), 0);
+    setTimeout(() => favNameInput.focus(), 0);
   }
   function closeFavNameModal() {
     setDisplay(favNameOverlay, false);
     pendingFav = null;
   }
 
-  on(favNameOverlay, "click", (e)=>{
+  on(favNameOverlay, "click", (e) => {
     if (e.target === favNameOverlay) closeFavNameModal();
   });
-  on(document, "keydown", (e)=>{
+  on(document, "keydown", (e) => {
     if (favNameOverlay && favNameOverlay.style.display === "flex" && e.key === "Escape") {
       closeFavNameModal();
     }
