@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Day controls -->
   <div id="monthControls">
     <button id="prevMonthBtn" type="button" aria-label="Previous day">◀</button>
     <button id="dayCounterBtn" type="button" aria-label="Day counter" disabled>Day 1</button>
@@ -18,85 +17,73 @@
     </button>
   </div>
 
-  <h1>SavR</h1>
-  <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
+  <div class="header-row">
+    <div class="title-block">
+      <h1 class="app-title">
+        <img src="images/dragon.jpg" alt="dragon" class="dragon-icon">
+        SavR
+        <img src="images/dragon.jpg" alt="dragon right" class="dragon-icon dragon-right">
+      </h1>
+      <h3>how the fuck am i poor again? where the fuck is my money going? help pls...</h3>
+    </div>
 
-  <!-- Two-column layout -->
-  <div class="content-grid">
-    <div class="main-column">
-      <div class="top-row">
-        <!-- Left panel: controls -->
-        <div class="left-panel">
-          <button id="setAllowanceBtn" type="button">Set Allowance</button>
-          <div id="allowanceContainer"></div>
+    <button id="profileBtn" class="profile-btn" aria-label="Profile">
+      <img src="images/blank-avatar.png" class="profile-icon" alt="">
+    </button>
+  </div>
 
-          <button id="addExpenseBtn" type="button">Add Expense</button>
-          <button id="showFavouritesBtn" type="button">Favourites</button>
-
-          <button id="noSpendBtn" type="button" aria-label="No spending today">
-            No spending today
-          </button>
-
-          <button id="setGoalBtn" type="button">Set goal</button>
-
-          <div id="expenseContainer"></div>
-
-          <!-- Stats -->
-          <div id="sidebarStats" aria-label="Stats">
-            <div id="scoreTotal">📈 XP: 0</div>
-            <div id="streakDisplay">🔥 Streak: 0 days</div>
-            <div id="levelDisplay">🛡️ Level: Bronze</div>
-          </div>
-        </div>
-
-        <!-- Center: Submitted Expenses Table -->
-        <div class="table-container" id="tableContainer">
-          <h3>Submitted Expenses</h3>
-          <div class="table-wrap">
-            <table id="submittedExpenses" aria-label="Submitted expenses">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Amount</th>
-                  <th scope="col">Category</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-
-            <!-- Left & right rails -->
-            <div id="leftRail" aria-hidden="true"></div>
-            <div id="deleteRail" aria-hidden="true"></div>
-          </div>
-
-          <button id="clearAllBtn" type="button">Clear All</button>
+  <!-- Summary row: Savings & Allowance vs XP, Streak, Level -->
+  <section class="summary-grid" aria-label="Savings and stats overview">
+    <div class="summary-column summary-left">
+      <!-- Header row -->
+      <div class="summary-item summary-heading">Savings:</div>
+      <!-- Total allowance -->
+      <div class="summary-item" id="allowanceDisplay">Allowance: 0.00</div>
+      <!-- Savings -->
+      <div class="summary-item" id="savingsInfo">Saved: 0.00</div>
+      <!-- Weekly / Daily toggle -->
+      <div class="summary-item">
+        <div id="allowanceModeToggle" class="allowance-toggle">
+          <button id="allowWeeklyBtn" type="button" class="active">Weekly</button>
+          <button id="allowDailyBtn" type="button">Daily</button>
         </div>
       </div>
     </div>
 
-    <!-- Right column: Sidebar -->
-    <aside class="sidebar" aria-label="Insights">
-      <h3>Allowance Info</h3>
+    <div class="summary-column summary-right" aria-label="XP and streak stats">
+      <div class="summary-item" id="scoreTotal">📈 XP: 0</div>
+      <div class="summary-item" id="streakDisplay">🔥 Streak: 0 days</div>
+      <div class="summary-item" id="levelDisplay">🛡️ Level: Bronze</div>
+    </div>
+  </section>
 
-      <!-- Weekly / Daily toggle -->
-      <div id="allowanceModeToggle" class="allowance-toggle">
-        <button id="allowWeeklyBtn" type="button" class="active">Weekly</button>
-        <button id="allowDailyBtn" type="button">Daily</button>
-      </div>
+  <!-- Hidden remaining placeholder so JS can still update it without showing on screen -->
+  <div id="allowanceRemaining" style="display:none;">Remaining: 0.00</div>
 
-      <div id="allowanceDisplay">Total: 0.00</div>
-      <div id="allowanceRemaining">Remaining: 0.00</div>
-      <div id="savingsInfo">Savings: 0.00</div>
+  <!-- Main table -->
+  <div class="table-container" id="tableContainer">
+    <h3>Submitted Expenses</h3>
+    <div class="table-wrap">
+      <table id="submittedExpenses" aria-label="Submitted expenses">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Category</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-      <!-- Sidebar feature buttons -->
-      <div class="sidebar-actions">
-        <button id="analyticsBtn" type="button">Analytics</button>
-        <button id="leaderboardBtn" type="button">Leaderboard</button>
-        <button id="rewardsBtn" type="button">Missions & Achievements</button>
-      </div>
-    </aside>
+      <!-- Left & right rails -->
+      <div id="leftRail" aria-hidden="true"></div>
+      <div id="deleteRail" aria-hidden="true"></div>
+    </div>
+
+    <button id="clearAllBtn" type="button">Clear All</button>
+    
   </div>
-
+  
   <!-- Leaderboard Modal -->
   <div
     id="leaderboardModalOverlay"
@@ -443,8 +430,74 @@
     </div>
   </div>
 
+  <!-- Bottom-sheet quick menu for "+" -->
+  <div id="quickMenuOverlay" class="bottom-sheet-overlay">
+    <div class="bottom-sheet-panel">
+      <button id="quickMenuAddExpense" type="button" class="sheet-item">
+        Add expense
+      </button>
+      <button id="quickMenuFaves" type="button" class="sheet-item">
+        Favourites
+      </button>
+      <button id="quickMenuNoSpend" type="button" class="sheet-item danger">
+        No spending today
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom-sheet quick menu for "i" -->
+  <div id="infoMenuOverlay" class="bottom-sheet-overlay">
+    <div class="bottom-sheet-panel">
+      <button id="infoMenuAnalytics" type="button" class="sheet-item">
+        Analytics
+      </button>
+      <button id="infoMenuLeaderboard" type="button" class="sheet-item">
+        Leaderboard
+      </button>
+      <button id="infoMenuMissions" type="button" class="sheet-item">
+        Missions & Achievements
+      </button>
+    </div>
+  </div>
+
+  <button id="noSpendBtn" type="button" style="display:none;"></button>
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    window.isProfilePage = false; // on profile.html
+  </script>
   <script src="script.js"></script>
+  
+  <!-- Streak islands visualisation -->
+  <div id="streakIslands" class="streak-islands">
+    <!-- Dragon that moves along the islands -->
+    <img
+      id="streakDragon"
+      class="streak-dragon"
+      src="images/blank-avatar.png"
+      alt="Streak dragon"
+    />
+
+    <div class="streak-island" data-day="1">1</div>
+    <div class="streak-island" data-day="2">2</div>
+    <div class="streak-island" data-day="3">3</div>
+    <div class="streak-island" data-day="4">4</div>
+    <div class="streak-island" data-day="5">5</div>
+    <div class="streak-island" data-day="6">6</div>
+    <div class="streak-island" data-day="7">7</div>
+  </div>
+
+  <!-- Fixed bottom navigation bar -->
+  <div id="bottomNavBar">
+    <button class="nav-btn nav-blue" id="navHomeBtn">H</button>
+    <button class="nav-btn nav-blue" id="navAllowBtn">A</button>
+
+    <button class="nav-btn nav-gold nav-center-btn" id="navAddBtn">+</button>
+
+    <button class="nav-btn nav-green" id="navGoalBtn">G</button>
+    <button class="nav-btn nav-blue" id="navInfoBtn">i</button>
+  </div>
 </body>
 </html>

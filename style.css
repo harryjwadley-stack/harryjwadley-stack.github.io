@@ -882,3 +882,601 @@ button:hover {
   transform: scale(1.15);
   opacity: 0.85;
 }
+
+
+/* =========================================
+   Mobile layout tweaks (phone-style)
+   Triggered on narrow screens
+========================================= */
+@media (max-width: 600px) {
+  /* Overall spacing + typography */
+  body {
+    /* top   right/left   bottom */
+    padding: 40px 12px 120px;
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    text-align: left;
+    margin-bottom: 0.25rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  /* Make everything single-column */
+  .content-grid {
+    display: block;
+  }
+
+  .top-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .left-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .table-container {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  /* Buttons: more phone-like sizing */
+  button {
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: 999px;
+  }
+
+  .left-panel button {
+    width: 100%;
+  }
+
+  #hardResetBtn {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+
+  /* Day controls: put everything in one row, tighter */
+  #monthControls {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #dayCounterBtn {
+    min-width: 80px;
+    font-size: 13px;
+  }
+
+  /* Sidebar becomes a card under main content */
+  .sidebar {
+    margin-top: 16px;
+    width: 100%;
+    position: static;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 12px;
+  }
+
+  /* Make the table fit and scroll if it has to */
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  #submittedExpenses {
+    min-width: 100%;
+    font-size: 13px;
+  }
+
+  #submittedExpenses th,
+  #submittedExpenses td {
+    padding: 6px;
+  }
+
+  /* Edit/delete/favourite rails are too fiddly on touch – hide on phone */
+  #leftRail,
+  #deleteRail {
+    display: none;
+  }
+
+  /* Modals: full-width phone cards */
+  .expense-modal,
+  .modal-card,
+  .goal-modal {
+    width: 94vw;
+    max-width: 94vw;
+    margin: 0 auto;
+    border-radius: 16px;
+    padding: 16px 14px;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .modal-actions button {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  /* Quick-pick grid – two columns on phone so buttons aren't tiny */
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Leaderboard table font slightly smaller */
+  .leaderboard-table {
+    font-size: 0.8rem;
+  }
+
+  /* Favourites table – narrower padding */
+  #favesList th,
+  #favesList td {
+    padding: 6px 4px;
+    font-size: 0.8rem;
+  }
+}
+/* =========================================
+   Bottom nav + day bar (mobile)
+========================================= */
+@media (max-width: 600px) {
+  #bottomNavBar {
+    position: fixed;
+    bottom: 16px;        /* sit right at the bottom now */
+    left: 0;
+    width: 100%;
+    background: white;
+    border-top: 1px solid #ccc;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .nav-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .nav-center-btn {
+    width: 62px;
+    height: 62px;
+    font-size: 30px;
+    border-radius: 14px;
+  }
+
+  .nav-blue { background: var(--turquoise); }
+  .nav-gold { background: var(--amber); color: #1a1a1a; }
+  .nav-green { background: var(--teal); }
+}
+
+/* Full-screen dim background for the + menu */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;              /* JS switches this to "flex" */
+  align-items: flex-end;      /* panel sits at the bottom */
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+}
+
+/* The white panel that holds the three buttons */
+.bottom-sheet-panel {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto env(safe-area-inset-bottom);
+  background: var(--card-bg);
+  border-radius: 16px 16px 0 16px;
+  padding: 12px 16px 18px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+  margin-bottom: 80px; 
+}
+
+/* Style each option button in the sheet */
+.sheet-item {
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.sheet-item:last-child {
+  margin-bottom: 0;
+}
+
+.sheet-item {
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.sheet-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Quick menu buttons in the + bottom sheet */
+
+/* Add Expense – turquoise/blue */
+#quickMenuAddExpense {
+  background: var(--turquoise);
+  color: #000;
+}
+
+/* Favourites – gold */
+#quickMenuFaves {
+  background: var(--amber);
+  color: #000;
+}
+
+/* No spending today – red */
+#quickMenuNoSpend {
+  background: var(--red);
+  color: #fff;
+}
+
+/* Optional: hover states to match rest of app */
+#quickMenuAddExpense:hover {
+  background: #0fb8d6;
+}
+
+#quickMenuFaves:hover {
+  background: #ffcb40;
+}
+
+#quickMenuNoSpend:hover {
+  background: #ff5b50;
+}
+
+@media (max-width: 600px) {
+  .bottom-sheet-panel {
+    margin-bottom: calc(env(safe-area-inset-bottom) + 80px);
+  }
+}
+
+/* "i" menu buttons (all turquoise/blue) */
+#infoMenuAnalytics,
+#infoMenuLeaderboard,
+#infoMenuMissions {
+  background: var(--turquoise);
+  color: #000;
+}
+
+#infoMenuAnalytics:hover,
+#infoMenuLeaderboard:hover,
+#infoMenuMissions:hover {
+  background: #0fb8d6;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.summary-left,
+.summary-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.summary-line span:first-child {
+  color: var(--navy);
+}
+
+.summary-line span:last-child {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.summary-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dragon-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.dragon-right {
+  transform: scaleX(-1); /* flips horizontally */
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.profile-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.profile-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+.profile-icon:hover {
+  opacity: 1;
+}
+
+.profile-container {
+  max-width: 400px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.name-field {
+  width: 80%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.save-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--teal);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background: #0b5a52;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dragon-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.dragon-right {
+  transform: scaleX(-1); /* flipped inward */
+}
+
+/* Profile button on the right */
+.profile-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.profile-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+.profile-btn:hover .profile-icon {
+  opacity: 1;
+}
+
+.profile-big-icon {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;      /* makes it round */
+  border: 3px solid #0f766e;
+  margin-bottom: 20px;
+}
+
+.profile-container {
+  max-width: 400px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.profile-big-icon {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--teal);
+  cursor: pointer;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  border-radius: 999px;
+  border: none;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  background: var(--amber);
+  cursor: pointer;
+}
+
+.avatar-edit-btn:hover {
+  filter: brightness(1.05);
+}
+
+/* Avatar picker under the icon */
+.avatar-picker {
+  margin-bottom: 24px;
+  display: none; /* JS will set to block */
+}
+
+.avatar-picker p {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.avatar-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.avatar-options img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.avatar-options img:hover {
+  border-color: var(--teal);
+}
+
+
+/* =========================================
+   Streak Islands (dragon journey)
+========================================= */
+
+.table-container {
+  margin-bottom: 8px;  /* smaller – most of the gap now comes from .streak-journey */
+}
+
+/* Streak journey block – sits near the bottom nav, not under the table */
+.streak-journey {
+  margin-top: 120px;   /* big gap from the table */
+  margin-bottom: 16px; /* small gap above the bottom nav buttons */
+  position: relative;
+  min-height: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Wrapper for the islands */
+.streak-islands {
+  margin-top: 16px;
+  margin-bottom: 10px;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  min-height: 90px; /* gives room for the dragon to float */
+}
+
+/* Individual island "stones" */
+.streak-island {
+  width: 48px;
+  height: 34px;
+  background: #8b5a2b;           /* brown */
+  color: #ffffff;                 /* white text */
+  border-radius: 50% 45% 55% 40%; /* slightly irregular blob */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  position: relative;
+}
+
+/* Zig-zag / jagged layout */
+.streak-island:nth-child(2),
+.streak-island:nth-child(5) {
+  transform: translateY(10px);
+}
+.streak-island:nth-child(3),
+.streak-island:nth-child(6) {
+  transform: translateY(-8px);
+}
+.streak-island:nth-child(4),
+.streak-island:nth-child(7) {
+  transform: translateY(14px);
+}
+
+/* Highlight islands that are "covered" by the streak */
+.streak-island.active {
+  box-shadow: 0 0 0 2px #ffffff, 0 6px 14px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.05);
+}
+
+/* Dragon icon floating above the islands */
+.streak-dragon {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;   /* keeps the dragon’s aspect ratio – no squish */
+  border-radius: 50%;
+  pointer-events: none;
+  transition: left 0.3s ease, top 0.3s ease;
+  opacity: 0;
+  z-index: 2;            /* make sure it sits on top of the islands */
+}
