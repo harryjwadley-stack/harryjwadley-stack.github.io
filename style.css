@@ -57,3 +57,61 @@ body {
 .survey-page {
   background: transparent;
 }
+
+.survey-form {
+  max-width: 850px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.survey-form h2 {
+  margin-top: 18px;
+  font-size: 1.15rem;
+  opacity: 0.95;
+}
+
+.survey-form label {
+  font-weight: 600;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 6px;
+}
+
+textarea {
+  min-height: 100px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.inline-text {
+  margin-left: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: none;
+}
+
+.submit-btn {
+  margin-top: 24px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0,0,0,0.4);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
