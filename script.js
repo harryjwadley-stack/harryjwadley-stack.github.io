@@ -13,6 +13,14 @@ function showFeed() {
 
   const posts = [
     {
+      category: "Examples",
+      stat: "100% of examples are examples",
+      summary:
+        "Examples are a useful way to not have to remember any information",
+      sourceLabel: "Harry's brain 1h ago",
+      sourceUrl: "https://www.instagram.com/harrywadleyy/",
+    },
+    {
       category: "Mindset & Stress",
       stat: "48% of Gen Z say they do not feel financially secure",
       summary:
