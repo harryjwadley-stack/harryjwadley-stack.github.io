@@ -9,8 +9,7 @@ function showFeed() {
   document.body.style.background = "var(--royal-blue)";
 
   pageContent.innerHTML = `
-    <h1>Feed Page</h1>
-    <p>This is the blue feed page.</p>
+    <h1>Feed</h1>
   `;
 }
 
@@ -21,8 +20,7 @@ function showSurvey() {
   document.body.style.background = "var(--sea-green)";
 
   pageContent.innerHTML = `
-    <h1>Survey Page</h1>
-    <p>This is the green survey page.</p>
+    <h1>Survey</h1>
   `;
 }
 
