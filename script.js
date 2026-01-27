@@ -11,10 +11,82 @@ function showFeed() {
   pageContent.classList.remove("survey-page");
   pageContent.classList.add("feed-page");
 
+  const posts = [
+    {
+      category: "Mindset & Stress",
+      stat: "48% of Gen Z say they do not feel financially secure",
+      summary:
+        "Nearly half of Gen Z report feeling financially insecure — a big signal that finance tools need to reduce anxiety and increase clarity.",
+      sourceLabel: "Deloitte 2025 Gen Z & Millennial Survey",
+      sourceUrl: "https://www.deloitte.com/global/en/issues/work/genz-millennial-survey.html",
+    },
+    {
+      category: "Mindset & Stress (Canada)",
+      stat: "64% of Gen Z Canadians experience financial stress multiple times a week",
+      summary:
+        "For many young Canadians, money stress is not occasional — it’s recurring. Tone and UX matter: supportive beats shaming.",
+      sourceLabel: "TD Newsroom (Oct 2025)",
+      sourceUrl:
+        "https://stories.td.com/ca/en/news/2025-10-14-more-than-half-of-gen-z-canadians-feel-pressured-to-27fake-27-f",
+    },
+    {
+      category: "Savings & Emergencies",
+      stat: "63% of adults would cover a $400 emergency expense using cash (or equivalent)",
+      summary:
+        "A meaningful chunk of people still can’t handle small emergencies without credit or borrowing — which often creates spiraling stress.",
+      sourceLabel: "Federal Reserve (SHED data viz / Economic Well-Being)",
+      sourceUrl:
+        "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses.html",
+    },
+    {
+      category: "Savings (Gen Z)",
+      stat: "34% of Gen Z report having zero emergency savings (2025)",
+      summary:
+        "One in three Gen Zers having no emergency fund suggests ‘small wins’ and habit-building features can be more useful than complex budgeting.",
+      sourceLabel: "Bankrate (Aug 2025)",
+      sourceUrl: "https://www.bankrate.com/banking/americans-without-emergency-savings/",
+    },
+    {
+      category: "Debt (Student Loans)",
+      stat: "Median student debt in 2024 was between $20,000 and $24,999 (for borrowers with their own education debt)",
+      summary:
+        "Student debt is common and often mid-sized rather than massive — which makes repayment planning and ‘next best action’ guidance powerful.",
+      sourceLabel: "Federal Reserve: Economic Well-Being (2024 report section)",
+      sourceUrl:
+        "https://www.federalreserve.gov/publications/2025-economic-well-being-of-us-households-in-2024-higher-education-and-student-loans.htm",
+    },
+  ];
+
+  const postsHtml = posts
+    .map(
+      (p) => `
+      <article class="feed-post">
+        <div class="post-top">
+          <span class="post-category">${p.category}</span>
+        </div>
+
+        <div class="post-stat">${p.stat}</div>
+        <div class="post-summary">${p.summary}</div>
+
+        <div class="post-readmore">
+          <span>Read more:</span>
+          <a href="${p.sourceUrl}" target="_blank" rel="noopener noreferrer">
+            ${p.sourceLabel}
+          </a>
+        </div>
+      </article>
+    `
+    )
+    .join("");
+
   pageContent.innerHTML = `
     <h1>Feed</h1>
+    <div class="feed-posts">
+      ${postsHtml}
+    </div>
   `;
 }
+
 
 function showSurvey() {
   surveyBtn.classList.add("active");
