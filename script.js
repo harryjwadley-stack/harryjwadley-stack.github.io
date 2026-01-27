@@ -13,7 +13,7 @@ function showFeed() {
 
   const posts = [
     {
-      category: "Examples",
+      category: "Example",
       stat: "100% of examples are examples",
       summary:
         "Examples are a useful way to not have to remember any information",
