@@ -16,44 +16,44 @@ function showFeed() {
       category: "Mindset & Stress",
       stat: "48% of Gen Z say they do not feel financially secure",
       summary:
-        "Deloitte’s 2025 survey reports that financial insecurity rose year over year, with nearly half of Gen Z (and 46% of millennials) saying they don’t feel financially secure. It also links lower financial security with poorer well‑being and less positive feelings about work.",
-      sourceLabel: "Deloitte (May 2025) – 2025 Gen Z & Millennial Survey",
+        "Nearly half of Gen Z report feeling financially insecure — a big signal that finance tools need to reduce anxiety and increase clarity.",
+      sourceLabel: "Deloitte 2025 Gen Z & Millennial Survey",
       sourceUrl: "https://www.deloitte.com/global/en/issues/work/genz-millennial-survey.html",
     },
     {
       category: "Mindset & Stress (Canada)",
       stat: "64% of Gen Z Canadians experience financial stress multiple times a week",
       summary:
-        "TD’s survey piece highlights the pressure many Gen Z Canadians feel to present ‘financial stability’ online. It reports that only 37% feel in control of their money and nearly two‑thirds feel financial stress multiple times a week, alongside broader concerns tied to cost of living and social pressure.",
-      sourceLabel: "TD Stories (Oct 2025) – ‘Fake financial stability’ survey",
+        "For many young Canadians, money stress is not occasional — it’s recurring. Tone and UX matter: supportive beats shaming.",
+      sourceLabel: "TD Newsroom (Oct 2025)",
       sourceUrl:
         "https://stories.td.com/ca/en/news/2025-10-14-more-than-half-of-gen-z-canadians-feel-pressured-to-27fake-27-f",
     },
     {
       category: "Savings & Emergencies",
-      stat: "63% of adults would cover a $400 emergency expense using cash (or its equivalent)",
+      stat: "63% of adults would cover a $400 emergency expense using cash (or equivalent)",
       summary:
-        "The Federal Reserve’s SHED data visualization shows the share of adults who could fully cover a $400 emergency expense using cash or an equivalent. It also breaks this metric down by demographics (like age, education, race/ethnicity, and metro status).",
-      sourceLabel: "Federal Reserve SHED Data Viz (May 2025) – $400 emergency expense",
+        "A meaningful chunk of people still can’t handle small emergencies without credit or borrowing — which often creates spiraling stress.",
+      sourceLabel: "Federal Reserve (SHED data viz / Economic Well-Being)",
       sourceUrl:
         "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses.html",
     },
     {
       category: "Savings (Gen Z)",
-      stat: "29% of Gen Z report having zero emergency savings (U.S., 2025)",
+      stat: "34% of Gen Z report having zero emergency savings (2025)",
       summary:
-        "Bankrate’s report on emergency savings finds that a sizable share of Americans have no emergency fund at all, and it breaks this out by generation—reporting 29% for Gen Z and 34% for millennials. The piece discusses economic pressures and how many people are struggling to build or maintain a buffer.",
-      sourceLabel: "Bankrate (Aug 2025) – Americans without emergency savings",
+        "One in three Gen Zers having no emergency fund suggests ‘small wins’ and habit-building features can be more useful than complex budgeting.",
+      sourceLabel: "Bankrate (Aug 2025)",
       sourceUrl: "https://www.bankrate.com/banking/americans-without-emergency-savings/",
     },
     {
       category: "Debt (Student Loans)",
-      stat: "Median student debt is between $20,000 and $24,999 for borrowers with their own education debt",
+      stat: "Median student debt in 2024 was between $20,000 and $24,999 (for borrowers with their own education debt)",
       summary:
-        "In the Fed’s Economic Well‑Being report, most student loan borrowers with outstanding debt owe less than $25,000, with a median balance between $20,000 and $24,999. The report notes balances vary by education level and race/ethnicity, and discusses differences by institution type and repayment status.",
-      sourceLabel: "Federal Reserve (May 2024/May 2025) – Higher Education & Student Loans (SHED)",
+        "Student debt is common and often mid-sized rather than massive — which makes repayment planning and ‘next best action’ guidance powerful.",
+      sourceLabel: "Federal Reserve: Economic Well-Being (2024 report section)",
       sourceUrl:
-        "https://www.federalreserve.gov/publications/2024-economic-well-being-of-us-households-in-2023-higher-education-student-loans.htm",
+        "https://www.federalreserve.gov/publications/2025-economic-well-being-of-us-households-in-2024-higher-education-and-student-loans.htm",
     },
   ];
 
@@ -85,6 +85,7 @@ function showFeed() {
     </div>
   `;
 }
+
 
 function showSurvey() {
   surveyBtn.classList.add("active");
@@ -263,6 +264,3 @@ function showSurvey() {
 
 feedBtn.addEventListener("click", showFeed);
 surveyBtn.addEventListener("click", showSurvey);
-
-// Optional: load feed by default on first load
-showFeed();
