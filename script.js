@@ -80,7 +80,6 @@ function showFeed() {
     .join("");
 
   pageContent.innerHTML = `
-    <h1>Feed</h1>
     <div class="feed-posts">
       ${postsHtml}
     </div>
@@ -98,7 +97,6 @@ function showSurvey() {
   pageContent.classList.add("survey-page");
 
   pageContent.innerHTML = `
-    <h1>Survey</h1>
 
     <form id="financeSurvey" class="survey-form">
 
@@ -258,7 +256,7 @@ function showSurvey() {
       <label>If a finance app could do one thing perfectly for you, what would it be?</label>
       <textarea></textarea>
 
-      <button type="submit" class="submit-btn">Submit Survey</button>
+      <button type="submit" class="submit-btn">Submit</button>
 
     </form>
   `;
