@@ -6,6 +6,8 @@ function showFeed() {
   feedBtn.classList.add("active");
   surveyBtn.classList.remove("active");
 
+  document.body.style.background = "var(--royal-blue)";
+
   pageContent.classList.remove("survey-page");
   pageContent.classList.add("feed-page");
 
@@ -65,8 +67,8 @@ function showFeed() {
 
   const postsHtml = posts
     .map(
-      (p) => `
-      <article class="feed-post">
+      (p, idx) => `
+      <article class="feed-post" id="post-${idx + 1}">
         <div class="post-top">
           <span class="post-category">${p.category}</span>
 
@@ -85,6 +87,8 @@ function showFeed() {
             ${p.sourceLabel}
           </a>
         </div>
+
+        <button type="button" class="share-btn" data-share="#post-${idx + 1}">Share</button>
       </article>
     `
     )
@@ -100,6 +104,8 @@ function showFeed() {
 function showSurvey() {
   surveyBtn.classList.add("active");
   feedBtn.classList.remove("active");
+
+  document.body.style.background = "var(--sea-green)";
 
   pageContent.classList.remove("feed-page");
   pageContent.classList.add("survey-page");
@@ -319,14 +325,38 @@ document.addEventListener("keydown", (e) => {
 // Event delegation for dynamically-rendered posts
 pageContent.addEventListener("click", (e) => {
   const btn = e.target.closest(".post-action-btn");
-  if (!btn) return;
-
-  const which = btn.dataset.modal;
-  if (which === "author") {
-    openModal("About the author", "info currently unaviable");
-  } else if (which === "org") {
-    openModal("About the organization", "yippeeeeee");
+  if (btn) {
+    const which = btn.dataset.modal;
+    if (which === "author") {
+      openModal("About the author", "info currently unaviable");
+    } else if (which === "org") {
+      openModal("About the organization", "yippeeeeee");
+    }
+    return;
   }
+
+  const shareBtn = e.target.closest(".share-btn");
+  if (!shareBtn) return;
+
+  const hash = shareBtn.getAttribute("data-share") || "";
+  const baseUrl = window.location.href.split("#")[0];
+  const url = baseUrl + hash;
+
+  if (navigator.share) {
+    navigator.share({ title: "SavR post", url }).catch(() => {});
+    return;
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(() => {
+      openModal("Share", "Link copied to clipboard!");
+    }).catch(() => {
+      openModal("Share", url);
+    });
+    return;
+  }
+
+  openModal("Share", url);
 });
 
 feedBtn.addEventListener("click", showFeed);
@@ -334,35 +364,3 @@ surveyBtn.addEventListener("click", showSurvey);
 
 // Optional: load feed by default on first load
 showFeed();
-
-
-// ===== Share Button Logic =====
-document.addEventListener("DOMContentLoaded", function () {
-  const posts = document.querySelectorAll(".feed-post");
-
-  posts.forEach((post, index) => {
-    if (!post.id) {
-      post.id = "post-" + (index + 1);
-    }
-
-    const shareBtn = document.createElement("button");
-    shareBtn.className = "share-btn";
-    shareBtn.textContent = "Share";
-
-    shareBtn.addEventListener("click", () => {
-      const url = window.location.origin + window.location.pathname + "#" + post.id;
-
-      if (navigator.share) {
-        navigator.share({
-          title: "Check out this post",
-          url: url
-        }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
-      }
-    });
-
-    post.appendChild(shareBtn);
-  });
-});

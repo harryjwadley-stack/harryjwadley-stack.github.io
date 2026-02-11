@@ -337,28 +337,28 @@ body {
 }
 
 
-/* Share button (bottom right of post) */
+/* Share button (bottom-right of each post) */
 .feed-post {
   position: relative;
-  padding-bottom: 60px;
+  padding-bottom: 62px; /* space for share button */
 }
 
 .share-btn {
   position: absolute;
-  bottom: 16px;
   right: 18px;
+  bottom: 16px;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.25);
-  background: rgba(255,255,255,0.15);
-  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
   font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: transform 0.12s ease, background 0.12s ease;
 }
 
 .share-btn:hover {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .share-btn:active {
