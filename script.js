@@ -6,6 +6,8 @@ function showFeed() {
   feedBtn.classList.add("active");
   surveyBtn.classList.remove("active");
 
+  document.body.style.background = "var(--royal-blue)";
+
   pageContent.classList.remove("survey-page");
   pageContent.classList.add("feed-page");
 
@@ -100,6 +102,8 @@ function showFeed() {
 function showSurvey() {
   surveyBtn.classList.add("active");
   feedBtn.classList.remove("active");
+
+  document.body.style.background = "var(--sea-green)";
 
   pageContent.classList.remove("feed-page");
   pageContent.classList.add("survey-page");
