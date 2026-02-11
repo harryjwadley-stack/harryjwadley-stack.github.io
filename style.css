@@ -335,3 +335,32 @@ body {
   .post-summary { font-size: 18px; }
   .post-action-btn { font-size: 13px; padding: 7px 10px; }
 }
+
+
+/* Share button (bottom right of post) */
+.feed-post {
+  position: relative;
+  padding-bottom: 60px;
+}
+
+.share-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.share-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.share-btn:active {
+  transform: translateY(1px);
+}

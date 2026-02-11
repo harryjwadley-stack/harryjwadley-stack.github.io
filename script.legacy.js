@@ -6,6 +6,8 @@ function showFeed() {
   feedBtn.classList.add("active");
   surveyBtn.classList.remove("active");
 
+  document.body.style.background = "var(--royal-blue)";
+
   pageContent.classList.remove("survey-page");
   pageContent.classList.add("feed-page");
 
@@ -100,6 +102,8 @@ function showFeed() {
 function showSurvey() {
   surveyBtn.classList.add("active");
   feedBtn.classList.remove("active");
+
+  document.body.style.background = "var(--sea-green)";
 
   pageContent.classList.remove("feed-page");
   pageContent.classList.add("survey-page");
@@ -334,35 +338,3 @@ surveyBtn.addEventListener("click", showSurvey);
 
 // Optional: load feed by default on first load
 showFeed();
-
-
-// ===== Share Button Logic =====
-document.addEventListener("DOMContentLoaded", function () {
-  const posts = document.querySelectorAll(".feed-post");
-
-  posts.forEach((post, index) => {
-    if (!post.id) {
-      post.id = "post-" + (index + 1);
-    }
-
-    const shareBtn = document.createElement("button");
-    shareBtn.className = "share-btn";
-    shareBtn.textContent = "Share";
-
-    shareBtn.addEventListener("click", () => {
-      const url = window.location.origin + window.location.pathname + "#" + post.id;
-
-      if (navigator.share) {
-        navigator.share({
-          title: "Check out this post",
-          url: url
-        }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
-      }
-    });
-
-    post.appendChild(shareBtn);
-  });
-});
