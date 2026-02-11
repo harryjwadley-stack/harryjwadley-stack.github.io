@@ -71,6 +71,10 @@ function showFeed() {
       <article class="feed-post" id="post-${idx + 1}">
         <div class="post-top">
           <span class="post-category">${p.category}</span>
+          <div class="post-actions">
+            <button type="button" class="post-action-btn" data-modal="author">About the author</button>
+            <button type="button" class="post-action-btn" data-modal="org">About the organization</button>
+          </div>
         </div>
 
         <div class="post-stat">${p.stat}</div>
@@ -312,4 +316,41 @@ pageContent.addEventListener("click", (e) => {
   }
 
   openModal("Share", url);
+});
+
+
+
+// ===== Modal helpers =====
+const modalBackdrop = document.getElementById("modalBackdrop");
+const modalTitleEl = document.getElementById("modalTitle");
+const modalBodyEl = document.getElementById("modalBody");
+const modalCloseBtn = document.getElementById("modalClose");
+const modalOkBtn = document.getElementById("modalOk");
+
+function openModal(title, body) {
+  if (!modalBackdrop) return;
+  modalTitleEl.textContent = title || "Info";
+  modalBodyEl.textContent = body || "";
+  modalBackdrop.classList.add("open");
+  modalBackdrop.setAttribute("aria-hidden", "false");
+}
+
+function closeModal() {
+  if (!modalBackdrop) return;
+  modalBackdrop.classList.remove("open");
+  modalBackdrop.setAttribute("aria-hidden", "true");
+}
+
+if (modalBackdrop) {
+  modalBackdrop.addEventListener("click", (e) => {
+    // click outside modal closes
+    if (e.target === modalBackdrop) closeModal();
+  });
+}
+
+if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+if (modalOkBtn) modalOkBtn.addEventListener("click", closeModal);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
 });

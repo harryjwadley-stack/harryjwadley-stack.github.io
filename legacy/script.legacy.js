@@ -67,15 +67,10 @@ function showFeed() {
 
   const postsHtml = posts
     .map(
-      (p) => `
-      <article class="feed-post">
+      (p, idx) => `
+      <article class="feed-post" id="post-${idx + 1}">
         <div class="post-top">
           <span class="post-category">${p.category}</span>
-
-          <div class="post-actions">
-            <button type="button" class="post-action-btn" data-modal="author">About the author</button>
-            <button type="button" class="post-action-btn" data-modal="org">About the organization</button>
-          </div>
         </div>
 
         <div class="post-stat">${p.stat}</div>
@@ -87,6 +82,8 @@ function showFeed() {
             ${p.sourceLabel}
           </a>
         </div>
+
+        <button type="button" class="share-btn" data-share="#post-${idx + 1}">Share</button>
       </article>
     `
     )
@@ -274,67 +271,45 @@ function showSurvey() {
   `;
 }
 
-
-
-/* =========================
-   Modal helpers (Feed posts)
-========================= */
-const infoModal = document.getElementById("infoModal");
-const modalTitle = document.getElementById("modalTitle");
-const modalBody = document.getElementById("modalBody");
-const modalCloseBtn = document.getElementById("modalCloseBtn");
-const modalOkBtn = document.getElementById("modalOkBtn");
-
-function openModal(titleText, bodyText) {
-  if (!infoModal || !modalBody || !modalTitle) return;
-
-  modalTitle.textContent = titleText;
-  modalBody.textContent = bodyText;
-
-  infoModal.classList.add("open");
-  infoModal.setAttribute("aria-hidden", "false");
-
-  // Focus for accessibility (best effort)
-  if (modalOkBtn) modalOkBtn.focus();
-}
-
-function closeModal() {
-  if (!infoModal) return;
-  infoModal.classList.remove("open");
-  infoModal.setAttribute("aria-hidden", "true");
-}
-
-function handleModalClick(e) {
-  // Close if clicking the dark backdrop (not the modal itself)
-  if (e.target === infoModal) closeModal();
-}
-
-if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
-if (modalOkBtn) modalOkBtn.addEventListener("click", closeModal);
-if (infoModal) infoModal.addEventListener("click", handleModalClick);
-
-// Esc to close
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && infoModal && infoModal.classList.contains("open")) {
-    closeModal();
-  }
-});
-
-// Event delegation for dynamically-rendered posts
-pageContent.addEventListener("click", (e) => {
-  const btn = e.target.closest(".post-action-btn");
-  if (!btn) return;
-
-  const which = btn.dataset.modal;
-  if (which === "author") {
-    openModal("About the author", "info currently unaviable");
-  } else if (which === "org") {
-    openModal("About the organization", "yippeeeeee");
-  }
-});
-
 feedBtn.addEventListener("click", showFeed);
 surveyBtn.addEventListener("click", showSurvey);
 
 // Optional: load feed by default on first load
 showFeed();
+
+
+pageContent.addEventListener("click", (e) => {
+  const btn = e.target.closest(".post-action-btn");
+  if (btn) {
+    const which = btn.dataset.modal;
+    if (which === "author") {
+      openModal("About the author", "info currently unaviable");
+    } else if (which === "org") {
+      openModal("About the organization", "yippeeeeee");
+    }
+    return;
+  }
+
+  const shareBtn = e.target.closest(".share-btn");
+  if (!shareBtn) return;
+
+  const hash = shareBtn.getAttribute("data-share") || "";
+  const baseUrl = window.location.href.split("#")[0];
+  const url = baseUrl + hash;
+
+  if (navigator.share) {
+    navigator.share({ title: "SavR post", url }).catch(() => {});
+    return;
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(() => {
+      openModal("Share", "Link copied to clipboard!");
+    }).catch(() => {
+      openModal("Share", url);
+    });
+    return;
+  }
+
+  openModal("Share", url);
+});

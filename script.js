@@ -320,37 +320,52 @@ pageContent.addEventListener("click", (e) => {
 
 
 
-// ===== Modal helpers =====
-const modalBackdrop = document.getElementById("modalBackdrop");
-const modalTitleEl = document.getElementById("modalTitle");
-const modalBodyEl = document.getElementById("modalBody");
-const modalCloseBtn = document.getElementById("modalClose");
-const modalOkBtn = document.getElementById("modalOk");
+// ===== Modal helpers (lazy lookup so it works even if modal HTML is after the script tag) =====
+let __modalBound = false;
 
-function openModal(title, body) {
-  if (!modalBackdrop) return;
-  modalTitleEl.textContent = title || "Info";
-  modalBodyEl.textContent = body || "";
-  modalBackdrop.classList.add("open");
-  modalBackdrop.setAttribute("aria-hidden", "false");
+function __getModalEls() {
+  return {
+    backdrop: document.getElementById("modalBackdrop"),
+    title: document.getElementById("modalTitle"),
+    body: document.getElementById("modalBody"),
+    closeBtn: document.getElementById("modalClose"),
+    okBtn: document.getElementById("modalOk"),
+  };
 }
 
-function closeModal() {
-  if (!modalBackdrop) return;
-  modalBackdrop.classList.remove("open");
-  modalBackdrop.setAttribute("aria-hidden", "true");
-}
+function __bindModalOnce() {
+  if (__modalBound) return;
+  const { backdrop, closeBtn, okBtn } = __getModalEls();
+  if (!backdrop) return; // modal markup not present
+  __modalBound = true;
 
-if (modalBackdrop) {
-  modalBackdrop.addEventListener("click", (e) => {
-    // click outside modal closes
-    if (e.target === modalBackdrop) closeModal();
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  if (okBtn) okBtn.addEventListener("click", closeModal);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
   });
 }
 
-if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
-if (modalOkBtn) modalOkBtn.addEventListener("click", closeModal);
+function openModal(title, body) {
+  const { backdrop, title: titleEl, body: bodyEl } = __getModalEls();
+  if (!backdrop || !titleEl || !bodyEl) return;
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeModal();
-});
+  titleEl.textContent = title || "Info";
+  bodyEl.textContent = body || "";
+  backdrop.classList.add("open");
+  backdrop.setAttribute("aria-hidden", "false");
+
+  __bindModalOnce();
+}
+
+function closeModal() {
+  const { backdrop } = __getModalEls();
+  if (!backdrop) return;
+  backdrop.classList.remove("open");
+  backdrop.setAttribute("aria-hidden", "true");
+}
